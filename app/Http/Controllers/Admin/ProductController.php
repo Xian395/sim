@@ -1,0 +1,178 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+
+class ProductController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()->role !== 'admin') {
+                return redirect()->route('dashboard')->with('error', 'Unauthorized access.');
+            }
+            return $next($request);
+        });
+    }
+
+    public function index()
+    {
+        $products = Product::with('categories')->get();
+        return Inertia::render('Admin/Products/Index', [
+            'products' => $products,
+            'categories' => Category::all(),
+        ]);
+    }
+
+    public function create()
+    {
+        $categories = Category::all();
+        return Inertia::render('Admin/Products/Create', [
+            'categories' => $categories,
+        ]);
+    }
+
+  public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'item_code' => 'required|string|max:20|unique:products,item_code',
+        'price' => 'required|numeric|min:0',
+        'category_ids' => 'required|array|min:1',
+        'category_ids.*' => 'exists:categories,id',
+        'description' => 'nullable|string',
+        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', 
+    ]);
+
+    $imagePath = null;
+    if ($request->hasFile('productimage')) {
+        $imagePath = $request->file('productimage')->store('products', 'public');
+    }
+
+    $validated['barcode'] = $this->generateBarcodeFromItemCode($validated['item_code']);
+    $validated['image_path'] = $imagePath;
+
+    $categoryIds = $validated['category_ids'];
+    unset($validated['category_ids'], $validated['productimage']);
+
+    $product = Product::create($validated);
+
+    $product->categories()->attach($categoryIds);
+
+    return redirect()->route('admin.products.create')->with('success', 'Product created successfully.');
+}
+
+    public function edit(Product $product)
+    {
+        $categories = Category::all();
+        $product->load('categories');
+        
+        return Inertia::render('Admin/Products/Edit', [
+            'product' => $product,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'item_code' => 'required|string|max:20|unique:products,item_code,' . $product->id,
+            'price' => 'required|numeric|min:0',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
+            'description' => 'nullable|string',
+            'productimage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
+        ]);
+
+        if ($validated['item_code'] !== $product->item_code) {
+            $validated['barcode'] = $this->generateBarcodeFromItemCode($validated['item_code']);
+        }
+
+        if ($request->hasFile('productimage')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            
+            $validated['image_path'] = $request->file('productimage')->store('products', 'public');
+        }
+
+        $categoryIds = $validated['category_ids'];
+        unset($validated['category_ids'], $validated['productimage']);
+
+        $product->update($validated);
+
+        $product->categories()->sync($categoryIds);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated successfully.',
+            'product' => $product->fresh()->load('categories'),
+            'redirect' => route('admin.products.index')
+        ]);
+    }
+
+    public function destroy(Product $product)
+    {
+        // Delete associated image file
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
+        
+        $product->delete();
+        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    private function generateBarcodeFromItemCode($itemCode)
+    {
+        $cleanItemCode = strtoupper(str_replace(' ', '', $itemCode));
+
+        $numericCode = $this->convertItemCodeToNumeric($cleanItemCode);
+
+        $barcodeBase = str_pad(substr($numericCode, 0, 12), 12, '0', STR_PAD_LEFT);
+
+        $checkDigit = $this->calculateEAN13CheckDigit($barcodeBase);
+
+        return $barcodeBase . $checkDigit;
+    }
+
+    private function convertItemCodeToNumeric($itemCode)
+    {
+        $numeric = '';
+
+        for ($i = 0; $i < strlen($itemCode); $i++) {
+            $char = $itemCode[$i];
+
+            if (is_numeric($char)) {
+                $numeric .= $char;
+            } else {
+                $numeric .= str_pad((ord($char) - 64), 2, '0', STR_PAD_LEFT);
+            }
+        }
+
+        if (strlen($numeric) > 12) {
+            $hash = hash('crc32', $itemCode);
+            $numeric = substr(str_pad($hash, 12, '0', STR_PAD_LEFT), 0, 12);
+        }
+
+        return $numeric;
+    }
+
+    private function calculateEAN13CheckDigit($barcode)
+    {
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int) $barcode[$i];
+            $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+        }
+
+        $checkDigit = (10 - ($sum % 10)) % 10;
+        return $checkDigit;
+    }
+}

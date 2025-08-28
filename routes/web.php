@@ -1,0 +1,117 @@
+<?php
+
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Staff\PosController;
+use App\Http\Controllers\Admin\SaleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StockInController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\StockOutController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\StaffDashboardController;
+
+// Route::get('/', function () {
+//     return Inertia::render('Welcome', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// });
+
+// Route::get('/', function () {
+//     return redirect()->route('login');
+// });
+
+
+Route::get('/', function () {
+    return Inertia::render('Auth/Login', [
+        'canResetPassword' => true,
+        'status' => session('status'),
+    ]);
+});
+
+
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route::get('/dashboard', function () {
+    //     return inertia('Dashboard');
+    // })->name('dashboard');
+
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+
+
+
+      Route::prefix('admin')->name('admin.')->group(function () {
+
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+
+
+
+        Route::get('/stock-in', [StockInController::class, 'index'])->name('stock-in.index');
+        Route::post('/stock-in', [StockInController::class, 'store'])->name('stock-in.store');
+        Route::get('/stock-out', [StockOutController::class, 'index'])->name('stock-out.index');
+        Route::post('/stock-out', [StockOutController::class, 'store'])->name('stock-out.store');
+
+
+
+      Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        
+
+
+        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+
+
+         Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+         Route::get('/logs/sales-report', [LogController::class, 'salesReport'])->name('logs.sales-report');
+
+        Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+        Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+
+    });
+
+        Route::prefix('staff')->middleware('pos')->name('staff.')->group(function () {
+        Route::get('/pos', [PosController::class, 'index'])->name('pos');
+        Route::post('/pos/store', [PosController::class, 'store'])->middleware('log:sale')->name('pos.store');
+
+         Route::get('/pos/suggestions', [PosController::class, 'suggestions'])->name('pos.suggestions');
+        Route::post('/pos/quick-add', [PosController::class, 'quickAdd'])->name('pos.quick-add');
+    
+        // Route::post('/pos/scan', [PosController::class, 'scanBarcode'])->name('pos.scan');
+    });
+
+
+});
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
