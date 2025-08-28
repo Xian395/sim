@@ -1,937 +1,721 @@
 <template>
     <AuthenticatedLayout>
         <div
-            class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 mt-12 sm:rounded-lg"
-        >
-            <div class="flex h-screen">
-                <!-- Main Product Area -->
-                <div class="flex-1 flex flex-col">
-                    <!-- Search and Filter Bar -->
-                    <div class="bg-white shadow-sm sm:rounded-lg px-6 py-4">
-                        <div class="flex flex-col lg:flex-row gap-4">
-                            <!-- Search Input -->
+            class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mt-12 sm:rounded-lg relative overflow-hidden">
+            <!-- Animated Background Elements -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div
+                    class="absolute -top-4 -left-4 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse">
+                </div>
+                <div class="absolute -bottom-8 -right-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"
+                    style="animation-delay: 2s"></div>
+            </div>
+
+            <!-- Main Product Area -->
+            <div class="h-screen flex flex-col relative z-10">
+                <!-- Enhanced Search and Filter Bar -->
+                <div
+                    class="bg-white/90 backdrop-blur-xl shadow-lg border border-white/20 sm:rounded-2xl mx-4 mt-4 mb-2">
+                    <!-- Cart Toggle Button with Enhanced Animation -->
+                    <button @click="toggleCartDrawer"
+                        class="fixed top-[260%] right-6 z-[60] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 flex items-center group overflow-hidden"
+                        :class="[
+                            { 'right-[25rem]': isCartOpen },
+                            cart.length > 0 ? 'p-4 space-x-3 pr-6' : 'p-4'
+                        ]">
+                        <!-- Ripple Effect -->
+                        <div
+                            class="absolute inset-0 bg-white/20 rounded-2xl scale-0 group-hover:scale-110 transition-transform duration-500">
+                        </div>
+
+                        <div class="relative z-10 flex items-center space-x-3">
+                            <svg class="w-6 h-6 transition-transform duration-300 group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.8 7.2M7 13l-1.8 7.2m0 0h12.6M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8" />
+                            </svg>
+                            <span v-if="cart.length > 0" class="font-semibold">
+                                {{ cart.length }} {{ cart.length === 1 ? 'item' : 'items' }}
+                            </span>
+                            <div v-if="cart.length > 0"
+                                class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] animate-bounce">
+                                {{ cart.length }}
+                            </div>
+                        </div>
+                    </button>
+
+                    <div class="p-6">
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <!-- Enhanced Search Input -->
                             <div class="relative flex-1 max-w-2xl">
-                                <div
-                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                >
-                                    <svg
-                                        class="h-5 w-5 text-gray-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                        />
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="h-6 w-6 text-gray-400 transition-colors duration-200" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
-                                <input
-                                    v-model="searchQuery"
-                                    @input="debouncedSearch"
-                                    type="text"
-                                    placeholder="Search"
-                                    class="block w-full pl-10 pr-3 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                />
-                                <div
-                                    v-if="searchQuery"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
-                                    <button
-                                        @click="clearSearch"
-                                        class="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <svg
-                                            class="h-5 w-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"
-                                            />
+                                <input v-model="searchQuery" @input="debouncedSearch" type="text"
+                                    placeholder="Search products, categories, or barcodes..."
+                                    class="block w-full pl-12 pr-12 py-4 text-lg bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 placeholder-gray-400" />
+                                <!-- Search Loading Indicator -->
+                                <div v-if="searchQuery && searchTimeout"
+                                    class="absolute inset-y-0 right-12 flex items-center">
+                                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                </div>
+                                <!-- Clear Button -->
+                                <div v-if="searchQuery && !searchTimeout"
+                                    class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                    <button @click="clearSearch"
+                                        class="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Filters Row -->
+                            <!-- Enhanced Filters -->
                             <div class="flex flex-wrap gap-3 items-center">
-                                <!-- Category Filter -->
-                                <select
-                                    v-model="categoryFilter"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                >
-                                    <option value="">All Categories</option>
-                                    <option
-                                        v-for="category in categories"
-                                        :key="category.id"
-                                        :value="category.id"
-                                    >
-                                        {{ category.name }}
-                                    </option>
-                                </select>
+                                <!-- Category Filter with Icons -->
+                                <div class="relative">
+                                    <select v-model="categoryFilter" @change="applyFilters"
+                                        class="appearance-none pl-4 pr-10 py-3 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium cursor-pointer transition-all duration-200">
+                                        <option value="">All Categories</option>
+                                        <option v-for="category in categories" :key="category.id" :value="category.id">
+                                            {{ category.name }}
+                                        </option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
 
                                 <!-- Stock Filter -->
-                                <select
-                                    v-model="stockFilter"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                >
-                                    <option value="all">All Stock</option>
-                                    <option value="available">Available</option>
-                                    <option value="in_stock">
-                                        In Stock (>5)
-                                    </option>
-                                    <option value="low_stock">
-                                        Low Stock (1-5)
-                                    </option>
-                                    <option value="out_of_stock">
-                                        Out of Stock
-                                    </option>
-                                </select>
+                                <div class="relative">
+                                    <select v-model="stockFilter" @change="applyFilters"
+                                        class="appearance-none pl-4 pr-10 py-3 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium cursor-pointer transition-all duration-200">
+                                        <option value="all">All Stock</option>
+                                        <option value="available">Available</option>
+                                        <option value="in_stock">In Stock (>5)</option>
+                                        <option value="low_stock">Low Stock (1-5)</option>
+                                        <option value="out_of_stock">Out of Stock</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
 
                                 <!-- Sort Options -->
-                                <select
-                                    v-model="sortBy"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                >
-                                    <option value="name">Sort by Name</option>
-                                    <option value="price">Sort by Price</option>
-                                    <option value="stock">Sort by Stock</option>
-                                    <option value="category">
-                                        Sort by Category
-                                    </option>
-                                    <option value="item_code">
-                                        Sort by Item Code
-                                    </option>
-                                    <option value="barcode">
-                                        Sort by Barcode
-                                    </option>
-                                </select>
+                                <div class="relative">
+                                    <select v-model="sortBy" @change="applyFilters"
+                                        class="appearance-none pl-4 pr-10 py-3 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium cursor-pointer transition-all duration-200">
+                                        <option value="name">Sort by Name</option>
+                                        <option value="price">Sort by Price</option>
+                                        <option value="stock">Sort by Stock</option>
+                                        <option value="category">Sort by Category</option>
+                                        <option value="item_code">Sort by Item Code</option>
+                                        <option value="barcode">Sort by Barcode</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
 
-                                <!-- Sort Order -->
-                                <button
-                                    @click="toggleSortOrder"
-                                    class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm flex items-center space-x-1"
-                                    :title="
-                                        sortOrder === 'asc'
-                                            ? 'Ascending'
-                                            : 'Descending'
-                                    "
-                                >
-                                    <svg
-                                        v-if="sortOrder === 'asc'"
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M7 11l5-5m0 0l5 5m-5-5v12"
-                                        />
+                                <!-- Sort Order with Enhanced Button -->
+                                <button @click="toggleSortOrder"
+                                    class="px-4 py-3 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl hover:bg-white hover:border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm font-medium flex items-center space-x-2 transition-all duration-200 group"
+                                    :title="sortOrder === 'asc' ? 'Ascending' : 'Descending'">
+                                    <svg v-if="sortOrder === 'asc'"
+                                        class="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 11l5-5m0 0l5 5m-5-5v12" />
                                     </svg>
-                                    <svg
-                                        v-else
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M17 13l-5 5m0 0l-5-5m5 5V6"
-                                        />
+                                    <svg v-else class="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                                     </svg>
+                                    <span>{{ sortOrder === 'asc' ? 'A-Z' : 'Z-A' }}</span>
                                 </button>
 
-                                <!-- Clear Filters -->
-                                <button
-                                    v-if="hasActiveFilters"
-                                    @click="clearAllFilters"
-                                    class="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                    Clear All
+                                <!-- Clear Filters Button -->
+                                <button v-if="hasActiveFilters" @click="clearAllFilters"
+                                    class="px-4 py-3 text-sm font-medium text-red-600 hover:text-white hover:bg-red-500 bg-red-50 border-2 border-red-200 hover:border-red-500 rounded-xl transition-all duration-200 flex items-center space-x-2 group">
+                                    <svg class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span>Clear All</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Product Stats -->
-                        <div
-                            v-if="stats"
-                            class="flex flex-wrap gap-4 mt-4 text-sm text-gray-600"
-                        >
-                            <span class="flex items-center">
-                                <div
-                                    class="w-2 h-2 bg-blue-500 rounded-full mr-2"
-                                ></div>
-                                Total: {{ stats.total_products }}
-                            </span>
-                            <span class="flex items-center">
-                                <div
-                                    class="w-2 h-2 bg-green-500 rounded-full mr-2"
-                                ></div>
-                                In Stock: {{ stats.in_stock }}
-                            </span>
-                            <span class="flex items-center">
-                                <div
-                                    class="w-2 h-2 bg-orange-500 rounded-full mr-2"
-                                ></div>
-                                Low Stock: {{ stats.low_stock }}
-                            </span>
-                            <span class="flex items-center">
-                                <div
-                                    class="w-2 h-2 bg-red-500 rounded-full mr-2"
-                                ></div>
-                                Out of Stock: {{ stats.out_of_stock }}
-                            </span>
-                            <span class="ml-auto font-medium">
-                                Showing {{ products.length }} products
-                            </span>
+                        <!-- Enhanced Product Stats -->
+                        <div v-if="stats"
+                            class="flex flex-wrap gap-6 mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full shadow-lg shadow-blue-500/30"></div>
+                                <span class="text-sm font-semibold text-gray-700">Total: <span class="text-blue-600">{{
+                                        stats.total_products }}</span></span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/30"></div>
+                                <span class="text-sm font-semibold text-gray-700">In Stock: <span
+                                        class="text-green-600">{{ stats.in_stock }}</span></span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-orange-500 rounded-full shadow-lg shadow-orange-500/30"></div>
+                                <span class="text-sm font-semibold text-gray-700">Low Stock: <span
+                                        class="text-orange-600">{{ stats.low_stock }}</span></span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/30"></div>
+                                <span class="text-sm font-semibold text-gray-700">Out of Stock: <span
+                                        class="text-red-600">{{ stats.out_of_stock }}</span></span>
+                            </div>
+                            <div class="ml-auto flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span class="font-bold text-gray-800">Showing {{ products.length }} products</span>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Products Grid -->
-                    <div class="flex-1 p-4 overflow-y-auto">
-                        <div class="flex flex-wrap justify-center gap-8">
+                <!-- Enhanced Products Grid -->
+                <div class="flex-1 p-6 overflow-y-auto">
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                        <div v-for="product in products" :key="product.id" @click="addToCart(product)"
+                            class="group relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer transform hover:scale-105 border border-white/50 hover:border-blue-200 overflow-hidden"
+                            :class="{
+                                'opacity-50 cursor-not-allowed': product.stock_quantity === 0,
+                            }">
+                            <!-- Gradient Overlay -->
                             <div
-                                v-for="product in products"
-                                :key="product.id"
-                                @click="addToCart(product)"
-                                class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border border-gray-100 hover:border-blue-300 flex flex-col justify-between"
-                                :class="{
-                                    'opacity-50': product.stock_quantity === 0,
-                                }"
-                                style="
-                                    width: 200px;
-                                    height: 215px;
-                                    padding: 1.5rem;
-                                "
-                            >
-                                <!-- Stock Status Indicator -->
-                                <div
-                                    class="absolute top-4 right-4 flex space-x-1"
-                                >
-                                    <div
-                                        v-if="product.stock_quantity === 0"
-                                        class="w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm"
-                                    ></div>
-                                    <div
-                                        v-else-if="product.stock_quantity <= 5"
-                                        class="w-3 h-3 bg-orange-500 rounded-full border-2 border-white shadow-sm"
-                                    ></div>
-                                    <div
-                                        v-else
-                                        class="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"
-                                    ></div>
-                                </div>
+                                class="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50 opacity-0 group-hover:opacity-50 transition-opacity duration-500">
+                            </div>
 
-                                <!-- Product Image -->
-                                <!-- Product Image -->
-                                <div class="flex justify-center mb-3">
+                            <!-- Stock Status with Animation -->
+                            <div class="absolute top-4 right-4 z-20">
+                                <div v-if="product.stock_quantity === 0"
+                                    class="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg pulse-red">
+                                </div>
+                                <div v-else-if="product.stock_quantity <= 5"
+                                    class="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-lg pulse-orange">
+                                </div>
+                                <div v-else
+                                    class="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg pulse-green">
+                                </div>
+                            </div>
+
+                            <div class="p-6 h-full flex flex-col">
+                                <!-- Enhanced Product Image -->
+                                <div class="flex justify-center mb-4">
                                     <div
-                                        class="w-16 h-16 rounded-lg overflow-hidden shadow-lg relative"
-                                    >
-                                        <img
-                                            v-if="product.image_path"
-                                            :src="
-                                                getImageUrl(product.image_path)
-                                            "
+                                        class="relative w-28 h-28 rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-shadow duration-500">
+                                        <img v-if="product.image_path" :src="getImageUrl(product.image_path)"
                                             :alt="product.name"
-                                            class="w-full h-full object-cover"
-                                            @error="handleImageError"
-                                        />
-                                        <div
-                                            class="w-full h-full rounded-lg bg-gradient-to-br flex items-center justify-center absolute inset-0"
+                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            @error="handleImageError" />
+                                        <div class="w-full h-full rounded-2xl bg-gradient-to-br flex items-center justify-center absolute inset-0 transition-transform duration-500 group-hover:scale-110"
                                             :class="[
                                                 getProductGradient(product.id),
-                                                product.image_path
-                                                    ? 'gradient-fallback hidden'
-                                                    : '',
-                                            ]"
-                                        >
-                                            <svg
-                                                class="w-6 h-6 text-white"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                                />
+                                                product.image_path ? 'gradient-fallback hidden' : '',
+                                            ]">
+                                            <svg class="w-10 h-10 text-white opacity-90" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                             </svg>
+                                        </div>
+                                        <!-- Shimmer Effect -->
+                                        <div
+                                            class="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000">
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Product Info -->
-                                <!-- Product Info -->
-                                <div
-                                    class="text-center flex-1 flex flex-col justify-between min-h-0"
-                                >
-                                    <div class="mb-2">
+                                <!-- Enhanced Product Info -->
+                                <div class="text-center flex-1 flex flex-col justify-between">
+                                    <div class="mb-3">
                                         <h3
-                                            class="font-semibold text-gray-900 text-sm leading-tight mb-1 line-clamp-2 overflow-hidden"
-                                            style="
-                                                display: -webkit-box;
-                                                -webkit-line-clamp: 2;
-                                                -webkit-box-orient: vertical;
-                                                max-height: 2.5rem;
-                                            "
-                                        >
+                                            class="font-bold text-gray-900 text-sm leading-tight mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
                                             {{ product.name }}
                                         </h3>
                                         <p
-                                            class="text-xs text-gray-500 mb-2 truncate"
-                                        >
-                                            {{
-                                                product.category_names ||
-                                                "Uncategorized"
-                                            }}
+                                            class="text-xs text-gray-500 mb-2 px-2 py-1 bg-gray-100 rounded-lg inline-block">
+                                            {{ product.category_names || "Uncategorized" }}
                                         </p>
                                     </div>
 
-                                    <div>
+                                    <div class="space-y-2">
                                         <p
-                                            class="text-lg font-bold text-gray-900 mb-1"
-                                        >
-                                            ₱{{
-                                                parseFloat(
-                                                    product.price
-                                                ).toFixed(2)
-                                            }}
+                                            class="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                                            ₱{{ parseFloat(product.price).toFixed(2) }}
                                         </p>
-                                        <p class="text-xs text-gray-600">
-                                            <span
-                                                v-if="
-                                                    product.stock_quantity === 0
-                                                "
-                                                class="text-red-600 font-medium"
-                                                >Out of Stock</span
-                                            >
-                                            <span
-                                                v-else-if="
-                                                    product.stock_quantity <= 5
-                                                "
-                                                class="text-orange-600 font-medium"
-                                                >Low ({{
-                                                    product.stock_quantity
-                                                }})</span
-                                            >
-                                            <span
-                                                v-else
-                                                class="text-green-600 font-medium"
-                                                >Stock ({{
-                                                    product.stock_quantity
-                                                }})</span
-                                            >
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Hover Effect -->
-                                <div
-                                    class="absolute inset-0 bg-blue-50 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                                ></div>
-
-                                <!-- Add to Cart Icon (appears on hover) -->
-                                <div
-                                    class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                >
-                                    <div
-                                        class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg"
-                                    >
-                                        <svg
-                                            class="w-3 h-3 text-white"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                            />
-                                        </svg>
+                                        <div class="flex items-center justify-center space-x-2">
+                                            <span v-if="product.stock_quantity === 0"
+                                                class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">Out
+                                                of Stock</span>
+                                            <span v-else-if="product.stock_quantity <= 5"
+                                                class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-full">Low
+                                                ({{ product.stock_quantity }})</span>
+                                            <span v-else
+                                                class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">Stock
+                                                ({{ product.stock_quantity }})</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Enhanced Add to Cart Animation -->
+                            <div
+                                class="absolute bottom-4 right-4 transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                                <div
+                                    class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Ripple Effect -->
+                            <div
+                                class="absolute inset-0 scale-0 group-active:scale-100 bg-blue-400 rounded-2xl opacity-20 transition-transform duration-200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Empty State -->
+                    <div v-if="products.length === 0" class="text-center py-20 space-y-6">
+                        <div class="relative">
+                            <svg class="mx-auto h-32 w-32 text-gray-300" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2-2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-blue-100 to-transparent rounded-full filter blur-3xl opacity-30">
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-2xl font-bold text-gray-900">No products found</h3>
+                            <p class="text-gray-500 max-w-md mx-auto">Try adjusting your search terms or filters to find
+                                what you're looking for.</p>
+                        </div>
+                        <button @click="clearAllFilters"
+                            class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold">
+                            Clear All Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rest of the cart drawer, payment modal, etc. remains the same -->
+            <!-- Cart Drawer Overlay -->
+            <div v-if="isCartOpen" @click="closeCartDrawer"
+                class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-30 transition-opacity duration-300">
+            </div>
+
+            <!-- Enhanced Cart Drawer -->
+            <div class="fixed top-0 right-0 h-full w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-40 transform transition-transform duration-200 ease-out flex flex-col border-l border-gray-200"
+                :class="isCartOpen ? 'translate-x-0' : 'translate-x-full'">
+                <!-- Enhanced Cart Header -->
+                <div
+                    class="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white p-6 relative overflow-hidden">
+                    <!-- Background Pattern -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20"></div>
+                    <div class="absolute inset-0"
+                        style="background-image: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);">
+                    </div>
+
+                    <!-- Cart Close Button (Fixed Position) -->
+                    <button @click="closeCartDrawer"
+                        class="fixed bottom-8 right-6 z-[60] bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl shadow-2xl hover:shadow-red-500/25 transition-all duration-500 flex items-center group overflow-hidden p-4"
+                        :class="{ 'right-[25rem]': isCartOpen }" v-if="isCartOpen">
+                        <!-- Ripple Effect -->
+                        <div
+                            class="absolute inset-0 bg-white/20 rounded-2xl scale-0 group-hover:scale-110 transition-transform duration-500">
                         </div>
 
-                        <!-- Empty State -->
-                        <div
-                            v-if="products.length === 0"
-                            class="text-center py-16"
-                        >
-                            <svg
-                                class="mx-auto h-24 w-24 text-gray-300"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2-2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                                />
+                        <div class="relative z-10 flex items-center space-x-2">
+                            <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-180" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            <h3 class="mt-4 text-lg font-medium text-gray-900">
-                                No products found
-                            </h3>
-                            <p class="mt-2 text-gray-500">
-                                Try adjusting your search terms
+                            <span class="font-semibold">Close</span>
+                        </div>
+                    </button>
+
+                    <div class="relative z-10 flex flex-col space-y-6">
+                        <div class="space-y-1">
+                            <h3 class="text-2xl font-bold">Current Order</h3>
+                            <div class="flex items-center space-x-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-white rounded-full opacity-60"></div>
+                                    <p class="text-blue-100 text-sm font-medium">
+                                        {{ cart.length }} {{ cart.length === 1 ? 'item' : 'items' }} selected
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Highlighted Total Amount -->
+                        <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/30">
+                            <p class="text-4xl font-black text-white drop-shadow-lg">
+                                ₱{{ total.toFixed(2) }}
+                            </p>
+                            <p class="text-blue-100 text-xs uppercase tracking-wider font-semibold mt-1">
+                                Total Amount
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Cart Sidebar -->
-                <div
-                    class="w-96 bg-white shadow-2xl border-l border-gray-200 flex flex-col"
-                >
-                    <!-- Cart Header -->
-                    <div
-                        class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6"
-                    >
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-xl font-bold">Current Order</h3>
-                                <p class="text-blue-100 text-sm">
-                                    {{ cart.length }} item{{
-                                        cart.length !== 1 ? "s" : ""
-                                    }}
-                                </p>
+                <!-- Cart Items (Enhanced) -->
+                <div class="flex-1 overflow-y-auto">
+                    <div v-if="cart.length === 0"
+                        class="flex flex-col items-center justify-center h-full text-gray-500 p-8 space-y-6">
+                        <div class="relative">
+                            <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.8 7.2M7 13l-1.8 7.2m0 0h12.6M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8" />
+                            </svg>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-blue-100 to-transparent rounded-full filter blur-2xl opacity-30">
                             </div>
-                            <div class="text-right">
-                                <p class="text-2xl font-bold">
-                                    ₱{{ total.toFixed(2) }}
-                                </p>
-                                <p class="text-blue-100 text-xs">Total</p>
-                            </div>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <h4 class="text-xl font-bold text-gray-900">Cart is empty</h4>
+                            <p class="text-gray-500">Start adding products to create an order</p>
                         </div>
                     </div>
 
-                    <!-- Cart Items -->
-                    <div class="flex-1 overflow-y-auto">
-                        <div
-                            v-if="cart.length === 0"
-                            class="flex flex-col items-center justify-center h-full text-gray-500 p-8"
-                        >
-                            <svg
-                                class="w-20 h-20 mb-4 text-gray-300"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.8 7.2M7 13l-1.8 7.2m0 0h12.6M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"
-                                />
-                            </svg>
-                            <h4 class="text-lg font-medium text-gray-900 mb-2">
-                                Cart is empty
-                            </h4>
-                            <p class="text-center text-gray-500">
-                                Select products to add them to your order
-                            </p>
-                        </div>
+                    <div v-else class="p-4 space-y-4">
+                        <div v-for="(item, index) in cart" :key="index"
+                            class="bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-2xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-300 group">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex-1 pr-3">
+                                    <h4
+                                        class="font-bold text-gray-900 text-sm leading-tight mb-1 group-hover:text-blue-600 transition-colors duration-300">
+                                        {{ item.name }}
+                                    </h4>
+                                    <p class="text-xs text-gray-500 font-medium">
+                                        {{ item.barcode }} • {{ item.category?.name || "No Category" }}
+                                    </p>
+                                </div>
+                                <button @click="removeFromCart(index)"
+                                    class="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-xl transition-all duration-200 group">
+                                    <svg class="w-4 h-4 group-hover:scale-110 transition-transform duration-200"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
 
-                        <div v-else class="p-4 space-y-3">
-                            <div
-                                v-for="(item, index) in cart"
-                                :key="index"
-                                class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:bg-gray-100 transition-colors"
-                            >
-                                <div
-                                    class="flex justify-between items-start mb-3"
-                                >
-                                    <div class="flex-1 pr-3">
-                                        <h4
-                                            class="font-semibold text-gray-900 text-sm leading-tight mb-1"
-                                        >
-                                            {{ item.name }}
-                                        </h4>
-                                        <p class="text-xs text-gray-500">
-                                            {{ item.barcode }} •
-                                            {{
-                                                item.category?.name ||
-                                                "No Category"
-                                            }}
-                                        </p>
-                                    </div>
-                                    <button
-                                        @click="removeFromCart(index)"
-                                        class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-                                    >
-                                        <svg
-                                            class="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center bg-white rounded-xl border-2 border-gray-200 shadow-sm">
+                                    <button @click="decrementQuantity(index)"
+                                        class="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-white hover:bg-blue-500 rounded-l-xl transition-all duration-200 group">
+                                        <svg class="w-4 h-4 group-hover:scale-110 transition-transform duration-200"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M20 12H4" />
+                                        </svg>
+                                    </button>
+                                    <span class="w-16 text-center text-sm font-bold py-2 bg-gray-50">{{ item.quantity
+                                        }}</span>
+                                    <button @click="incrementQuantity(index)"
+                                        :disabled="item.quantity >= item.stock_quantity"
+                                        class="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-white hover:bg-blue-500 rounded-r-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group">
+                                        <svg class="w-4 h-4 group-hover:scale-110 transition-transform duration-200"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
                                     </button>
                                 </div>
 
-                                <div class="flex items-center justify-between">
-                                    <div
-                                        class="flex items-center bg-white rounded-lg border border-gray-200"
-                                    >
-                                        <button
-                                            @click="decrementQuantity(index)"
-                                            class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-l-lg transition-colors"
-                                        >
-                                            <svg
-                                                class="w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M20 12H4"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <span
-                                            class="w-12 text-center text-sm font-semibold py-2 border-x border-gray-200"
-                                            >{{ item.quantity }}</span
-                                        >
-                                        <button
-                                            @click="incrementQuantity(index)"
-                                            :disabled="
-                                                item.quantity >=
-                                                item.stock_quantity
-                                            "
-                                            class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            <svg
-                                                class="w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <div class="text-right">
-                                        <p class="text-xs text-gray-500">
-                                            ₱{{
-                                                parseFloat(item.price).toFixed(
-                                                    2
-                                                )
-                                            }}
-                                            each
-                                        </p>
-                                        <p class="font-bold text-gray-900">
-                                            ₱{{
-                                                (
-                                                    item.quantity * item.price
-                                                ).toFixed(2)
-                                            }}
-                                        </p>
-                                    </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 font-medium">
+                                        ₱{{ parseFloat(item.price).toFixed(2) }} each
+                                    </p>
+                                    <p class="font-bold text-gray-900 text-lg">
+                                        ₱{{ (item.quantity * item.price).toFixed(2) }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Cart Summary & Actions -->
-                    <!-- Cart Summary & Actions -->
-                    <div class="border-t border-gray-200 bg-gray-50 p-6">
-                        <!-- Order Summary -->
-                        <div class="space-y-3 mb-6">
-                            <div
-                                class="flex justify-between text-lg font-bold border-t pt-3"
-                            >
-                                <span>Total:</span>
-                                <span class="text-blue-600"
-                                    >₱{{ total.toFixed(2) }}</span
-                                >
+                <!-- Enhanced Cart Footer -->
+                <div class="border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50/50 backdrop-blur-xl p-6">
+                    <!-- Order Summary -->
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-center text-2xl font-bold border-t border-gray-300 pt-4">
+                            <span class="text-gray-800">Total:</span>
+                            <span class="text-blue-600 bg-blue-100 px-3 py-1 rounded-xl">₱{{ total.toFixed(2) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Complete Sale Button -->
+                    <button @click="showPaymentModal = true" :disabled="cart.length === 0"
+                        class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl flex items-center justify-center space-x-3 mb-4 relative overflow-hidden group"
+                        :class="cart.length === 0
+                                ? 'bg-gray-400 text-white cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                            ">
+                        <!-- Button Ripple Effect -->
+                        <div
+                            class="absolute inset-0 bg-white/20 transform scale-0 group-hover:scale-100 transition-transform duration-500 rounded-2xl">
+                        </div>
+
+                        <div class="relative z-10 flex items-center space-x-3">
+                            <svg class="w-6 h-6 transition-transform duration-300 group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span>
+                                {{ cart.length === 0 ? "Add items to cart" : "Proceed to Payment" }}
+                            </span>
+                        </div>
+                    </button>
+
+                    <!-- Enhanced Receipt Section -->
+                    <div v-if="lastSaleReceipt"
+                        class="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl shadow-lg relative overflow-hidden">
+                        <!-- Success Pattern -->
+                        <div class="absolute inset-0 opacity-5">
+                            <div class="absolute inset-0"
+                                style="background-image: radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.3) 0%, transparent 70%);">
                             </div>
                         </div>
 
-                        <!-- Complete Sale Button -->
-                        <button
-                            @click="showPaymentModal = true"
-                            :disabled="cart.length === 0"
-                            class="w-full py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 mb-4"
-                            :class="
-                                cart.length === 0
-                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
-                            "
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                                />
-                            </svg>
-                            <span>
-                                {{
-                                    cart.length === 0
-                                        ? "Add items to cart"
-                                        : "Proceed to Payment"
-                                }}
-                            </span>
-                        </button>
-
-                        <!-- Receipt Section -->
-                        <div
-                            v-if="lastSaleReceipt"
-                            class="p-4 bg-green-50 border border-green-200 rounded-xl"
-                        >
-                            <div class="flex items-center mb-3">
-                                <svg
-                                    class="w-5 h-5 text-green-600 mr-2"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                                <h4 class="font-bold text-green-800">
-                                    Sale Completed!
-                                </h4>
+                        <div class="relative z-10">
+                            <div class="flex items-center mb-4 space-x-3">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <h4 class="font-bold text-green-800 text-lg">Sale Completed!</h4>
                             </div>
 
                             <!-- Transaction Summary -->
-                            <div class="text-sm text-green-700 mb-4 space-y-1">
-                                <p>
-                                    <strong>Receipt:</strong>
-                                    {{ lastSaleReceipt.receipt_id }}
+                            <div class="text-sm text-green-700 mb-6 space-y-2 bg-white/50 p-4 rounded-xl">
+                                <p class="flex justify-between">
+                                    <span class="font-semibold">Receipt:</span>
+                                    <span class="font-mono">{{ lastSaleReceipt.receipt_id }}</span>
                                 </p>
-                                <p>
-                                    <strong>Total:</strong> ₱{{
-                                        parseFloat(
-                                            lastSaleReceipt.total
-                                        ).toFixed(2)
-                                    }}
+                                <p class="flex justify-between">
+                                    <span class="font-semibold">Total:</span>
+                                    <span class="font-bold text-green-800">₱{{
+                                        parseFloat(lastSaleReceipt.total).toFixed(2) }}</span>
                                 </p>
-                                <p v-if="lastSaleReceipt.payment_amount">
-                                    <strong>Payment:</strong> ₱{{
-                                        parseFloat(
-                                            lastSaleReceipt.payment_amount
-                                        ).toFixed(2)
-                                    }}
+                                <p v-if="lastSaleReceipt.payment_amount" class="flex justify-between">
+                                    <span class="font-semibold">Payment:</span>
+                                    <span>₱{{ parseFloat(lastSaleReceipt.payment_amount).toFixed(2) }}</span>
                                 </p>
-                                <p v-if="lastSaleReceipt.change_amount">
-                                    <strong>Change:</strong> ₱{{
-                                        parseFloat(
-                                            lastSaleReceipt.change_amount
-                                        ).toFixed(2)
-                                    }}
+                                <p v-if="lastSaleReceipt.change_amount" class="flex justify-between">
+                                    <span class="font-semibold">Change:</span>
+                                    <span>₱{{ parseFloat(lastSaleReceipt.change_amount).toFixed(2) }}</span>
                                 </p>
                             </div>
 
-                            <button
-                                @click="generateReceipt"
-                                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2 font-semibold transition-colors"
-                            >
-                                <svg
-                                    class="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    />
-                                </svg>
-                                <span>Print Receipt</span>
+                            <button @click="generateReceipt"
+                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 flex items-center justify-center space-x-3 font-bold transition-all duration-300 shadow-lg hover:shadow-xl group relative overflow-hidden">
+                                <!-- Button Animation -->
+                                <div
+                                    class="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+                                </div>
+
+                                <div class="relative z-10 flex items-center space-x-3">
+                                    <svg class="h-5 w-5 group-hover:scale-110 transition-transform duration-200"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span>Print Receipt</span>
+                                </div>
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Payment Modal -->
-                    <div
-                        v-if="showPaymentModal"
-                        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                    >
-                        <div
-                            class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
-                        >
-                            <!-- Modal Header -->
-                            <div class="flex items-center justify-between mb-6">
-                                <h3 class="text-2xl font-bold text-gray-900">
+            <!-- Enhanced Payment Modal -->
+            <div v-if="showPaymentModal"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div
+                    class="bg-white/95 backdrop-blur-xl rounded-3xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 relative">
+                    <!-- Modal Background Pattern -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-3xl"></div>
+
+                    <div class="relative z-10">
+                        <!-- Enhanced Modal Header -->
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h3
+                                    class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
                                     Payment Details
                                 </h3>
-                                <button
-                                    @click="closePaymentModal"
-                                    class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"
-                                >
-                                    <svg
-                                        class="w-6 h-6"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"
-                                        />
-                                    </svg>
+                                <p class="text-gray-500 text-sm mt-1">Complete your transaction</p>
+                            </div>
+                            <button @click="closePaymentModal"
+                                class="text-gray-400 hover:text-gray-600 p-3 rounded-2xl hover:bg-gray-100 transition-all duration-200 group">
+                                <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Enhanced Order Summary -->
+                        <div
+                            class="mb-8 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-200">
+                            <h4 class="font-bold text-gray-900 mb-4 text-lg">Order Summary</h4>
+                            <div class="space-y-3 mb-6">
+                                <div v-for="(item, index) in cart" :key="index"
+                                    class="flex justify-between items-center text-sm p-3 bg-white rounded-xl">
+                                    <div class="flex-1">
+                                        <span class="font-semibold text-gray-900">{{ item.name }}</span>
+                                        <span class="text-gray-500 ml-2">x{{ item.quantity }}</span>
+                                    </div>
+                                    <span class="font-bold text-gray-900">₱{{ (item.quantity * item.price).toFixed(2)
+                                        }}</span>
+                                </div>
+                            </div>
+                            <div class="border-t-2 border-gray-300 pt-4 flex justify-between items-center">
+                                <span class="text-xl font-bold text-gray-900">Total Amount:</span>
+                                <span class="text-2xl font-black text-blue-600">₱{{ total.toFixed(2) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Payment Input -->
+                        <div class="mb-8">
+                            <label for="paymentAmount" class="block text-sm font-bold text-gray-700 mb-3">
+                                Amount Received
+                            </label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-2xl font-bold">₱</span>
+                                </div>
+                                <input id="paymentAmount" v-model="paymentAmount" @input="calculateChange"
+                                    @focus="$event.target.select()" type="number" step="0.01" min="0" placeholder="0.00"
+                                    class="block w-full pl-14 pr-6 py-5 text-2xl font-bold bg-white border-3 rounded-2xl focus:outline-none focus:ring-4 transition-all duration-300 placeholder-gray-400"
+                                    :class="{
+                                        'border-red-300 focus:ring-red-500/20 focus:border-red-500 bg-red-50': paymentAmount && parseFloat(paymentAmount) < total,
+                                        'border-green-300 focus:ring-green-500/20 focus:border-green-500 bg-green-50': paymentAmount && parseFloat(paymentAmount) >= total,
+                                        'border-gray-300 focus:ring-blue-500/20 focus:border-blue-500': !paymentAmount
+                                    }" />
+                            </div>
+
+                            <!-- Enhanced Quick Amount Buttons -->
+                            <div class="flex flex-wrap gap-3 mt-6">
+                                <button v-for="amount in quickAmounts" :key="amount" @click="setPaymentAmount(amount)"
+                                    class="px-4 py-3 text-sm font-bold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 rounded-xl hover:from-blue-200 hover:to-blue-300 hover:scale-105 transition-all duration-200 border border-blue-300">
+                                    ₱{{ amount }}
+                                </button>
+                                <button @click="setExactAmount"
+                                    class="px-4 py-3 text-sm font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-700 rounded-xl hover:from-green-200 hover:to-emerald-300 hover:scale-105 transition-all duration-200 border border-green-300">
+                                    Exact Amount
                                 </button>
                             </div>
+                        </div>
 
-                            <!-- Order Summary in Modal -->
-                            <div class="mb-6 p-4 bg-gray-50 rounded-xl">
-                                <h4 class="font-semibold text-gray-900 mb-3">
-                                    Order Summary
-                                </h4>
-                                <div class="space-y-2 mb-4">
-                                    <div
-                                        v-for="(item, index) in cart"
-                                        :key="index"
-                                        class="flex justify-between text-sm"
-                                    >
-                                        <span
-                                            >{{ item.name }} x{{
-                                                item.quantity
-                                            }}</span
-                                        >
-                                        <span
-                                            >₱{{
-                                                (
-                                                    item.quantity * item.price
-                                                ).toFixed(2)
-                                            }}</span
-                                        >
-                                    </div>
-                                </div>
+                        <!-- Enhanced Change Display -->
+                        <div v-if="paymentAmount && parseFloat(paymentAmount) > 0"
+                            class="p-6 rounded-2xl mb-6 relative overflow-hidden" :class="change >= 0
+                                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'
+                                    : 'bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200'
+                                ">
+                            <!-- Background Effect -->
+                            <div class="absolute inset-0 opacity-10"
+                                :class="change >= 0 ? 'bg-gradient-to-br from-green-400 to-emerald-400' : 'bg-gradient-to-br from-red-400 to-rose-400'">
+                            </div>
+
+                            <div class="relative z-10 flex justify-between items-center">
+                                <span class="font-bold text-xl"
+                                    :class="change >= 0 ? 'text-green-700' : 'text-red-700'">
+                                    {{ change >= 0 ? "Change:" : "Insufficient:" }}
+                                </span>
+                                <span class="text-3xl font-black"
+                                    :class="change >= 0 ? 'text-green-900' : 'text-red-900'">
+                                    ₱{{ Math.abs(change).toFixed(2) }}
+                                </span>
+                            </div>
+
+                            <!-- Enhanced Warning -->
+                            <div v-if="change < 0"
+                                class="mt-4 text-sm text-red-600 flex items-center bg-white/60 p-3 rounded-xl">
+                                <svg class="w-5 h-5 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <span class="font-semibold">Need ₱{{ (total - parseFloat(paymentAmount)).toFixed(2) }}
+                                    more</span>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Action Buttons -->
+                        <div class="flex gap-4">
+                            <button @click="closePaymentModal"
+                                class="flex-1 py-4 px-6 border-2 border-gray-300 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 group">
+                                <span
+                                    class="group-hover:scale-105 inline-block transition-transform duration-200">Cancel</span>
+                            </button>
+                            <button @click="processSale"
+                                :disabled="cart.length === 0 || (paymentAmount && parseFloat(paymentAmount) < total)"
+                                class="flex-1 py-4 px-6 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 relative overflow-hidden group"
+                                :class="cart.length === 0 || (paymentAmount && parseFloat(paymentAmount) < total)
+                                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl'
+                                    ">
+                                <!-- Success Button Animation -->
                                 <div
-                                    class="border-t pt-3 flex justify-between items-center font-bold text-lg"
-                                >
-                                    <span>Total Amount:</span>
-                                    <span class="text-blue-600"
-                                        >₱{{ total.toFixed(2) }}</span
-                                    >
-                                </div>
-                            </div>
-
-                            <!-- Payment Amount Input -->
-                            <div class="mb-6">
-                                <label
-                                    for="paymentAmount"
-                                    class="block text-sm font-medium text-gray-700 mb-3"
-                                >
-                                    Amount Received
-                                </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-                                    >
-                                        <span class="text-gray-500 text-xl"
-                                            >₱</span
-                                        >
-                                    </div>
-                                    <input
-                                        id="paymentAmount"
-                                        v-model="paymentAmount"
-                                        @input="calculateChange"
-                                        @focus="$event.target.select()"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        placeholder="0.00"
-                                        class="block w-full pl-10 pr-4 py-4 text-xl font-semibold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        :class="{
-                                            'border-red-300 focus:ring-red-500':
-                                                paymentAmount &&
-                                                parseFloat(paymentAmount) <
-                                                    total,
-                                            'border-green-300 focus:ring-green-500':
-                                                paymentAmount &&
-                                                parseFloat(paymentAmount) >=
-                                                    total,
-                                        }"
-                                    />
+                                    class="absolute inset-0 bg-white/20 transform scale-0 group-hover:scale-110 transition-transform duration-500 rounded-2xl">
                                 </div>
 
-                                <!-- Quick Amount Buttons -->
-                                <div class="flex flex-wrap gap-2 mt-4">
-                                    <button
-                                        v-for="amount in quickAmounts"
-                                        :key="amount"
-                                        @click="setPaymentAmount(amount)"
-                                        class="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
-                                    >
-                                        ₱{{ amount }}
-                                    </button>
-                                    <button
-                                        @click="setExactAmount"
-                                        class="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium"
-                                    >
-                                        Exact Amount
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Change Display -->
-                            <div
-                                v-if="
-                                    paymentAmount &&
-                                    parseFloat(paymentAmount) > 0
-                                "
-                                class="p-4 rounded-xl mb-6"
-                                :class="
-                                    change >= 0
-                                        ? 'bg-green-50 border border-green-200'
-                                        : 'bg-red-50 border border-red-200'
-                                "
-                            >
-                                <div class="flex justify-between items-center">
-                                    <span
-                                        class="font-semibold text-lg"
-                                        :class="
-                                            change >= 0
-                                                ? 'text-green-700'
-                                                : 'text-red-700'
-                                        "
-                                    >
-                                        {{
-                                            change >= 0
-                                                ? "Change:"
-                                                : "Insufficient Payment:"
-                                        }}
-                                    </span>
-                                    <span
-                                        class="text-2xl font-bold"
-                                        :class="
-                                            change >= 0
-                                                ? 'text-green-900'
-                                                : 'text-red-900'
-                                        "
-                                    >
-                                        ₱{{ Math.abs(change).toFixed(2) }}
-                                    </span>
-                                </div>
-
-                                <!-- Insufficient payment warning -->
-                                <div
-                                    v-if="change < 0"
-                                    class="mt-3 text-sm text-red-600 flex items-center"
-                                >
-                                    <svg
-                                        class="w-4 h-4 mr-2"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
-                                    Need ₱{{
-                                        (
-                                            total - parseFloat(paymentAmount)
-                                        ).toFixed(2)
-                                    }}
-                                    more
-                                </div>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="flex gap-3">
-                                <button
-                                    @click="closePaymentModal"
-                                    class="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    @click="processSale"
-                                    :disabled="
-                                        cart.length === 0 ||
-                                        (paymentAmount &&
-                                            parseFloat(paymentAmount) < total)
-                                    "
-                                    class="flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
-                                    :class="
-                                        cart.length === 0 ||
-                                        (paymentAmount &&
-                                            parseFloat(paymentAmount) < total)
-                                            ? 'bg-gray-400 text-white cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
-                                    "
-                                >
-                                    <svg
-                                        class="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M5 13l4 4L19 7"
-                                        />
+                                <div class="relative z-10 flex items-center space-x-3">
+                                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span>
-                                        {{
-                                            cart.length === 0
-                                                ? "Add Items"
-                                                : paymentAmount &&
-                                                  parseFloat(paymentAmount) <
-                                                      total
-                                                ? "Insufficient Payment"
-                                                : "Complete Sale"
-                                        }}
-                                    </span>
-                                </button>
-                            </div>
+                                        {{ cart.length === 0 ? "Add Items" : paymentAmount && parseFloat(paymentAmount)
+                                            < total ? "Insufficient Payment" : "Complete Sale" }} </span>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -969,6 +753,9 @@ const categories = ref(props.categories || []);
 const stats = ref(props.stats || {});
 const lastSaleReceipt = ref(null);
 const searchTimeout = ref(null);
+
+// Cart drawer state
+const isCartOpen = ref(false);
 
 const total = computed(() => {
     return cart.value.reduce(
@@ -1027,8 +814,7 @@ const getImageUrl = (imagePath) => {
 const handleImageError = (event) => {
     console.warn(`Image failed to load: ${event.target.src}`);
     event.target.style.display = "none";
-    const fallback =
-        event.target.parentElement.querySelector(".gradient-fallback");
+    const fallback = event.target.parentElement.querySelector(".gradient-fallback");
     if (fallback) {
         fallback.classList.remove("hidden");
     }
@@ -1038,16 +824,33 @@ const getProductGradient = (productId) => {
     return productGradients[productId % productGradients.length];
 };
 
+// Cart drawer functions
+const toggleCartDrawer = () => {
+    isCartOpen.value = !isCartOpen.value;
+};
+
+const openCartDrawer = () => {
+    isCartOpen.value = true;
+};
+
+const closeCartDrawer = () => {
+    isCartOpen.value = false;
+};
+
+// Watch for cart changes
+watch(cart, (newCart) => {
+    if (newCart.length === 0 && !lastSaleReceipt.value) {
+        isCartOpen.value = false;
+    }
+}, { deep: true });
+
 watch(
     () => page.props.flash?.receipt_data,
     (newReceiptData) => {
         if (newReceiptData) {
             lastSaleReceipt.value = newReceiptData;
             console.log("Receipt data received:", newReceiptData);
-            console.log(
-                "Products in receipt:",
-                newReceiptData.items.map((item) => item.display_name)
-            );
+            console.log("Products in receipt:", newReceiptData.items.map((item) => item.display_name));
         }
     },
     { immediate: true }
@@ -1130,6 +933,10 @@ const addToCart = (product) => {
     } else {
         cart.value.push({ ...product, quantity: 1 });
     }
+
+    // Auto-open drawer when product is added
+    openCartDrawer();
+
     console.log("Added to cart:", product.name);
 };
 
@@ -1224,6 +1031,8 @@ const processSale = () => {
                 paymentAmount.value = "";
                 change.value = 0;
                 showPaymentModal.value = false;
+                // Keep drawer open to show receipt
+                isCartOpen.value = true;
             },
             onError: () => {
                 notify("Sale processing failed. Please try again.", "error");
@@ -1498,20 +1307,118 @@ const closePaymentModal = () => {
     overflow: hidden;
 }
 
+/* Enhanced Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
+    background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: linear-gradient(to bottom, #94a3b8, #64748b);
+}
+
+/* Custom Pulse Animations for Stock Status */
+@keyframes pulse-red {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes pulse-orange {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+    }
+}
+
+@keyframes pulse-green {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}
+
+.pulse-red {
+    animation: pulse-red 2s infinite;
+}
+
+.pulse-orange {
+    animation: pulse-orange 2s infinite;
+}
+
+.pulse-green {
+    animation: pulse-green 2s infinite;
+}
+
+/* Glass Morphism Effect */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Smooth Transitions for Interactive Elements */
+.smooth-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Button Hover Effects */
+.btn-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Subtle Glow Effects */
+.glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-green {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+/* Card Hover Animation */
+.card-hover:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Grid Improvements */
+@media (max-width: 640px) {
+    .grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (min-width: 1400px) {
+    .grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
 }
 </style>
