@@ -124,7 +124,7 @@
                                         <option value="stock">Sort by Stock</option>
                                         <option value="category">Sort by Category</option>
                                         <option value="item_code">Sort by Item Code</option>
-                                        <option value="barcode">Sort by Barcode</option>
+                                        <!-- <option value="barcode">Sort by Barcode</option> -->
                                     </select>
                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
