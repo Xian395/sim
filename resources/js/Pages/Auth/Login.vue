@@ -61,17 +61,17 @@ const submit = () => {
         </div>
 
         <div
-            class="w-full max-w-lg relative z-10 bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/40 p-10"
+            class="w-full max-w-md relative z-10 bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/40 p-8"
         >
-            <div class="text-center mb-8">
-                <img
-                    src="/logo1.png"
-                    alt="Company Logo"
-                    class="mx-auto h-20 w-auto mb-4"
-                />
-                <h2 class="text-3xl font-bold text-gray-900">
-                    3R QuickPay Minimart
-                </h2>
+            <div class="text-center mb-6 relative">
+                <div class="relative h-32 flex items-center justify-center">
+                    <img
+                        src="/logo1.png"
+                        alt="Company Logo"
+                        class="h-40 w-auto relative z-10"
+                        style="margin-top: -1rem; margin-bottom: -1rem;"
+                    />
+                </div>
                 <p class="text-gray-500 mt-2 text-sm">
                     Sign in to continue managing your operations
                 </p>
