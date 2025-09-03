@@ -18,7 +18,7 @@
                     class="bg-white/90 backdrop-blur-xl shadow-lg border border-white/20 sm:rounded-2xl mx-4 mt-4 mb-2">
                     <!-- Cart Toggle Button with Enhanced Animation -->
                     <button @click="toggleCartDrawer"
-                        class="fixed top-[260%] right-6 z-[60] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 flex items-center group overflow-hidden"
+                        class="fixed top-[58%] right-6 z-[60] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 flex items-center group overflow-hidden"
                         :class="[
                             { 'right-[25rem]': isCartOpen },
                             cart.length > 0 ? 'p-4 space-x-3 pr-6' : 'p-4'
@@ -189,7 +189,7 @@
                                 <span class="text-sm font-semibold text-gray-700">Out of Stock: <span
                                         class="text-red-600">{{ stats.out_of_stock }}</span></span>
                             </div>
-                            <div class="ml-auto flex items-center space-x-2">
+                            <div class="flex items-center space-x-2">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

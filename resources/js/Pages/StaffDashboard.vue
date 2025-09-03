@@ -183,20 +183,23 @@ import UnAuthorized from "@/Components/UnAuthorized.vue";
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
-// These would typically come from your backend/props
-const todaysTransactions = ref(0); // You can pass this as a prop
+const props = defineProps({
+  todaysActivity: {
+    type: Object,
+    default: () => ({ transactions: 0, total_sales: 0 })
+  }
+});
 
-// Date and Time reactive data
+const todaysTransactions = ref(props.todaysActivity.transactions);
+
 const currentTime = ref('');
 const currentDate = ref('');
 const currentDay = ref('');
 
-// Calendar data
 const currentCalendarDate = ref(new Date());
 const selectedDate = ref(null);
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// Update time every second
 const updateDateTime = () => {
   const now = new Date();
   currentTime.value = now.toLocaleTimeString('en-US', {
@@ -228,7 +231,6 @@ onUnmounted(() => {
   }
 });
 
-// Calendar computed properties
 const currentMonthYear = computed(() => {
   return currentCalendarDate.value.toLocaleDateString('en-US', {
     month: 'long',
@@ -240,15 +242,12 @@ const calendarDates = computed(() => {
   const year = currentCalendarDate.value.getFullYear();
   const month = currentCalendarDate.value.getMonth();
   
-  // First day of the month
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   
-  // Start from the beginning of the week
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - startDate.getDay());
   
-  // End at the end of the week
   const endDate = new Date(lastDay);
   endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
   
