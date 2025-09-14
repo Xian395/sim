@@ -57,385 +57,482 @@
                     </div>
                 </div>
 
-                <!-- Inventory Report Controls -->
+                <!-- Reports Tabs Section -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
-                        <h2 class="text-2xl font-black text-green-700">Inventory Report</h2>
-                        <div class="flex space-x-2">
-                            <ButtonNew
-                                types="view"
-                                @click="showInventoryReport = !showInventoryReport; loadInventoryReport()"
-                            >
-                                {{ showInventoryReport ? 'Hide' : 'Show' }} Inventory Report
-                            </ButtonNew>
-                            <ButtonNew
-                                types="pdf"
-                                size="md"
-                                tooltips="Export Inventory Report"
-                                @click="exportInventoryReport"
-                                v-if="showInventoryReport && inventoryReportData"
-                            >
-                                PDF
-                            </ButtonNew>
-                        </div>
-                    </div>
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Business Reports</h2>
 
-                    <!-- Inventory Report Section -->
-                    <div v-if="showInventoryReport" class="p-6 bg-gray-50 border-b">
-                        <div v-if="inventoryReportData" class="space-y-6">
-                            <!-- Summary Stats -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Total Products</div>
-                                    <div class="text-2xl font-bold text-blue-600">
-                                        {{ inventoryReportData.summary.totalProducts }}
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-8" aria-label="Tabs">
+                                <button
+                                    @click="activeTab = 'inventory'"
+                                    :class="[
+                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                                        activeTab === 'inventory'
+                                            ? 'border-green-500 text-green-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ]"
+                                >
+                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    Inventory Report
+                                </button>
+
+                                <button
+                                    @click="activeTab = 'brandSales'; brandReportFilters.period = 'daily'; loadBrandSalesReport()"
+                                    :class="[
+                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                                        activeTab === 'brandSales'
+                                            ? 'border-purple-500 text-purple-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ]"
+                                >
+                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    </svg>
+                                    Brand Sales Report
+                                </button>
+
+                                <button
+                                    @click="activeTab = 'sales'"
+                                    :class="[
+                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+                                        activeTab === 'sales'
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ]"
+                                >
+                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                    Sales Reports
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="mt-6">
+                            <!-- Inventory Report Tab -->
+                            <div v-if="activeTab === 'inventory'" class="space-y-6">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Inventory Overview</h3>
+                                        <p class="text-sm text-gray-600">Monitor stock levels and inventory values</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <ButtonNew
+                                            types="view"
+                                            @click="showInventoryReport = !showInventoryReport; loadInventoryReport()"
+                                        >
+                                            {{ showInventoryReport ? 'Hide' : 'Load' }} Report
+                                        </ButtonNew>
+                                        <ButtonNew
+                                            types="pdf"
+                                            size="md"
+                                            tooltips="Export Inventory Report"
+                                            @click="exportInventoryReport"
+                                            v-if="showInventoryReport && inventoryReportData"
+                                        >
+                                            Export PDF
+                                        </ButtonNew>
                                     </div>
                                 </div>
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Total Inventory Value</div>
-                                    <div class="text-2xl font-bold text-green-600">
-                                        ₱{{ formatCurrency(inventoryReportData.summary.totalValue || 0) }}
+
+                                <div v-if="showInventoryReport">
+                                    <div v-if="inventoryReportData" class="space-y-6">
+                                        <!-- Summary Stats -->
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-blue-600">Total Products</div>
+                                                        <div class="text-2xl font-bold text-blue-900">
+                                                            {{ inventoryReportData.summary.totalProducts }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-blue-500">
+                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-green-600">Total Value</div>
+                                                        <div class="text-2xl font-bold text-green-900">
+                                                            ₱{{ formatCurrency(inventoryReportData.summary.totalValue || 0) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-green-500">
+                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-yellow-600">Low Stock</div>
+                                                        <div class="text-2xl font-bold text-yellow-900">
+                                                            {{ inventoryReportData.summary.lowStockCount }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-yellow-500">
+                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-red-600">Out of Stock</div>
+                                                        <div class="text-2xl font-bold text-red-900">
+                                                            {{ inventoryReportData.summary.outOfStockCount }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-red-500">
+                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Inventory Details Table -->
+                                        <div class="bg-white rounded-lg border border-gray-200">
+                                            <div class="px-6 py-4 border-b border-gray-200">
+                                                <h4 class="text-lg font-medium text-gray-900">Product Inventory Details</h4>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-gray-200">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="bg-white divide-y divide-gray-200">
+                                                        <tr v-for="product in inventoryReportData.products" :key="product.id" class="hover:bg-gray-50">
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                                {{ product.name }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                {{ product.brand }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                {{ product.stock_quantity }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                ₱{{ formatCurrency(product.price) }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                ₱{{ formatCurrency(product.value) }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                                <span :class="getStatusBadgeClass(product.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                                                    {{ product.status }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Low Stock Items</div>
-                                    <div class="text-2xl font-bold text-yellow-600">
-                                        {{ inventoryReportData.summary.lowStockCount }}
-                                    </div>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Out of Stock Items</div>
-                                    <div class="text-2xl font-bold text-red-600">
-                                        {{ inventoryReportData.summary.outOfStockCount }}
+
+                                    <div v-if="loadingInventoryReport" class="text-center py-12">
+                                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                                        <p class="mt-2 text-gray-600">Loading inventory report...</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Inventory Details Table -->
-                            <div class="bg-white p-6 rounded-lg shadow border">
-                                <h3 class="text-lg font-semibold mb-4">Product Inventory Details</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <tr v-for="product in inventoryReportData.products" :key="product.id">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ product.name }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ product.brand }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ product.stock_quantity }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₱{{ formatCurrency(product.price) }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₱{{ formatCurrency(product.value) }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span :class="getStatusBadgeClass(product.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                                        {{ product.status }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <!-- Brand Sales Report Tab -->
+                            <div v-if="activeTab === 'brandSales'" class="space-y-6">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Brand Sales Analysis</h3>
+                                        <p class="text-sm text-gray-600">Track sales performance by brand across different periods</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <ButtonNew
+                                            types="pdf"
+                                            size="md"
+                                            tooltips="Export Brand Sales Report"
+                                            @click="exportBrandSalesReport"
+                                            v-if="brandSalesReportData"
+                                        >
+                                            Export PDF
+                                        </ButtonNew>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                        <select
+                                            v-model="brandReportFilters.period"
+                                            @change="loadBrandSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        >
+                                            <option value="" disabled>Select a period</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    </div>
+
+                                    <div v-if="brandReportFilters.period === 'daily' || brandReportFilters.period === 'weekly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                        <input
+                                            v-model="brandReportFilters.date"
+                                            @change="loadBrandSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="brandReportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                        <select
+                                            v-model="brandReportFilters.year"
+                                            @change="loadBrandSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        >
+                                            <option v-for="year in availableYears" :key="year" :value="year">
+                                                {{ year }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div v-if="brandReportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                                        <select
+                                            v-model="brandReportFilters.month"
+                                            @change="loadBrandSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        >
+                                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                                {{ month }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div v-if="brandSalesReportData" class="bg-white rounded-lg border border-gray-200">
+                                    <div class="px-6 py-4 border-b border-gray-200">
+                                        <h4 class="text-lg font-medium text-gray-900">Sales by Brand</h4>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <tr v-for="brandSale in brandSalesReportData.brandSales" :key="brandSale.brand" class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {{ brandSale.brand }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        <span class="font-medium text-green-600">₱{{ formatCurrency(brandSale.totalAmount) }}</span>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {{ brandSale.totalTransactions }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div v-if="loadingBrandSalesReport" class="text-center py-12">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                    <p class="mt-2 text-gray-600">Loading brand sales report...</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div v-if="loadingInventoryReport" class="text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                            <p class="mt-2 text-gray-600">Loading inventory report...</p>
+                            <!-- Sales Reports Tab -->
+                            <div v-if="activeTab === 'sales'" class="space-y-6">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Sales Analytics</h3>
+                                        <p class="text-sm text-gray-600">Comprehensive sales reporting with charts and breakdowns</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <ButtonNew
+                                            types="view"
+                                            @click="showSalesReport = !showSalesReport"
+                                        >
+                                            {{ showSalesReport ? 'Hide' : 'Load' }} Report
+                                        </ButtonNew>
+                                        <ButtonNew
+                                            types="pdf"
+                                            size="md"
+                                            tooltips="Export Sales Report"
+                                            @click="exportSalesReport"
+                                            v-if="showSalesReport && salesReportData"
+                                        >
+                                            Export PDF
+                                        </ButtonNew>
+                                    </div>
+                                </div>
+
+                                <div v-if="showSalesReport">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                            <select
+                                                v-model="reportFilters.period"
+                                                @change="loadSalesReport"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="" disabled>Select a period</option>
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                            </select>
+                                        </div>
+
+                                        <div v-if="reportFilters.period === 'daily' || reportFilters.period === 'weekly'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                            <input
+                                                v-model="reportFilters.date"
+                                                @change="loadSalesReport"
+                                                type="date"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+
+                                        <div v-if="reportFilters.period === 'monthly'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                            <select
+                                                v-model="reportFilters.year"
+                                                @change="loadSalesReport"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option v-for="year in availableYears" :key="year" :value="year">
+                                                    {{ year }}
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div v-if="reportFilters.period === 'monthly'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                                            <select
+                                                v-model="reportFilters.month"
+                                                @change="loadSalesReport"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                                    {{ month }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sales Report Results -->
+                                    <div v-if="salesReportData" class="space-y-6">
+                                        <!-- Summary Stats -->
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                                <div class="text-sm font-medium text-green-600">Total Sales</div>
+                                                <div class="text-2xl font-bold text-green-900">
+                                                    ₱{{ formatCurrency(salesReportData.salesData.totalAmount || 0) }}
+                                                </div>
+                                            </div>
+                                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                                <div class="text-sm font-medium text-blue-600">Total Transactions</div>
+                                                <div class="text-2xl font-bold text-blue-900">
+                                                    {{ salesReportData.salesData.totalTransactions || 0 }}
+                                                </div>
+                                            </div>
+                                            <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                                <div class="text-sm font-medium text-purple-600">Average Transaction</div>
+                                                <div class="text-2xl font-bold text-purple-900">
+                                                    ₱{{ formatCurrency(salesReportData.salesData.averageTransaction || 0) }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Chart -->
+                                        <div class="bg-white p-6 rounded-lg border border-gray-200">
+                                            <h4 class="text-lg font-medium text-gray-900 mb-4">Sales Chart</h4>
+                                            <div class="h-64">
+                                                <canvas ref="salesChart"></canvas>
+                                            </div>
+                                        </div>
+
+                                        <!-- Detailed Breakdown -->
+                                        <div class="bg-white rounded-lg border border-gray-200">
+                                            <div class="px-6 py-4 border-b border-gray-200">
+                                                <h4 class="text-lg font-medium text-gray-900">Detailed Breakdown</h4>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-gray-200">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                {{ reportFilters.period === 'daily' ? 'Hour' : 'Date' }}
+                                                            </th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales Amount</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="bg-white divide-y divide-gray-200">
+                                                        <tr v-for="item in getBreakdownData()" :key="item.key" class="hover:bg-gray-50">
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                {{ item.label }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                ₱{{ formatCurrency(item.amount) }}
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                {{ item.transactions }}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="loadingSalesReport" class="text-center py-12">
+                                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <p class="mt-2 text-gray-600">Loading sales report...</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Brand Sales Report Controls -->
+                <!-- Activity Logs Section (kept separate) -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
-                        <h2 class="text-2xl font-black text-purple-700">Brand Sales Report</h2>
-                        <div class="flex space-x-2">
-                            <ButtonNew
-                                types="view"
-                                @click="showBrandSalesReport = !showBrandSalesReport"
-                            >
-                                {{ showBrandSalesReport ? 'Hide' : 'Show' }} Brand Sales Report
-                            </ButtonNew>
-                            <ButtonNew
-                                types="pdf"
-                                size="md"
-                                tooltips="Export Brand Sales Report"
-                                @click="exportBrandSalesReport"
-                                v-if="showBrandSalesReport && brandSalesReportData"
-                            >
-                                PDF
-                            </ButtonNew>
-                        </div>
-                    </div>
-
-                    <!-- Brand Sales Report Section -->
-                    <div v-if="showBrandSalesReport" class="p-6 bg-gray-50 border-b">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
-                                <select
-                                    v-model="brandReportFilters.period"
-                                    @change="loadBrandSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    <option value="" disabled selected>Select a period</option>
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                </select>
-                            </div>
-
-                            <div v-if="brandReportFilters.period === 'daily' || brandReportFilters.period === 'weekly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                                <input
-                                    v-model="brandReportFilters.date"
-                                    @change="loadBrandSalesReport"
-                                    type="date"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                />
-                            </div>
-
-                            <div v-if="brandReportFilters.period === 'monthly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                                <select
-                                    v-model="brandReportFilters.year"
-                                    @change="loadBrandSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    <option v-for="year in availableYears" :key="year" :value="year">
-                                        {{ year }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div v-if="brandReportFilters.period === 'monthly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                                <select
-                                    v-model="brandReportFilters.month"
-                                    @change="loadBrandSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                >
-                                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
-                                        {{ month }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Brand Sales Report Results -->
-                        <div v-if="brandSalesReportData" class="space-y-6">
-                            <!-- Brand Sales Table -->
-                            <div class="bg-white p-6 rounded-lg shadow border">
-                                <h3 class="text-lg font-semibold mb-4">Sales by Brand</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <tr v-for="brandSale in brandSalesReportData.brandSales" :key="brandSale.brand">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {{ brandSale.brand }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₱{{ formatCurrency(brandSale.totalAmount) }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ brandSale.totalTransactions }}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="loadingBrandSalesReport" class="text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                            <p class="mt-2 text-gray-600">Loading brand sales report...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sales Report Controls -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
-                        <h2 class="text-2xl font-black text-blue-700">Sales Reports</h2>
-                        <div class="flex space-x-2">
-                            <ButtonNew
-                                types="view"
-                                @click="showSalesReport = !showSalesReport"
-                            >
-                                {{ showSalesReport ? 'Hide' : 'Show' }} Sales Report
-                            </ButtonNew>
-                            <ButtonNew
-                                types="pdf"
-                                size="md"
-                                tooltips="Export Sales Report"
-                                @click="exportSalesReport"
-                                v-if="showSalesReport && salesReportData"
-                            >
-                                PDF
-                            </ButtonNew>
-                        </div>
-                    </div>
-
-                    <!-- Sales Report Section -->
-                    <div v-if="showSalesReport" class="p-6 bg-gray-50 border-b">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
-                                <select
-                                    v-model="reportFilters.period"
-                                    @change="loadSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="" disabled selected>Select a period</option>
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                </select>
-                            </div>
-
-                            <div v-if="reportFilters.period === 'daily' || reportFilters.period === 'weekly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                                <input
-                                    v-model="reportFilters.date"
-                                    @change="loadSalesReport"
-                                    type="date"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div v-if="reportFilters.period === 'monthly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                                <select
-                                    v-model="reportFilters.year"
-                                    @change="loadSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option v-for="year in availableYears" :key="year" :value="year">
-                                        {{ year }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div v-if="reportFilters.period === 'monthly'">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                                <select
-                                    v-model="reportFilters.month"
-                                    @change="loadSalesReport"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
-                                        {{ month }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Sales Report Results -->
-                        <div v-if="salesReportData" class="space-y-6">
-                            <!-- Summary Stats -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Total Sales</div>
-                                    <div class="text-2xl font-bold text-green-600">
-                                        ₱{{ formatCurrency(salesReportData.salesData.totalAmount || 0) }}
-                                    </div>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Total Transactions</div>
-                                    <div class="text-2xl font-bold text-blue-600">
-                                        {{ salesReportData.salesData.totalTransactions || 0 }}
-                                    </div>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg shadow border">
-                                    <div class="text-sm text-gray-600">Average Transaction</div>
-                                    <div class="text-2xl font-bold text-purple-600">
-                                        ₱{{ formatCurrency(salesReportData.salesData.averageTransaction || 0) }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Chart -->
-                            <div class="bg-white p-6 rounded-lg shadow border">
-                                <h3 class="text-lg font-semibold mb-4">Sales Chart</h3>
-                                <div class="h-64">
-                                    <canvas ref="salesChart"></canvas>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-6 rounded-lg shadow border">
-                                <h3 class="text-lg font-semibold mb-4">Detailed Breakdown</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    {{ reportFilters.period === 'daily' ? 'Hour' : 'Date' }}
-                                                </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Sales Amount
-                                                </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Transactions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <tr v-for="item in getBreakdownData()" :key="item.key">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ item.label }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₱{{ formatCurrency(item.amount) }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ item.transactions }}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="loadingSalesReport" class="text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <p class="mt-2 text-gray-600">Loading sales report...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
-                        <h2 class="text-2xl font-black text-blue-700">Activity Logs</h2>
+                        <h2 class="text-2xl font-black text-gray-700">Activity Logs</h2>
                         <ButtonNew
                             types="pdf"
                             size="md"
-                            tooltips="Export"
+                            tooltips="Export Activity Logs"
                             @click="exportToPDF"
                         >
                             PDF
@@ -684,6 +781,8 @@ const inventoryReportData = ref(null);
 const showBrandSalesReport = ref(false);
 const loadingBrandSalesReport = ref(false);
 const brandSalesReportData = ref(null);
+
+const activeTab = ref('inventory');
 
 const reportFilters = ref({
     period: '',
