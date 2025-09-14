@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'name', 
-        'barcode', 
-        'price', 
-        'description', 
-        'stock_quantity', 
+        'name',
+        'barcode',
+        'price',
+        'description',
+        'stock_quantity',
         'item_code',
         'image_path',
+        'brand_id',
     ];
 
     public function category()
@@ -31,5 +32,10 @@ class Product extends Model
     public function stockTransactions()
     {
         return $this->hasMany(StockTransaction::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 }

@@ -148,6 +148,25 @@
                             </div>
 
                             <div class="mt-4">
+                                <InputLabel for="brand_id" value="Brand (Optional)" />
+                                <select
+                                    id="brand_id"
+                                    v-model="form.brand_id"
+                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+                                    <option value="">Select a brand (optional)</option>
+                                    <option
+                                        v-for="brand in brands"
+                                        :key="brand.id"
+                                        :value="brand.id"
+                                    >
+                                        {{ brand.name }}
+                                    </option>
+                                </select>
+                                <InputError class="mt-2" :message="form.errors.brand_id" />
+                            </div>
+
+                            <div class="mt-4">
     <InputLabel for="productimage" value="Product Image" />
     <input
     id="productimage"
@@ -241,6 +260,7 @@ import { notify } from "@/globalFunctions.js";
 
 defineProps({
     categories: Array,
+    brands: Array,
 });
 
 const $page = usePage();
@@ -250,6 +270,7 @@ const form = useForm({
     item_code: "",
     price: "",
     category_ids: [],
+    brand_id: "",
     description: "",
     productimage: null
 });
@@ -284,6 +305,9 @@ const submit = async () => {
         formData.append('price', form.price);
         formData.append('description', form.description);
         formData.append('productimage', form.productimage);
+        if (form.brand_id) {
+            formData.append('brand_id', form.brand_id);
+        }
         
         form.category_ids.forEach((id, index) => {
             formData.append(`category_ids[${index}]`, id);

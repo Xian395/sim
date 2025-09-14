@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StockInController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\StockOutController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StaffDashboardController;
@@ -83,6 +84,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+        Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
+        Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+        Route::get('/brands/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+        Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+        Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
 
 
 

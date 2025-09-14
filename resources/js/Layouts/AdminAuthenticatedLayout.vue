@@ -150,6 +150,36 @@
                         </NavLink>
                     </li>
 
+                    <!-- Brands -->
+                    <li>
+                        <NavLink
+                            :href="route('admin.brands.index')"
+                            :active="route().current('admin.brands.*')"
+                            class="flex items-center w-full p-2 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 group"
+                            :class="{
+                                'bg-blue-100 text-blue-700':
+                                    route().current('admin.brands.*'),
+                            }"
+                        >
+                            <svg
+                                class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-blue-700"
+                                :class="{
+                                    'text-blue-700':
+                                        route().current('admin.brands.*'),
+                                }"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                            >
+                                <path
+                                    d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM4 9a2 2 0 100 4h12a2 2 0 100-4H4zM4 15a2 2 0 100 4h12a2 2 0 100-4H4z"
+                                />
+                            </svg>
+                            <span class="flex-1 ml-3 whitespace-nowrap"
+                                >Brands</span
+                            >
+                        </NavLink>
+                    </li>
+
                     <!-- Stock Management Section -->
                     <li>
                         <div

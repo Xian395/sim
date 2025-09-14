@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -23,18 +24,21 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = Product::with('categories')->get();
+        $products = Product::with(['categories', 'brand'])->get();
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => Category::all(),
+            'brands' => Brand::all(),
         ]);
     }
 
     public function create()
     {
         $categories = Category::all();
+        $brands = Brand::all();
         return Inertia::render('Admin/Products/Create', [
             'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 
@@ -46,8 +50,9 @@ class ProductController extends Controller
         'price' => 'required|numeric|min:0',
         'category_ids' => 'required|array|min:1',
         'category_ids.*' => 'exists:categories,id',
+        'brand_id' => 'nullable|exists:brands,id',
         'description' => 'nullable|string',
-        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', 
+        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
     ]);
 
     $imagePath = null;
@@ -71,11 +76,13 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
-        $product->load('categories');
-        
+        $brands = Brand::all();
+        $product->load(['categories', 'brand']);
+
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 
@@ -87,8 +94,9 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'category_ids' => 'required|array|min:1',
             'category_ids.*' => 'exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'description' => 'nullable|string',
-            'productimage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
+            'productimage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validated['item_code'] !== $product->item_code) {

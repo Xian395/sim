@@ -79,6 +79,27 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium text-gray-700 mb-2"
+                                        >Brand</label
+                                    >
+                                    <select
+                                        v-model="filters.brand"
+                                        @change="applyFilters"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Brands</option>
+                                        <option
+                                            v-for="brand in brands"
+                                            :key="brand.id"
+                                            :value="brand.id"
+                                        >
+                                            {{ brand.name }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-2"
                                         >Stock Status</label
                                     >
                                     <select
@@ -281,6 +302,23 @@
                                             class="text-gray-400 text-sm"
                                         >
                                             No categories
+                                        </span>
+                                    </div>
+                                </template>
+
+                                <template #column-brand="{ item }">
+                                    <div>
+                                        <span
+                                            v-if="item.brand"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                                        >
+                                            {{ item.brand.name }}
+                                        </span>
+                                        <span
+                                            v-else
+                                            class="text-gray-400 text-sm"
+                                        >
+                                            No brand
                                         </span>
                                     </div>
                                 </template>
@@ -742,6 +780,7 @@ import { autoTable } from "jspdf-autotable";
 const props = defineProps({
     products: Array,
     categories: Array,
+    brands: Array,
 });
 
 const $page = usePage();
@@ -754,6 +793,7 @@ const dataTable = ref();
 const filters = ref({
     search: "",
     category: "",
+    brand: "",
     stockStatus: "",
     sortBy: "name",
     priceMin: "",
@@ -826,6 +866,13 @@ const filteredProducts = computed(() => {
                 product.categories.some(
                     (category) => category.id == filters.value.category
                 )
+        );
+    }
+
+    if (filters.value.brand) {
+        result = result.filter(
+            (product) =>
+                product.brand && product.brand.id == filters.value.brand
         );
     }
 
@@ -944,6 +991,7 @@ const isFiltered = computed(() => {
     return (
         filters.value.search ||
         filters.value.category ||
+        filters.value.brand ||
         filters.value.stockStatus ||
         filters.value.priceMin ||
         filters.value.priceMax
@@ -965,6 +1013,7 @@ const clearFilters = () => {
     filters.value = {
         search: "",
         category: "",
+        brand: "",
         stockStatus: "",
         sortBy: "name",
         priceMin: "",
@@ -999,9 +1048,15 @@ const tableColumns = computed(() => [
         align: "left",
     },
     {
-        key: "categories", 
+        key: "categories",
         label: "Categories",
-        type: "custom", 
+        type: "custom",
+        align: "left",
+    },
+    {
+        key: "brand",
+        label: "Brand",
+        type: "custom",
         align: "left",
     },
     {
