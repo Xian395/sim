@@ -39,7 +39,16 @@ class BrandController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Brand::create($validated);
+        $brand = Brand::create($validated);
+
+        // Check if this is an AJAX request (for inline brand creation)
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand created successfully.',
+                'brand' => $brand
+            ]);
+        }
 
         return redirect()->route('admin.brands.create')->with('success', 'Brand created successfully.');
     }

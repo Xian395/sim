@@ -523,6 +523,7 @@
                             <input
                                 type="number"
                                 step="0.01"
+                                min="0.01"
                                 id="price"
                                 v-model="editForm.price"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -582,6 +583,44 @@
                                 class="text-red-600 text-sm mt-1"
                             >
                                 {{ editForm.errors.category_ids }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                for="edit_brand_id"
+                                class="block mb-2 text-sm font-medium text-gray-900"
+                                >Brand (Optional)</label
+                            >
+                            <div class="flex gap-2">
+                                <select
+                                    id="edit_brand_id"
+                                    v-model="editForm.brand_id"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                >
+                                    <option value="">Select a brand (optional)</option>
+                                    <option
+                                        v-for="brand in availableBrands"
+                                        :key="brand.id"
+                                        :value="brand.id"
+                                    >
+                                        {{ brand.name }}
+                                    </option>
+                                </select>
+                                <button
+                                    type="button"
+                                    @click="openQuickBrandModal"
+                                    class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
+                                    title="Add New Brand"
+                                >
+                                    + Add Brand
+                                </button>
+                            </div>
+                            <div
+                                v-if="editForm.errors.brand_id"
+                                class="text-red-600 text-sm mt-1"
+                            >
+                                {{ editForm.errors.brand_id }}
                             </div>
                         </div>
 
@@ -762,6 +801,72 @@
                 </div>
             </div>
         </Modal>
+
+        <!-- Quick Brand Creation Modal -->
+        <Modal :show="showQuickBrandModal" @close="closeQuickBrandModal">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        Add New Brand
+                    </h3>
+                    <button
+                        @click="closeQuickBrandModal"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form @submit.prevent="createQuickBrand">
+                    <div class="mb-4">
+                        <label for="quick_brand_name" class="block mb-2 text-sm font-medium text-gray-900">Brand Name</label>
+                        <input
+                            id="quick_brand_name"
+                            type="text"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            v-model="quickBrandForm.name"
+                            required
+                            autofocus
+                        />
+                        <div v-if="quickBrandForm.errors.name" class="text-red-600 text-sm mt-1">
+                            {{ quickBrandForm.errors.name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="quick_brand_description" class="block mb-2 text-sm font-medium text-gray-900">Description (Optional)</label>
+                        <textarea
+                            id="quick_brand_description"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            rows="3"
+                            v-model="quickBrandForm.description"
+                        ></textarea>
+                        <div v-if="quickBrandForm.errors.description" class="text-red-600 text-sm mt-1">
+                            {{ quickBrandForm.errors.description }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-2">
+                        <button
+                            type="button"
+                            @click="closeQuickBrandModal"
+                            class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="quickBrandForm.processing"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                            {{ quickBrandForm.processing ? 'Creating...' : 'Create Brand' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AdminAuthenticatedLayout>
 </template>
 
@@ -789,6 +894,10 @@ const showDeleteModal = ref(false);
 const editingProduct = ref(null);
 const productToDelete = ref(null);
 const dataTable = ref();
+
+// Quick Brand Modal
+const showQuickBrandModal = ref(false);
+const availableBrands = ref([...props.brands]);
 
 const filters = ref({
     search: "",
@@ -1079,6 +1188,12 @@ const editForm = useForm({
     price: "",
     item_code: "",
     category_ids: [],
+    brand_id: "",
+    description: "",
+});
+
+const quickBrandForm = useForm({
+    name: "",
     description: "",
 });
 
@@ -1091,6 +1206,7 @@ const openEditModal = (product) => {
     editForm.category_ids = product.categories
         ? product.categories.map((c) => c.id)
         : []; // Updated
+    editForm.brand_id = product.brand ? product.brand.id : "";
     editForm.description = product.description || "";
     showEditModal.value = true;
 };
@@ -1413,5 +1529,50 @@ const generateBarcodeStripes = (barcode) => {
         }"/>`;
     }
     return stripes;
+};
+
+// Quick Brand Modal Functions
+const openQuickBrandModal = () => {
+    showQuickBrandModal.value = true;
+    quickBrandForm.reset();
+    quickBrandForm.clearErrors();
+};
+
+const closeQuickBrandModal = () => {
+    showQuickBrandModal.value = false;
+    quickBrandForm.reset();
+    quickBrandForm.clearErrors();
+};
+
+const createQuickBrand = async () => {
+    try {
+        const response = await axios.post(route('admin.brands.store'), quickBrandForm.data());
+
+        if (response.data.success) {
+            // Add the new brand to the available brands list
+            const newBrand = response.data.brand;
+            availableBrands.value.push(newBrand);
+
+            // Auto-select the newly created brand in edit form
+            if (editingProduct.value) {
+                editForm.brand_id = newBrand.id;
+            }
+
+            // Close modal and notify
+            closeQuickBrandModal();
+            notify('Brand created successfully and selected!', 'success');
+        } else {
+            notify('Failed to create brand', 'error');
+        }
+    } catch (error) {
+        console.error('Quick brand creation error:', error);
+        if (error.response && error.response.data.errors) {
+            quickBrandForm.setError(error.response.data.errors);
+            const errorMessages = Object.values(error.response.data.errors).flat().join('<br>');
+            notify(errorMessages, 'error');
+        } else {
+            notify('Something went wrong while creating the brand.', 'error');
+        }
+    }
 };
 </script>
