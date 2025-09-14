@@ -30,6 +30,16 @@
                         >
                             <template #column-actions="{ item }">
                                 <div class="flex justify-end space-x-2">
+                                    <button
+                                        @click="openProductsModal(item)"
+                                        class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        title="View Products"
+                                    >
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                        </svg>
+                                        {{ item.products_count }} Products
+                                    </button>
                                     <ButtonNew
                                         types="edit"
                                         tooltips="Edit Brand"
@@ -168,6 +178,110 @@
                 </button>
             </div>
         </Modal>
+
+        <!-- Products Modal -->
+        <Modal :show="showProductsModal" @close="closeProductsModal" max-width="4xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Products for Brand: <span class="text-blue-600">{{ selectedBrand?.name }}</span>
+                    </h3>
+                    <button
+                        @click="closeProductsModal"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div v-if="loadingProducts" class="flex justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+
+                <div v-else-if="brandProducts.length === 0" class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No products</h3>
+                    <p class="mt-1 text-sm text-gray-500">This brand has no products assigned to it yet.</p>
+                </div>
+
+                <div v-else class="overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categories</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="product in brandProducts" :key="product.id" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex justify-center">
+                                            <div class="w-10 h-10 rounded-lg overflow-hidden shadow-sm">
+                                                <img
+                                                    v-if="product.image_path"
+                                                    :src="getImageUrl(product.image_path)"
+                                                    :alt="product.name"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                                <div v-else class="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                                        <div v-if="product.description" class="text-sm text-gray-500 truncate max-w-xs">{{ product.description }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.item_code }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{{ parseFloat(product.price).toFixed(2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span :class="{
+                                            'text-red-600': product.stock_quantity === 0,
+                                            'text-yellow-600': product.stock_quantity > 0 && product.stock_quantity < 11,
+                                            'text-green-600': product.stock_quantity >= 11
+                                        }" class="text-sm font-medium">
+                                            {{ product.stock_quantity || 0 }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-1">
+                                            <span
+                                                v-for="category in product.categories"
+                                                :key="category.id"
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                                            >
+                                                {{ category.name }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button
+                        @click="closeProductsModal"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </AdminAuthenticatedLayout>
 </template>
 
@@ -193,6 +307,11 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedBrand = ref(null);
 const brandToDelete = ref(null);
+
+// Products Modal
+const showProductsModal = ref(false);
+const brandProducts = ref([]);
+const loadingProducts = ref(false);
 
 const tableColumns = computed(() => [
     {
@@ -322,5 +441,38 @@ const submitEdit = async () => {
             notify('Failed to update brand', 'error');
         }
     }
+};
+
+// Products Modal Functions
+const openProductsModal = async (brand) => {
+    selectedBrand.value = brand;
+    showProductsModal.value = true;
+    loadingProducts.value = true;
+    brandProducts.value = [];
+
+    try {
+        const response = await axios.get(`/admin/brands/${brand.id}/products`);
+        brandProducts.value = response.data.products;
+    } catch (error) {
+        console.error('Error loading brand products:', error);
+        notify('Failed to load brand products', 'error');
+    } finally {
+        loadingProducts.value = false;
+    }
+};
+
+const closeProductsModal = () => {
+    showProductsModal.value = false;
+    selectedBrand.value = null;
+    brandProducts.value = [];
+    loadingProducts.value = false;
+};
+
+const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith("http")) {
+        return imagePath;
+    }
+    return `/storage/${imagePath}`;
 };
 </script>

@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/brands/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
         Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
         Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+        Route::get('/brands/{brand}/products', [BrandController::class, 'products'])->name('brands.products');
 
 
 
