@@ -97,6 +97,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
          Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
          Route::get('/logs/sales-report', [LogController::class, 'salesReport'])->name('logs.sales-report');
+         Route::get('/logs/inventory-report', [LogController::class, 'inventoryReport'])->name('logs.inventory-report');
+         Route::get('/logs/brand-sales-report', [LogController::class, 'brandSalesReport'])->name('logs.brand-sales-report');
 
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
         Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');

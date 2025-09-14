@@ -57,6 +57,227 @@
                     </div>
                 </div>
 
+                <!-- Inventory Report Controls -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
+                        <h2 class="text-2xl font-black text-green-700">Inventory Report</h2>
+                        <div class="flex space-x-2">
+                            <ButtonNew
+                                types="view"
+                                @click="showInventoryReport = !showInventoryReport; loadInventoryReport()"
+                            >
+                                {{ showInventoryReport ? 'Hide' : 'Show' }} Inventory Report
+                            </ButtonNew>
+                            <ButtonNew
+                                types="pdf"
+                                size="md"
+                                tooltips="Export Inventory Report"
+                                @click="exportInventoryReport"
+                                v-if="showInventoryReport && inventoryReportData"
+                            >
+                                PDF
+                            </ButtonNew>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Report Section -->
+                    <div v-if="showInventoryReport" class="p-6 bg-gray-50 border-b">
+                        <div v-if="inventoryReportData" class="space-y-6">
+                            <!-- Summary Stats -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="bg-white p-4 rounded-lg shadow border">
+                                    <div class="text-sm text-gray-600">Total Products</div>
+                                    <div class="text-2xl font-bold text-blue-600">
+                                        {{ inventoryReportData.summary.totalProducts }}
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow border">
+                                    <div class="text-sm text-gray-600">Total Inventory Value</div>
+                                    <div class="text-2xl font-bold text-green-600">
+                                        ₱{{ formatCurrency(inventoryReportData.summary.totalValue || 0) }}
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow border">
+                                    <div class="text-sm text-gray-600">Low Stock Items</div>
+                                    <div class="text-2xl font-bold text-yellow-600">
+                                        {{ inventoryReportData.summary.lowStockCount }}
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow border">
+                                    <div class="text-sm text-gray-600">Out of Stock Items</div>
+                                    <div class="text-2xl font-bold text-red-600">
+                                        {{ inventoryReportData.summary.outOfStockCount }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inventory Details Table -->
+                            <div class="bg-white p-6 rounded-lg shadow border">
+                                <h3 class="text-lg font-semibold mb-4">Product Inventory Details</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <tr v-for="product in inventoryReportData.products" :key="product.id">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ product.name }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ product.brand }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ product.stock_quantity }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₱{{ formatCurrency(product.price) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₱{{ formatCurrency(product.value) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span :class="getStatusBadgeClass(product.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                                        {{ product.status }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="loadingInventoryReport" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                            <p class="mt-2 text-gray-600">Loading inventory report...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Sales Report Controls -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
+                        <h2 class="text-2xl font-black text-purple-700">Brand Sales Report</h2>
+                        <div class="flex space-x-2">
+                            <ButtonNew
+                                types="view"
+                                @click="showBrandSalesReport = !showBrandSalesReport"
+                            >
+                                {{ showBrandSalesReport ? 'Hide' : 'Show' }} Brand Sales Report
+                            </ButtonNew>
+                            <ButtonNew
+                                types="pdf"
+                                size="md"
+                                tooltips="Export Brand Sales Report"
+                                @click="exportBrandSalesReport"
+                                v-if="showBrandSalesReport && brandSalesReportData"
+                            >
+                                PDF
+                            </ButtonNew>
+                        </div>
+                    </div>
+
+                    <!-- Brand Sales Report Section -->
+                    <div v-if="showBrandSalesReport" class="p-6 bg-gray-50 border-b">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                <select
+                                    v-model="brandReportFilters.period"
+                                    @change="loadBrandSalesReport"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="" disabled selected>Select a period</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+
+                            <div v-if="brandReportFilters.period === 'daily' || brandReportFilters.period === 'weekly'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                <input
+                                    v-model="brandReportFilters.date"
+                                    @change="loadBrandSalesReport"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
+                            <div v-if="brandReportFilters.period === 'monthly'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                <select
+                                    v-model="brandReportFilters.year"
+                                    @change="loadBrandSalesReport"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option v-for="year in availableYears" :key="year" :value="year">
+                                        {{ year }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div v-if="brandReportFilters.period === 'monthly'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                                <select
+                                    v-model="brandReportFilters.month"
+                                    @change="loadBrandSalesReport"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                        {{ month }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Brand Sales Report Results -->
+                        <div v-if="brandSalesReportData" class="space-y-6">
+                            <!-- Brand Sales Table -->
+                            <div class="bg-white p-6 rounded-lg shadow border">
+                                <h3 class="text-lg font-semibold mb-4">Sales by Brand</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <tr v-for="brandSale in brandSalesReportData.brandSales" :key="brandSale.brand">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ brandSale.brand }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₱{{ formatCurrency(brandSale.totalAmount) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ brandSale.totalTransactions }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="loadingBrandSalesReport" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                            <p class="mt-2 text-gray-600">Loading brand sales report...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sales Report Controls -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="flex items-center justify-between border-b border-stroke py-4 px-6.5 dark:border-strokedark p-6">
@@ -456,7 +677,22 @@ const salesReportData = ref(null);
 const salesChart = ref(null);
 const chartInstance = ref(null);
 
+const showInventoryReport = ref(false);
+const loadingInventoryReport = ref(false);
+const inventoryReportData = ref(null);
+
+const showBrandSalesReport = ref(false);
+const loadingBrandSalesReport = ref(false);
+const brandSalesReportData = ref(null);
+
 const reportFilters = ref({
+    period: '',
+    date: new Date().toISOString().split('T')[0],
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+});
+
+const brandReportFilters = ref({
     period: '',
     date: new Date().toISOString().split('T')[0],
     year: new Date().getFullYear(),
@@ -932,6 +1168,205 @@ const handleItemsPerPageChange = () => {
         preserveState: true,
         preserveScroll: true,
     });
+};
+
+const loadInventoryReport = async () => {
+    if (showInventoryReport.value && !inventoryReportData.value) {
+        loadingInventoryReport.value = true;
+        try {
+            const response = await fetch(`/admin/logs/inventory-report`);
+            const data = await response.json();
+            inventoryReportData.value = data;
+        } catch (error) {
+            console.error('Error loading inventory report:', error);
+        } finally {
+            loadingInventoryReport.value = false;
+        }
+    }
+};
+
+const loadBrandSalesReport = async () => {
+    loadingBrandSalesReport.value = true;
+    try {
+        const params = new URLSearchParams({
+            period: brandReportFilters.value.period,
+            date: brandReportFilters.value.date,
+            year: brandReportFilters.value.year,
+            month: brandReportFilters.value.month,
+        });
+
+        const response = await fetch(`/admin/logs/brand-sales-report?${params}`);
+        const data = await response.json();
+        brandSalesReportData.value = data;
+    } catch (error) {
+        console.error('Error loading brand sales report:', error);
+    } finally {
+        loadingBrandSalesReport.value = false;
+    }
+};
+
+const getStatusBadgeClass = (status) => {
+    switch (status) {
+        case 'Out of Stock':
+            return 'bg-red-100 text-red-800';
+        case 'Low Stock':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'In Stock':
+            return 'bg-green-100 text-green-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+};
+
+const exportInventoryReport = async () => {
+    if (!inventoryReportData.value) return;
+
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+
+        const logoBase64 = await getLogoBase64();
+
+        let yPosition = 8;
+
+        if (logoBase64) {
+            const logoWidth = 20;
+            const logoHeight = 20;
+            const logoX = (pageWidth - logoWidth) / 2;
+
+            doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+            yPosition += logoHeight + 2;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        const title = "INVENTORY REPORT";
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
+
+        yPosition += 10;
+
+        doc.setFontSize(13);
+        doc.text("Summary", 14, yPosition);
+
+        yPosition += 8;
+
+        doc.setFontSize(10);
+        doc.text(`• Total Products: ${inventoryReportData.value.summary.totalProducts}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Total Inventory Value: PHP ${formatCurrency(inventoryReportData.value.summary.totalValue)}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Low Stock Items: ${inventoryReportData.value.summary.lowStockCount}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Out of Stock Items: ${inventoryReportData.value.summary.outOfStockCount}`, 18, yPosition);
+        yPosition += 10;
+
+        const tableRows = inventoryReportData.value.products.map(product => [
+            product.name,
+            product.brand,
+            product.stock_quantity.toString(),
+            `PHP ${formatCurrency(product.price)}`,
+            `PHP ${formatCurrency(product.value)}`,
+            product.status,
+        ]);
+
+        autoTable(doc, {
+            head: [['Product Name', 'Brand', 'Stock Qty', 'Unit Price', 'Total Value', 'Status']],
+            body: tableRows,
+            startY: yPosition,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [34, 197, 94], textColor: 255 },
+            margin: { left: 14, right: 14, top: 10 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY || yPosition + 10;
+        const generatedText = `Generated on: ${new Date().toLocaleString()}`;
+        const textWidth = doc.getTextWidth(generatedText);
+        doc.setFontSize(9);
+        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
+
+        const filename = `inventory-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+
+    } catch (error) {
+        alert("Error generating PDF. Please try again.");
+        console.error(error);
+    }
+};
+
+const exportBrandSalesReport = async () => {
+    if (!brandSalesReportData.value) return;
+
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+
+        const logoBase64 = await getLogoBase64();
+
+        let yPosition = 8;
+
+        if (logoBase64) {
+            const logoWidth = 20;
+            const logoHeight = 20;
+            const logoX = (pageWidth - logoWidth) / 2;
+
+            doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+            yPosition += logoHeight + 2;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        const title = "BRAND SALES REPORT";
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
+
+        yPosition += 4;
+
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(11);
+        const periodText = `Period: ${brandReportFilters.value.period.charAt(0).toUpperCase() + brandReportFilters.value.period.slice(1)}`;
+        const dateText = brandReportFilters.value.period === 'monthly'
+            ? `Month: ${months[brandReportFilters.value.month - 1]} ${brandReportFilters.value.year}`
+            : `Date: ${brandReportFilters.value.date}`;
+
+        doc.text(periodText, 14, yPosition);
+        const dateTextWidth = doc.getTextWidth(dateText);
+        doc.text(dateText, pageWidth - dateTextWidth - 14, yPosition);
+
+        yPosition += 10;
+
+        const tableRows = brandSalesReportData.value.brandSales.map(brandSale => [
+            brandSale.brand,
+            `PHP ${formatCurrency(brandSale.totalAmount)}`,
+            brandSale.totalTransactions.toString(),
+        ]);
+
+        autoTable(doc, {
+            head: [['Brand', 'Total Sales', 'Transactions']],
+            body: tableRows,
+            startY: yPosition,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [147, 51, 234], textColor: 255 },
+            margin: { left: 14, right: 14, top: 10 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY || yPosition + 10;
+        const generatedText = `Generated on: ${new Date().toLocaleString()}`;
+        const textWidth = doc.getTextWidth(generatedText);
+        doc.setFontSize(9);
+        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
+
+        const filename = `brand-sales-report-${brandReportFilters.value.period}-${brandReportFilters.value.date || `${brandReportFilters.value.year}-${brandReportFilters.value.month}`}.pdf`;
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+
+    } catch (error) {
+        alert("Error generating PDF. Please try again.");
+        console.error(error);
+    }
 };
 
 onMounted(() => {

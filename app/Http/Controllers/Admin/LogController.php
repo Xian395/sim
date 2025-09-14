@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Log;
+use App\Models\Product;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -117,6 +119,206 @@ class LogController extends Controller
             'year' => $year,
             'month' => $month
         ]);
+    }
+
+    public function inventoryReport(Request $request)
+    {
+        $products = Product::with('brand')
+            ->select('id', 'name', 'stock_quantity', 'price', 'brand_id')
+            ->orderBy('stock_quantity', 'asc')
+            ->get();
+
+        $totalProducts = $products->count();
+        $totalValue = $products->sum(function ($product) {
+            return $product->stock_quantity * $product->price;
+        });
+
+        $lowStockProducts = $products->where('stock_quantity', '<=', 10);
+        $outOfStockProducts = $products->where('stock_quantity', '<=', 0);
+
+        return response()->json([
+            'products' => $products->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'brand' => $product->brand ? $product->brand->name : 'No Brand',
+                    'stock_quantity' => $product->stock_quantity,
+                    'price' => $product->price,
+                    'value' => $product->stock_quantity * $product->price,
+                    'status' => $product->stock_quantity <= 0 ? 'Out of Stock' :
+                               ($product->stock_quantity <= 10 ? 'Low Stock' : 'In Stock'),
+                ];
+            }),
+            'summary' => [
+                'totalProducts' => $totalProducts,
+                'totalValue' => $totalValue,
+                'lowStockCount' => $lowStockProducts->count(),
+                'outOfStockCount' => $outOfStockProducts->count(),
+            ]
+        ]);
+    }
+
+    public function brandSalesReport(Request $request)
+    {
+        $period = $request->get('period', 'daily');
+        $date = $request->get('date', now()->toDateString());
+        $year = $request->get('year', now()->year);
+        $month = $request->get('month', now()->month);
+
+        $brands = Brand::with('products')->get();
+        $brandSalesData = [];
+
+        foreach ($brands as $brand) {
+            $productNames = $brand->products->pluck('name')->toArray();
+
+            $brandSales = $this->getBrandSalesForPeriod($productNames, $brand->name, $period, $date, $year, $month);
+            $brandSalesData[] = $brandSales;
+        }
+
+        return response()->json([
+            'brandSales' => $brandSalesData,
+            'period' => $period,
+            'date' => $date,
+            'year' => $year,
+            'month' => $month
+        ]);
+    }
+
+    private function getBrandSalesForPeriod($productNames, $brandName, $period, $date, $year, $month)
+    {
+        switch ($period) {
+            case 'daily':
+                return $this->getDailyBrandSales($productNames, $brandName, $date);
+            case 'weekly':
+                return $this->getWeeklyBrandSales($productNames, $brandName, $date);
+            case 'monthly':
+                return $this->getMonthlyBrandSales($productNames, $brandName, $year, $month);
+            default:
+                return [];
+        }
+    }
+
+    private function getDailyBrandSales($productNames, $brandName, $date)
+    {
+        $startDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $endDate = Carbon::parse($date)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        $brandSales = $sales->filter(function ($sale) use ($productNames) {
+            return $this->saleContainsProducts($sale->details, $productNames);
+        });
+
+        $totalAmount = $this->extractAmountFromSales($brandSales);
+
+        return [
+            'brand' => $brandName,
+            'totalAmount' => $totalAmount,
+            'totalTransactions' => $brandSales->count(),
+            'date' => $date,
+        ];
+    }
+
+    private function getWeeklyBrandSales($productNames, $brandName, $date)
+    {
+        $startDate = Carbon::parse($date)->startOfWeek();
+        $endDate = Carbon::parse($date)->endOfWeek();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        $brandSales = $sales->filter(function ($sale) use ($productNames) {
+            return $this->saleContainsProducts($sale->details, $productNames);
+        });
+
+        $dailyBreakdown = [];
+        for ($i = 0; $i < 7; $i++) {
+            $currentDay = $startDate->copy()->addDays($i);
+            $daySales = $brandSales->filter(function ($sale) use ($currentDay) {
+                return $sale->created_at->isSameDay($currentDay);
+            });
+
+            $dailyBreakdown[] = [
+                'date' => $currentDay->toDateString(),
+                'dayName' => $currentDay->format('l'),
+                'amount' => $this->extractAmountFromSales($daySales),
+                'transactions' => $daySales->count(),
+            ];
+        }
+
+        $totalAmount = $this->extractAmountFromSales($brandSales);
+
+        return [
+            'brand' => $brandName,
+            'totalAmount' => $totalAmount,
+            'totalTransactions' => $brandSales->count(),
+            'startDate' => $startDate->toDateString(),
+            'endDate' => $endDate->toDateString(),
+            'dailyBreakdown' => $dailyBreakdown,
+        ];
+    }
+
+    private function getMonthlyBrandSales($productNames, $brandName, $year, $month)
+    {
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        $brandSales = $sales->filter(function ($sale) use ($productNames) {
+            return $this->saleContainsProducts($sale->details, $productNames);
+        });
+
+        $dailyBreakdown = [];
+        $daysInMonth = $endDate->day;
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $currentDay = Carbon::createFromDate($year, $month, $day);
+            $daySales = $brandSales->filter(function ($sale) use ($currentDay) {
+                return $sale->created_at->isSameDay($currentDay);
+            });
+
+            $dailyBreakdown[] = [
+                'date' => $currentDay->toDateString(),
+                'day' => $day,
+                'amount' => $this->extractAmountFromSales($daySales),
+                'transactions' => $daySales->count(),
+            ];
+        }
+
+        $totalAmount = $this->extractAmountFromSales($brandSales);
+
+        return [
+            'brand' => $brandName,
+            'totalAmount' => $totalAmount,
+            'totalTransactions' => $brandSales->count(),
+            'year' => $year,
+            'month' => $month,
+            'monthName' => $startDate->format('F'),
+            'dailyBreakdown' => $dailyBreakdown,
+        ];
+    }
+
+    private function saleContainsProducts($details, $productNames)
+    {
+        if (empty($productNames) || !$details) {
+            return false;
+        }
+
+        foreach ($productNames as $productName) {
+            // Look for product name in the sales details
+            // Format: "Processed sale: Test [Qty: 1], SkyFlakes Craker [Qty: 1]"
+            if (stripos($details, $productName) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getSalesSummary()
