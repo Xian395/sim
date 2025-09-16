@@ -22,13 +22,68 @@
                             Add
                         </ButtonNew>
                     </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="px-6 pt-4 pb-2">
+                        <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                            <button
+                                @click="filterCategories('active')"
+                                :class="{
+                                    'bg-white text-blue-600 shadow-sm': props.filter === 'active',
+                                    'text-gray-500 hover:text-gray-700': props.filter !== 'active'
+                                }"
+                                class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                            >
+                                Active Categories
+                                <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                    {{ activeCategoryCount }}
+                                </span>
+                            </button>
+                            <button
+                                @click="filterCategories('archived')"
+                                :class="{
+                                    'bg-white text-orange-600 shadow-sm': props.filter === 'archived',
+                                    'text-gray-500 hover:text-gray-700': props.filter !== 'archived'
+                                }"
+                                class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                            >
+                                Archived Categories
+                                <span class="ml-2 bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                                    {{ archivedCategoryCount }}
+                                </span>
+                            </button>
+                            <button
+                                @click="filterCategories('all')"
+                                :class="{
+                                    'bg-white text-gray-900 shadow-sm': props.filter === 'all',
+                                    'text-gray-500 hover:text-gray-700': props.filter !== 'all'
+                                }"
+                                class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                            >
+                                All Categories
+                                <span class="ml-2 bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                                    {{ totalCategoryCount }}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                     <div class="p-6">
-                        <DataTable 
-                            :data="categories" 
+                        <DataTable
+                            :data="categories"
                             :columns="tableColumns"
                             :empty-message="'No categories found'"
                              ref="dataTable"
                         >
+                            <template #column-status="{ item }">
+                                <span
+                                    :class="{
+                                        'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium': item.status === 'active',
+                                        'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium': item.status === 'inactive'
+                                    }"
+                                >
+                                    {{ item.status === 'active' ? 'Active' : 'Inactive' }}
+                                </span>
+                            </template>
                             <template #column-actions="{ item }">
                                 <div class="flex justify-end space-x-2">
                                     <ButtonNew
@@ -38,10 +93,10 @@
                                         @click="openEditModal(item)"
                                     />
                                     <ButtonNew
-                                        types="delete"
-                                        tooltips="Delete Category"
-                                        class="text-red-600 hover:text-red-900"
-                                        @click="openDeleteModal(item)"
+                                        :types="item.status === 'active' ? 'archive' : 'save'"
+                                        :tooltips="item.status === 'active' ? 'Archive Category' : 'Activate Category'"
+                                        :class="item.status === 'active' ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'"
+                                        @click="toggleStatus(item)"
                                     />
                                 </div>
                             </template>
@@ -120,45 +175,6 @@
             </div>
         </Modal>
 
-        <Modal :show="showDeleteModal" @close="closeDeleteModal">
-            <div class="p-4 md:p-5 text-center">
-                <svg
-                    class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                >
-                    <path
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                </svg>
-                <h3 class="mb-5 text-lg font-normal text-black dark:text-gray-400">
-                    Are you sure you want to delete the category <strong>"{{ categoryToDelete?.name }}"</strong>?
-                    <br>
-                    <span class="text-red-600">You won't be able to revert this!</span>
-                </h3>
-                <button
-                    @click="confirmDelete"
-                    type="button"
-                    class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center"
-                >
-                    Yes, I'm sure
-                </button>
-                <button
-                    @click="closeDeleteModal"
-                    type="button"
-                    class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                >
-                    No, cancel
-                </button>
-                
-            </div>
-        </Modal>
     </AdminAuthenticatedLayout>
 </template>
 
@@ -174,16 +190,26 @@ import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import DataTable from "@/Components/DataTable.vue";
 
-defineProps({
+const props = defineProps({
     categories: Array,
+    filter: {
+        type: String,
+        default: 'active'
+    },
+    counts: {
+        type: Object,
+        default: () => ({})
+    }
 });
 
 const $page = usePage();
 const dataTable = ref();
 const showEditModal = ref(false);
-const showDeleteModal = ref(false);
 const selectedCategory = ref(null);
-const categoryToDelete = ref(null);
+
+const activeCategoryCount = computed(() => props.counts.active || 0);
+const archivedCategoryCount = computed(() => props.counts.archived || 0);
+const totalCategoryCount = computed(() => props.counts.total || 0);
 
 const tableColumns = computed(() => [
     {
@@ -191,6 +217,12 @@ const tableColumns = computed(() => [
         label: 'CATEGORY NAME',
         type: 'text',
         align: 'left'
+    },
+    {
+        key: 'status',
+        label: 'STATUS',
+        type: 'custom',
+        align: 'center'
     },
     {
         key: 'actions',
@@ -204,61 +236,6 @@ const editForm = useForm({
     name: '',
 });
 
-const openDeleteModal = (category) => {
-    categoryToDelete.value = category;
-    showDeleteModal.value = true;
-};
-
-const closeDeleteModal = () => {
-    showDeleteModal.value = false;
-    categoryToDelete.value = null;
-};
-
-const confirmDelete = async () => {
-    if (!categoryToDelete.value) return;
-
-    try {
-        await router.delete(
-            route("admin.categories.destroy", categoryToDelete.value.id),
-            {
-                onSuccess: () => {
-                    reload();
-                    notify("Category deleted successfully!", "success");
-                    closeDeleteModal();
-                },
-                onError: (errors) => {
-                    
-                    let errorMessage = "Failed to delete category. Please try again.";
-                    
-                    if (errors && errors.category) {
-                        errorMessage = Array.isArray(errors.category) 
-                            ? errors.category[0] 
-                            : errors.category;
-                    }
-                    else if ($page.props.flash?.error) {
-                        errorMessage = $page.props.flash.error;
-                    }
-                    else if (errors && typeof errors === 'object') {
-                        if (errors.message) {
-                            errorMessage = errors.message;
-                        } else if (errors.error) {
-                            errorMessage = errors.error;
-                        }
-                    }
-                    
-                    notify(errorMessage, "error");
-                    closeDeleteModal();
-                }
-            }
-        );
-    } catch (error) {
-        notify(
-            "An unexpected error occurred while deleting the category.",
-            "error"
-        );
-        closeDeleteModal();
-    }
-};
 
 
 
@@ -280,17 +257,17 @@ const reload = () => {
     router.reload({
         only: ["products", "categories"],
         preserveState: true,
-        preserveScroll: true,
+        preserveScroll: true
     });
 };
 
 const submitEdit = async () => {
     try {
         const response = await axios.put(`/admin/categories/${selectedCategory.value.id}`, {
-            name: editForm.name, 
-            _method: 'PUT' 
+            name: editForm.name,
+            _method: 'PUT'
         });
-        
+
         closeEditModal();
         reload();
         notify('Category updated successfully', 'success');
@@ -301,5 +278,35 @@ const submitEdit = async () => {
             notify('Failed to update category', 'error');
         }
     }
+};
+
+const toggleStatus = async (category) => {
+    try {
+        await router.patch(
+            route("admin.categories.toggle-status", category.id),
+            {},
+            {
+                onSuccess: () => {
+                    reload();
+                    const message = category.status === 'active'
+                        ? 'Category deactivated successfully!'
+                        : 'Category activated successfully!';
+                    notify(message, "success");
+                },
+                onError: (errors) => {
+                    notify("Failed to update category status. Please try again.", "error");
+                }
+            }
+        );
+    } catch (error) {
+        notify("An unexpected error occurred while updating the category status.", "error");
+    }
+};
+
+const filterCategories = (filter) => {
+    router.get(route('admin.categories.index', { filter }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
 };
 </script>

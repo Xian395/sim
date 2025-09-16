@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::patch('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
 
         Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
         Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');

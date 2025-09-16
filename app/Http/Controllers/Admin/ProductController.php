@@ -27,14 +27,15 @@ class ProductController extends Controller
         $products = Product::with(['categories', 'brand'])->get();
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
-            'categories' => Category::all(),
+            'categories' => Category::where('status', 'active')->orderBy('name')->get(),
+            'allCategories' => Category::orderBy('name')->get(), // For display of existing inactive categories
             'brands' => Brand::all(),
         ]);
     }
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::where('status', 'active')->orderBy('name')->get();
         $brands = Brand::all();
         return Inertia::render('Admin/Products/Create', [
             'categories' => $categories,
@@ -44,6 +45,9 @@ class ProductController extends Controller
 
   public function store(Request $request)
 {
+    // Get active category IDs for validation
+    $activeCategoryIds = Category::where('status', 'active')->pluck('id')->toArray();
+
     $validated = $request->validate([
         'name' => 'required|string|max:255',
         'item_code' => 'required|string|max:20|unique:products,item_code',
@@ -54,6 +58,14 @@ class ProductController extends Controller
         'description' => 'nullable|string',
         'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
     ]);
+
+    // Additional validation to ensure only active categories are selected
+    $invalidCategories = array_diff($validated['category_ids'], $activeCategoryIds);
+    if (!empty($invalidCategories)) {
+        return back()->withErrors([
+            'category_ids' => 'One or more selected categories are inactive and cannot be used.'
+        ]);
+    }
 
     $imagePath = null;
     if ($request->hasFile('productimage')) {
@@ -75,19 +87,26 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = Category::all();
+        $categories = Category::where('status', 'active')->orderBy('name')->get();
         $brands = Brand::all();
         $product->load(['categories', 'brand']);
+
+        // Check if product has any inactive categories
+        $inactiveCategories = $product->categories()->where('status', 'inactive')->get();
 
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'brands' => $brands,
+            'inactiveCategories' => $inactiveCategories,
         ]);
     }
 
     public function update(Request $request, Product $product)
     {
+        // Get active category IDs for validation
+        $activeCategoryIds = Category::where('status', 'active')->pluck('id')->toArray();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'item_code' => 'required|string|max:20|unique:products,item_code,' . $product->id,
@@ -98,6 +117,17 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'productimage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Additional validation to ensure only active categories are selected
+        $invalidCategories = array_diff($validated['category_ids'], $activeCategoryIds);
+        if (!empty($invalidCategories)) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'category_ids' => ['One or more selected categories are inactive and cannot be used.']
+                ]
+            ], 422);
+        }
 
         if ($validated['item_code'] !== $product->item_code) {
             $validated['barcode'] = $this->generateBarcodeFromItemCode($validated['item_code']);

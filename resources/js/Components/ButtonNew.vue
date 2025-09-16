@@ -54,7 +54,8 @@ const defaultIcons = {
     'back': 'mdi mdi-arrow-left-circle',
     'remove' : 'mdi mdi-minus-circle',
     'pdf' : 'mdi mdi-file-export',
-    'login' : 'mdi mdi-login'
+    'login' : 'mdi mdi-login',
+    'archive' : 'mdi-archive-arrow-up'
 };
 
 const iconClass = computed(() => {
@@ -105,7 +106,8 @@ const buttonClasses = computed(() => {
         back: 'red',
         remove: 'orange',
         pdf: 'red',
-        login: 'blue'
+        login: 'blue',
+        archive: 'orange'
         
     };
     const color = props.color?.trim() || colorMap[props.types?.trim()] || 'blue';

@@ -138,8 +138,8 @@
                                 </div>
                                 <div class="mt-1">
                                     <p class="text-sm text-gray-600">
-                                        Select one or more categories for this
-                                        product
+                                        Select one or more active categories for this
+                                        product. Only active categories are available for selection.
                                     </p>
                                 </div>
                                 <InputError

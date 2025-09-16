@@ -290,9 +290,14 @@
                                         <span
                                             v-for="category in item.categories"
                                             :key="category.id"
-                                            class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                                            :class="{
+                                                'bg-blue-100 text-blue-800': category.status === 'active',
+                                                'bg-orange-100 text-orange-800': category.status === 'inactive'
+                                            }"
+                                            class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
                                         >
                                             {{ category.name }}
+                                            <span v-if="category.status === 'inactive'" class="ml-1" title="This category is archived">⚠️</span>
                                         </span>
                                         <span
                                             v-if="
@@ -546,6 +551,7 @@
                             <div
                                 class="mt-1 p-3 border border-gray-300 rounded-md bg-white max-h-48 overflow-y-auto"
                             >
+                                <!-- Active categories -->
                                 <div
                                     v-for="category in categories"
                                     :key="category.id"
@@ -565,8 +571,34 @@
                                         {{ category.name }}
                                     </label>
                                 </div>
+
+                                <!-- Inactive categories that are currently assigned -->
+                                <div v-if="currentProductInactiveCategories.length > 0" class="mt-3 pt-3 border-t border-gray-200">
+                                    <p class="text-xs text-orange-600 font-medium mb-2">⚠️ Archived Categories (Currently Assigned):</p>
+                                    <div
+                                        v-for="category in currentProductInactiveCategories"
+                                        :key="'inactive_' + category.id"
+                                        class="flex items-center mb-2 last:mb-0 bg-orange-50 p-2 rounded"
+                                    >
+                                        <input
+                                            :id="'inactive_category_' + category.id"
+                                            type="checkbox"
+                                            :value="category.id"
+                                            v-model="editForm.category_ids"
+                                            class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-orange-300 rounded"
+                                        />
+                                        <label
+                                            :for="'inactive_category_' + category.id"
+                                            class="ml-2 text-sm text-orange-800 cursor-pointer"
+                                        >
+                                            {{ category.name }} (Archived)
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-orange-600 mt-1">These categories are archived. Consider selecting active categories instead.</p>
+                                </div>
+
                                 <div
-                                    v-if="categories.length === 0"
+                                    v-if="categories.length === 0 && currentProductInactiveCategories.length === 0"
                                     class="text-sm text-gray-500 italic"
                                 >
                                     No categories available
@@ -885,6 +917,7 @@ import { autoTable } from "jspdf-autotable";
 const props = defineProps({
     products: Array,
     categories: Array,
+    allCategories: Array,
     brands: Array,
 });
 
@@ -1130,6 +1163,21 @@ const clearFilters = () => {
     };
     currentPage.value = 1;
 };
+
+const currentProductInactiveCategories = computed(() => {
+    if (!editingProduct.value || !props.allCategories) {
+        return [];
+    }
+
+    const productCategoryIds = editingProduct.value.categories
+        ? editingProduct.value.categories.map(c => c.id)
+        : [];
+
+    return props.allCategories.filter(category =>
+        category.status === 'inactive' &&
+        productCategoryIds.includes(category.id)
+    );
+});
 
 const tableColumns = computed(() => [
     {

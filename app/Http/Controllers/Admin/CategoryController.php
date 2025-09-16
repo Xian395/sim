@@ -20,11 +20,31 @@ class CategoryController extends Controller
         });
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
+        $filter = $request->get('filter', 'active');
+
+        $categories = Category::when($filter === 'active', function ($query) {
+            return $query->where('status', 'active');
+        })->when($filter === 'archived', function ($query) {
+            return $query->where('status', 'inactive');
+        })->when($filter === 'all', function ($query) {
+            return $query;
+        })->orderBy('name')->get();
+
+        // Get counts for all statuses
+        $activeCategoryCount = Category::where('status', 'active')->count();
+        $archivedCategoryCount = Category::where('status', 'inactive')->count();
+        $totalCategoryCount = Category::count();
+
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
+            'filter' => $filter,
+            'counts' => [
+                'active' => $activeCategoryCount,
+                'archived' => $archivedCategoryCount,
+                'total' => $totalCategoryCount,
+            ],
         ]);
     }
 
@@ -39,6 +59,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories,name',
         ]);
 
+        $validated['status'] = 'active';
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
@@ -73,13 +94,24 @@ class CategoryController extends Controller
     {
         if ($category->products()->exists()) {
             throw ValidationException::withMessages([
-                'category' => 'Cannot delete category with associated products. Please remove all products from this category first.'
+                'category' => 'Cannot archive category with associated products. Please remove all products from this category first.'
             ]);
         }
 
-        $category->delete();
-        
+        $category->update(['status' => 'inactive']);
+
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully.');
+            ->with('success', 'Category archived successfully.');
+    }
+
+    public function toggleStatus(Category $category)
+    {
+        $newStatus = $category->status === 'active' ? 'inactive' : 'active';
+        $category->update(['status' => $newStatus]);
+
+        $message = $newStatus === 'active' ? 'Category activated successfully.' : 'Category deactivated successfully.';
+
+        return redirect()->route('admin.categories.index')
+            ->with('success', $message);
     }
 }
