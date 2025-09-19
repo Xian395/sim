@@ -24,7 +24,38 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = Product::with(['categories', 'brand'])->get();
+        $products = Product::with(['categories', 'brand'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'item_code' => $product->item_code,
+                    'name' => $product->name,
+                    'barcode' => $product->barcode,
+                    'categories' => $product->categories->map(function($category) {
+                        return [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                            'status' => $category->status
+                        ];
+                    })->toArray(),
+                    'category' => $product->categories->first() ? [
+                        'id' => $product->categories->first()->id,
+                        'name' => $product->categories->first()->name
+                    ] : null,
+                    'brand' => $product->brand ? [
+                        'id' => $product->brand->id,
+                        'name' => $product->brand->name
+                    ] : null,
+                    'price' => $product->price,
+                    'stock_quantity' => $product->stock_quantity,
+                    'description' => $product->description,
+                    'image_url' => $product->image_path ? \App\Models\Product::getImageUrl($product->image_path) : null,
+                    'lastUpdated' => $product->updated_at->diffForHumans(),
+                ];
+            });
+
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => Category::where('status', 'active')->orderBy('name')->get(),
@@ -56,7 +87,7 @@ class ProductController extends Controller
         'category_ids.*' => 'exists:categories,id',
         'brand_id' => 'nullable|exists:brands,id',
         'description' => 'nullable|string',
-        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     // Additional validation to ensure only active categories are selected
@@ -94,8 +125,24 @@ class ProductController extends Controller
         // Check if product has any inactive categories
         $inactiveCategories = $product->categories()->where('status', 'inactive')->get();
 
+        // Format product data with proper image URL
+        $productData = [
+            'id' => $product->id,
+            'item_code' => $product->item_code,
+            'name' => $product->name,
+            'barcode' => $product->barcode,
+            'price' => $product->price,
+            'stock_quantity' => $product->stock_quantity,
+            'description' => $product->description,
+            'image_path' => $product->image_path,
+            'image_url' => $product->image_path ? \App\Models\Product::getImageUrl($product->image_path) : null,
+            'brand_id' => $product->brand_id,
+            'categories' => $product->categories,
+            'brand' => $product->brand,
+        ];
+
         return Inertia::render('Admin/Products/Edit', [
-            'product' => $product,
+            'product' => $productData,
             'categories' => $categories,
             'brands' => $brands,
             'inactiveCategories' => $inactiveCategories,
@@ -148,10 +195,34 @@ class ProductController extends Controller
 
         $product->categories()->sync($categoryIds);
 
+        $updatedProduct = $product->fresh()->load(['categories', 'brand']);
+        $formattedProduct = [
+            'id' => $updatedProduct->id,
+            'item_code' => $updatedProduct->item_code,
+            'name' => $updatedProduct->name,
+            'barcode' => $updatedProduct->barcode,
+            'categories' => $updatedProduct->categories->map(function($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'status' => $category->status
+                ];
+            })->toArray(),
+            'brand' => $updatedProduct->brand ? [
+                'id' => $updatedProduct->brand->id,
+                'name' => $updatedProduct->brand->name
+            ] : null,
+            'price' => $updatedProduct->price,
+            'stock_quantity' => $updatedProduct->stock_quantity,
+            'description' => $updatedProduct->description,
+            'image_url' => $updatedProduct->image_path ? \App\Models\Product::getImageUrl($updatedProduct->image_path) : null,
+            'lastUpdated' => $updatedProduct->updated_at->diffForHumans(),
+        ];
+
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully.',
-            'product' => $product->fresh()->load('categories'),
+            'product' => $formattedProduct,
             'redirect' => route('admin.products.index')
         ]);
     }

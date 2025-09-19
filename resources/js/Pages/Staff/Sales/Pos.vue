@@ -233,14 +233,14 @@
                                 <div class="flex justify-center mb-4">
                                     <div
                                         class="relative w-28 h-28 rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-shadow duration-500">
-                                        <img v-if="product.image_path" :src="getImageUrl(product.image_path)"
+                                        <img v-if="product.image_url" :src="product.image_url"
                                             :alt="product.name"
                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                             @error="handleImageError" />
                                         <div class="w-full h-full rounded-2xl bg-gradient-to-br flex items-center justify-center absolute inset-0 transition-transform duration-500 group-hover:scale-110"
                                             :class="[
                                                 getProductGradient(product.id),
-                                                product.image_path ? 'gradient-fallback hidden' : '',
+                                                product.image_url ? 'gradient-fallback hidden' : '',
                                             ]">
                                             <svg class="w-10 h-10 text-white opacity-90" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -793,23 +793,6 @@ const productGradients = [
     "from-sky-500 to-sky-600",
 ];
 
-const getImageUrl = (imagePath) => {
-    if (!imagePath) {
-        return null;
-    }
-
-    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-        return imagePath;
-    }
-
-    let normalizedPath = imagePath;
-    if (!imagePath.startsWith("/")) {
-        normalizedPath = `/storage/${imagePath}`;
-    }
-
-    const baseUrl = window.location.origin;
-    return `${baseUrl}${normalizedPath}`;
-};
 
 const handleImageError = (event) => {
     console.warn(`Image failed to load: ${event.target.src}`);

@@ -93,7 +93,20 @@ class BrandController extends Controller
         $products = $brand->products()
             ->with('categories')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'item_code' => $product->item_code,
+                    'price' => $product->price,
+                    'stock_quantity' => $product->stock_quantity,
+                    'description' => $product->description,
+                    'image_path' => $product->image_path,
+                    'image_url' => $product->image_path ? \App\Models\Product::getImageUrl($product->image_path) : null,
+                    'categories' => $product->categories,
+                ];
+            });
 
         return response()->json([
             'products' => $products

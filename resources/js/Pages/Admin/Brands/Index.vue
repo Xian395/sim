@@ -227,8 +227,8 @@
                                         <div class="flex justify-center">
                                             <div class="w-10 h-10 rounded-lg overflow-hidden shadow-sm">
                                                 <img
-                                                    v-if="product.image_path"
-                                                    :src="getImageUrl(product.image_path)"
+                                                    v-if="product.image_url"
+                                                    :src="product.image_url"
                                                     :alt="product.name"
                                                     class="w-full h-full object-cover"
                                                 />
@@ -468,11 +468,4 @@ const closeProductsModal = () => {
     loadingProducts.value = false;
 };
 
-const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) {
-        return imagePath;
-    }
-    return `/storage/${imagePath}`;
-};
 </script>

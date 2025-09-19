@@ -87,7 +87,7 @@ class PosController extends Controller
 
     $products = $productsQuery->get()->map(function ($product) {
         $product->display_name = "[{$product->barcode}] {$product->name}";
-        
+
         if ($product->stock_quantity == 0) {
             $product->stock_status = 'out_of_stock';
         } elseif ($product->stock_quantity <= 5) {
@@ -95,9 +95,10 @@ class PosController extends Controller
         } else {
             $product->stock_status = 'in_stock';
         }
-        
+
         $product->category_names = $product->categories->pluck('name')->join(', ');
-        
+        $product->image_url = $product->image_path ? \App\Models\Product::getImageUrl($product->image_path) : null;
+
         return $product;
     });
 

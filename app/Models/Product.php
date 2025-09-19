@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Category;
 use App\Models\StockTransaction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -37,5 +38,14 @@ class Product extends Model
     public function brand()
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public static function getImageUrl($imagePath)
+    {
+        if (!$imagePath) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($imagePath);
     }
 }

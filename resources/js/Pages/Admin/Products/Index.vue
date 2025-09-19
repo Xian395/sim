@@ -207,17 +207,15 @@
                                 item-key="id"
                                 ref="dataTable"
                             >
-                                <template #column-image_path="{ item }">
+                                <template #column-image_url="{ item }">
                                     <div class="flex justify-center">
                                         <div
                                             class="w-12 h-12 rounded-lg overflow-hidden shadow-lg relative cursor-pointer hover:shadow-xl transition-shadow duration-200"
                                             @click="viewImage(item)"
                                         >
                                             <img
-                                                v-if="item.image_path"
-                                                :src="
-                                                    getImageUrl(item.image_path)
-                                                "
+                                                v-if="item.image_url"
+                                                :src="item.image_url"
                                                 :alt="item.name"
                                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                                                 @error="handleImageError"
@@ -226,7 +224,7 @@
                                                 class="w-full h-full rounded-lg bg-gradient-to-br flex items-center justify-center absolute inset-0"
                                                 :class="[
                                                     getProductGradient(item.id),
-                                                    item.image_path
+                                                    item.image_url
                                                         ? 'gradient-fallback hidden'
                                                         : '',
                                                 ]"
@@ -783,8 +781,8 @@
                 <div class="flex justify-center bg-gray-50 rounded-lg p-4">
                     <div class="relative max-w-full max-h-96">
                         <img
-                            v-if="selectedImage?.image_path"
-                            :src="getImageUrl(selectedImage.image_path)"
+                            v-if="selectedImage?.image_url"
+                            :src="selectedImage.image_url"
                             :alt="selectedImage?.name"
                             class="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
                             @error="handleImageError"
@@ -956,13 +954,6 @@ const closeImageModal = () => {
 };
 const showImageModal = ref(false);
 const selectedImage = ref(null);
-const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) {
-        return imagePath;
-    }
-    return `/storage/${imagePath}`;
-};
 
 const handleImageError = (event) => {
     event.target.style.display = "none";
@@ -1187,7 +1178,7 @@ const tableColumns = computed(() => [
         align: "left",
     },
     {
-        key: "image_path",
+        key: "image_url",
         label: "Image",
         type: "custom",
         align: "center",
