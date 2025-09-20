@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\StockInController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\StockOutController;
+use App\Http\Controllers\Admin\InventoryReportsController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StaffDashboardController;
 
@@ -98,8 +99,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
          Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
          Route::get('/logs/sales-report', [LogController::class, 'salesReport'])->name('logs.sales-report');
-         Route::get('/logs/inventory-report', [LogController::class, 'inventoryReport'])->name('logs.inventory-report');
          Route::get('/logs/brand-sales-report', [LogController::class, 'brandSalesReport'])->name('logs.brand-sales-report');
+
+         Route::get('/inventory-reports', [InventoryReportsController::class, 'index'])->name('inventory-reports.index');
+         Route::get('/inventory-reports/report', [InventoryReportsController::class, 'inventoryReport'])->name('inventory-reports.report');
 
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
         Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');

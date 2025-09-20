@@ -66,21 +66,6 @@
                         <div class="border-b border-gray-200">
                             <nav class="flex space-x-8" aria-label="Tabs">
                                 <button
-                                    @click="activeTab = 'inventory'"
-                                    :class="[
-                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
-                                        activeTab === 'inventory'
-                                            ? 'border-green-500 text-green-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    ]"
-                                >
-                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                    </svg>
-                                    Inventory Report
-                                </button>
-
-                                <button
                                     @click="activeTab = 'brandSales'; brandReportFilters.period = 'daily'; loadBrandSalesReport()"
                                     :class="[
                                         'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
@@ -114,153 +99,6 @@
 
                         <!-- Tab Content -->
                         <div class="mt-6">
-                            <!-- Inventory Report Tab -->
-                            <div v-if="activeTab === 'inventory'" class="space-y-6">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900">Inventory Overview</h3>
-                                        <p class="text-sm text-gray-600">Monitor stock levels and inventory values</p>
-                                    </div>
-                                    <div class="flex space-x-2">
-                                        <ButtonNew
-                                            types="view"
-                                            @click="showInventoryReport = !showInventoryReport; loadInventoryReport()"
-                                        >
-                                            {{ showInventoryReport ? 'Hide' : 'Load' }} Report
-                                        </ButtonNew>
-                                        <ButtonNew
-                                            types="pdf"
-                                            size="md"
-                                            tooltips="Export Inventory Report"
-                                            @click="exportInventoryReport"
-                                            v-if="showInventoryReport && inventoryReportData"
-                                        >
-                                            Export PDF
-                                        </ButtonNew>
-                                    </div>
-                                </div>
-
-                                <div v-if="showInventoryReport">
-                                    <div v-if="inventoryReportData" class="space-y-6">
-                                        <!-- Summary Stats -->
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                                                <div class="flex items-center justify-between">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-blue-600">Total Products</div>
-                                                        <div class="text-2xl font-bold text-blue-900">
-                                                            {{ inventoryReportData.summary.totalProducts }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-blue-500">
-                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                                                <div class="flex items-center justify-between">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-green-600">Total Value</div>
-                                                        <div class="text-2xl font-bold text-green-900">
-                                                            ₱{{ formatCurrency(inventoryReportData.summary.totalValue || 0) }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-green-500">
-                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
-                                                <div class="flex items-center justify-between">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-yellow-600">Low Stock</div>
-                                                        <div class="text-2xl font-bold text-yellow-900">
-                                                            {{ inventoryReportData.summary.lowStockCount }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-yellow-500">
-                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
-                                                <div class="flex items-center justify-between">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-red-600">Out of Stock</div>
-                                                        <div class="text-2xl font-bold text-red-900">
-                                                            {{ inventoryReportData.summary.outOfStockCount }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-red-500">
-                                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Inventory Details Table -->
-                                        <div class="bg-white rounded-lg border border-gray-200">
-                                            <div class="px-6 py-4 border-b border-gray-200">
-                                                <h4 class="text-lg font-medium text-gray-900">Product Inventory Details</h4>
-                                            </div>
-                                            <div class="overflow-x-auto">
-                                                <table class="min-w-full divide-y divide-gray-200">
-                                                    <thead class="bg-gray-50">
-                                                        <tr>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="bg-white divide-y divide-gray-200">
-                                                        <tr v-for="product in inventoryReportData.products" :key="product.id" class="hover:bg-gray-50">
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                                {{ product.name }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                {{ product.brand }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                {{ product.stock_quantity }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                ₱{{ formatCurrency(product.price) }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                ₱{{ formatCurrency(product.value) }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                                <span :class="getStatusBadgeClass(product.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                                                    {{ product.status }}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div v-if="loadingInventoryReport" class="text-center py-12">
-                                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                                        <p class="mt-2 text-gray-600">Loading inventory report...</p>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Brand Sales Report Tab -->
                             <div v-if="activeTab === 'brandSales'" class="space-y-6">
@@ -774,15 +612,12 @@ const salesReportData = ref(null);
 const salesChart = ref(null);
 const chartInstance = ref(null);
 
-const showInventoryReport = ref(false);
-const loadingInventoryReport = ref(false);
-const inventoryReportData = ref(null);
 
 const showBrandSalesReport = ref(false);
 const loadingBrandSalesReport = ref(false);
 const brandSalesReportData = ref(null);
 
-const activeTab = ref('inventory');
+const activeTab = ref('brandSales');
 
 const reportFilters = ref({
     period: '',
@@ -1269,20 +1104,6 @@ const handleItemsPerPageChange = () => {
     });
 };
 
-const loadInventoryReport = async () => {
-    if (showInventoryReport.value && !inventoryReportData.value) {
-        loadingInventoryReport.value = true;
-        try {
-            const response = await fetch(`/admin/logs/inventory-report`);
-            const data = await response.json();
-            inventoryReportData.value = data;
-        } catch (error) {
-            console.error('Error loading inventory report:', error);
-        } finally {
-            loadingInventoryReport.value = false;
-        }
-    }
-};
 
 const loadBrandSalesReport = async () => {
     loadingBrandSalesReport.value = true;
@@ -1304,96 +1125,7 @@ const loadBrandSalesReport = async () => {
     }
 };
 
-const getStatusBadgeClass = (status) => {
-    switch (status) {
-        case 'Out of Stock':
-            return 'bg-red-100 text-red-800';
-        case 'Low Stock':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'In Stock':
-            return 'bg-green-100 text-green-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-};
 
-const exportInventoryReport = async () => {
-    if (!inventoryReportData.value) return;
-
-    try {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.width;
-
-        const logoBase64 = await getLogoBase64();
-
-        let yPosition = 8;
-
-        if (logoBase64) {
-            const logoWidth = 20;
-            const logoHeight = 20;
-            const logoX = (pageWidth - logoWidth) / 2;
-
-            doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
-            yPosition += logoHeight + 2;
-        }
-
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        const title = "INVENTORY REPORT";
-        const titleWidth = doc.getTextWidth(title);
-        doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
-
-        yPosition += 10;
-
-        doc.setFontSize(13);
-        doc.text("Summary", 14, yPosition);
-
-        yPosition += 8;
-
-        doc.setFontSize(10);
-        doc.text(`• Total Products: ${inventoryReportData.value.summary.totalProducts}`, 18, yPosition);
-        yPosition += 7;
-        doc.text(`• Total Inventory Value: PHP ${formatCurrency(inventoryReportData.value.summary.totalValue)}`, 18, yPosition);
-        yPosition += 7;
-        doc.text(`• Low Stock Items: ${inventoryReportData.value.summary.lowStockCount}`, 18, yPosition);
-        yPosition += 7;
-        doc.text(`• Out of Stock Items: ${inventoryReportData.value.summary.outOfStockCount}`, 18, yPosition);
-        yPosition += 10;
-
-        const tableRows = inventoryReportData.value.products.map(product => [
-            product.name,
-            product.brand,
-            product.stock_quantity.toString(),
-            `PHP ${formatCurrency(product.price)}`,
-            `PHP ${formatCurrency(product.value)}`,
-            product.status,
-        ]);
-
-        autoTable(doc, {
-            head: [['Product Name', 'Brand', 'Stock Qty', 'Unit Price', 'Total Value', 'Status']],
-            body: tableRows,
-            startY: yPosition,
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [34, 197, 94], textColor: 255 },
-            margin: { left: 14, right: 14, top: 10 }
-        });
-
-        const finalY = doc.lastAutoTable.finalY || yPosition + 10;
-        const generatedText = `Generated on: ${new Date().toLocaleString()}`;
-        const textWidth = doc.getTextWidth(generatedText);
-        doc.setFontSize(9);
-        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
-
-        const filename = `inventory-report-${new Date().toISOString().split('T')[0]}.pdf`;
-        const pdfBlob = doc.output('blob');
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(pdfUrl, '_blank');
-
-    } catch (error) {
-        alert("Error generating PDF. Please try again.");
-        console.error(error);
-    }
-};
 
 const exportBrandSalesReport = async () => {
     if (!brandSalesReportData.value) return;

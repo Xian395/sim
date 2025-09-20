@@ -180,12 +180,12 @@
                         </NavLink>
                     </li>
 
-                    <!-- Stock Management Section -->
+                    <!-- Inventory Section -->
                     <li>
                         <div
                             class="flex items-center p-2 text-xs font-semibold text-gray-500 uppercase mt-6"
                         >
-                            <span>Stock Management</span>
+                            <span>Inventory</span>
                         </div>
                     </li>
 
@@ -253,6 +253,35 @@
                             </svg>
                             <span class="flex-1 ml-3 whitespace-nowrap"
                                 >Stock Out</span
+                            >
+                        </NavLink>
+                    </li>
+
+                    <!-- Inventory Reports -->
+                    <li>
+                        <NavLink
+                            :href="route('admin.inventory-reports.index')"
+                            :active="route().current('admin.inventory-reports.*')"
+                            class="flex items-center w-full p-2 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 group"
+                            :class="{
+                                'bg-blue-100 text-blue-700':
+                                    route().current('admin.inventory-reports.*'),
+                            }"
+                        >
+                            <svg
+                                class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-blue-700"
+                                :class="{
+                                    'text-blue-700':
+                                        route().current('admin.inventory-reports.*'),
+                                }"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                            <span class="flex-1 ml-3 whitespace-nowrap"
+                                >Inventory Reports</span
                             >
                         </NavLink>
                     </li>
