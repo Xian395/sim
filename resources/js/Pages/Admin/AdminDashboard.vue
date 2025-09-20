@@ -77,6 +77,26 @@
           </div>
         </div>
 
+        <!-- Product Sales Chart -->
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Product Sales Overview</h3>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600">Top 10 products by sales volume (highest to lowest)</p>
+          </div>
+          <div v-if="hasActualSalesData" class="h-96">
+            <canvas ref="salesChart"></canvas>
+          </div>
+          <div v-else class="h-96 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div class="text-center">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <h4 class="mt-2 text-sm font-medium text-gray-900">No sales data available</h4>
+              <p class="mt-1 text-sm text-gray-500">Sales data will appear here once products are sold.</p>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Financial Overview</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -301,12 +321,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
-import StatsCard from '@/Components/StatsCard.vue'; 
+import StatsCard from '@/Components/StatsCard.vue';
 import UnAuthorized from "@/Components/UnAuthorized.vue";
 import { notify2 } from "@/globalFunctions.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  BarController,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
 
 const $page = usePage();
 
@@ -319,11 +349,21 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  productSalesData: {
+    type: Array,
+    default: () => [],
+  },
 });
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, Title, Tooltip, Legend);
 
 const products = ref(props.products || []);
 const stats = ref(props.stats || {});
+const productSalesData = ref(props.productSalesData || []);
 const currentDateTime = ref('');
+const salesChart = ref(null);
+let chartInstance = null;
 
 const calculatedStats = computed(() => {
   const productList = products.value || [];
@@ -382,6 +422,12 @@ const recentProducts = computed(() => {
   return [...(products.value || [])]
     .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     .slice(0, 5);
+});
+
+const hasActualSalesData = computed(() => {
+  return productSalesData.value &&
+         productSalesData.value.length > 0 &&
+         productSalesData.value.some(item => item.total_sales > 0);
 });
 
 const formatCurrency = (amount) => {
@@ -457,19 +503,148 @@ const exportInventoryReport = () => {
   a.download = `inventory-report-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   window.URL.revokeObjectURL(url);
-  
+
   notify2('Inventory report exported successfully!', 'success');
+};
+
+const createSalesChart = () => {
+  if (!salesChart.value) {
+    console.log('Sales chart canvas not found');
+    return;
+  }
+
+  if (!productSalesData.value || productSalesData.value.length === 0) {
+    console.log('No sales data available');
+    return;
+  }
+
+  // Destroy existing chart if it exists
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  const salesData = productSalesData.value || [];
+  console.log('Raw sales data:', salesData);
+
+  // Filter out products with zero sales and sort by total_sales in descending order
+  const filteredData = salesData.filter(item => item.total_sales > 0);
+  const sortedData = [...filteredData].sort((a, b) => b.total_sales - a.total_sales);
+
+  console.log('Filtered and sorted data:', sortedData);
+
+  // If no products have sales, don't render the chart
+  if (sortedData.length === 0) {
+    console.log('No products with sales found');
+    return;
+  }
+
+  const labels = sortedData.map(item => {
+    // Ensure we have a valid name
+    const name = item.name || 'Unnamed Product';
+    // Truncate long product names for better display
+    return name.length > 20 ? name.substring(0, 20) + '...' : name;
+  });
+
+  const data = sortedData.map(item => {
+    // Ensure we have valid numerical data
+    const sales = parseInt(item.total_sales) || 0;
+    console.log(`Product: ${item.name}, Sales: ${sales}`);
+    return sales;
+  });
+
+  // Generate colors for bars (gradient from highest to lowest)
+  const colors = sortedData.map((_, index) => {
+    const intensity = 1 - (index / sortedData.length) * 0.7;
+    return `rgba(59, 130, 246, ${intensity})`;
+  });
+
+  const borderColors = sortedData.map((_, index) => {
+    const intensity = 1 - (index / sortedData.length) * 0.7;
+    return `rgba(37, 99, 235, ${intensity})`;
+  });
+
+  chartInstance = new ChartJS(salesChart.value, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Sales',
+        data: data,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Units Sold'
+          },
+          ticks: {
+            stepSize: 1
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Products'
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'Product Sales Performance',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            title: function(tooltipItems) {
+              const index = tooltipItems[0].dataIndex;
+              return sortedData[index]?.name || '';
+            },
+            label: function(context) {
+              return `Units Sold: ${context.parsed.y}`;
+            }
+          }
+        }
+      }
+    }
+  });
 };
 
 onMounted(() => {
   products.value = props.products || [];
   stats.value = props.stats || {};
+  productSalesData.value = props.productSalesData || [];
   updateDateTime();
-  
+
   setInterval(updateDateTime, 60000);
-  
+
   if ($page.props.auth.user.role === 'admin') {
     showStockAlerts();
+
+    // Create chart after DOM is ready
+    nextTick(() => {
+      createSalesChart();
+    });
   }
 });
 

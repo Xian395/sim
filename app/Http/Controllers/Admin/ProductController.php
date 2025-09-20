@@ -87,7 +87,7 @@ class ProductController extends Controller
         'category_ids.*' => 'exists:categories,id',
         'brand_id' => 'nullable|exists:brands,id',
         'description' => 'nullable|string',
-        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'productimage' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
     ]);
 
     // Additional validation to ensure only active categories are selected
@@ -184,7 +184,7 @@ class ProductController extends Controller
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            
+
             $validated['image_path'] = $request->file('productimage')->store('products', 'public');
         }
 
@@ -233,7 +233,7 @@ class ProductController extends Controller
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
-        
+
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
