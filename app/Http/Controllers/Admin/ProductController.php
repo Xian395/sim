@@ -100,7 +100,7 @@ class ProductController extends Controller
 
     $imagePath = null;
     if ($request->hasFile('productimage')) {
-        $imagePath = $request->file('productimage')->store('products', 'public');
+        $imagePath = $request->file('productimage')->store('products', 's3');
     }
 
     $validated['barcode'] = $this->generateBarcodeFromItemCode($validated['item_code']);
@@ -182,10 +182,10 @@ class ProductController extends Controller
 
         if ($request->hasFile('productimage')) {
             if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
+                Storage::disk('s3')->delete($product->image_path);
             }
 
-            $validated['image_path'] = $request->file('productimage')->store('products', 'public');
+            $validated['image_path'] = $request->file('productimage')->store('products', 's3');
         }
 
         $categoryIds = $validated['category_ids'];
@@ -231,7 +231,7 @@ class ProductController extends Controller
     {
         // Delete associated image file
         if ($product->image_path) {
-            Storage::disk('public')->delete($product->image_path);
+            Storage::disk('s3')->delete($product->image_path);
         }
 
         $product->delete();

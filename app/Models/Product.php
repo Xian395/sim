@@ -46,17 +46,7 @@ class Product extends Model
             return null;
         }
 
-        // For local development, ensure the URL works with different local server setups
-        if (app()->environment('local')) {
-            $baseUrl = config('app.url');
-            // Handle cases where APP_URL might not be set correctly for local development
-            if (empty($baseUrl) || $baseUrl === 'http://localhost') {
-                $baseUrl = request()->getSchemeAndHttpHost();
-            }
-            return $baseUrl . '/storage/' . $imagePath;
-        }
-
-        // For production, use the configured storage URL
-        return Storage::disk('public')->url($imagePath);
+        // Use cloud storage for all environments
+        return Storage::disk('s3')->url($imagePath);
     }
 }
