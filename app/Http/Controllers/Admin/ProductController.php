@@ -100,7 +100,8 @@ class ProductController extends Controller
 
     $imagePath = null;
     if ($request->hasFile('productimage')) {
-        $imagePath = $request->file('productimage')->store('products', 's3');
+        $disk = config('app.env') === 'local' ? 'public' : 's3';
+        $imagePath = $request->file('productimage')->store('products', $disk);
     }
 
     $validated['barcode'] = $this->generateBarcodeFromItemCode($validated['item_code']);
@@ -182,10 +183,12 @@ class ProductController extends Controller
 
         if ($request->hasFile('productimage')) {
             if ($product->image_path) {
-                Storage::disk('s3')->delete($product->image_path);
+                $disk = config('app.env') === 'local' ? 'public' : 's3';
+                Storage::disk($disk)->delete($product->image_path);
             }
 
-            $validated['image_path'] = $request->file('productimage')->store('products', 's3');
+            $disk = config('app.env') === 'local' ? 'public' : 's3';
+            $validated['image_path'] = $request->file('productimage')->store('products', $disk);
         }
 
         $categoryIds = $validated['category_ids'];
@@ -231,7 +234,8 @@ class ProductController extends Controller
     {
         // Delete associated image file
         if ($product->image_path) {
-            Storage::disk('s3')->delete($product->image_path);
+            $disk = config('app.env') === 'local' ? 'public' : 's3';
+            Storage::disk($disk)->delete($product->image_path);
         }
 
         $product->delete();

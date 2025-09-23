@@ -46,7 +46,8 @@ class Product extends Model
             return null;
         }
 
-        // Use cloud storage for all environments
-        return Storage::disk('s3')->url($imagePath);
+        // Use public disk for local development, S3 for production
+        $disk = config('app.env') === 'local' ? 'public' : 's3';
+        return Storage::disk($disk)->url($imagePath);
     }
 }

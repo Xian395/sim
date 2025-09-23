@@ -2,6 +2,7 @@
 
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\LogController;
@@ -32,6 +33,14 @@ use App\Http\Controllers\StaffDashboardController;
 
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        $user = Auth::user();
+        return match ($user->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            default => redirect()->route('staff.pos'),
+        };
+    }
+
     return Inertia::render('Auth/Login', [
         'canResetPassword' => true,
         'status' => session('status'),
