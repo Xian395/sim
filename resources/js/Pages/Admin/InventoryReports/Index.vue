@@ -30,6 +30,13 @@
                 </div>
                 <div class="flex space-x-2">
                   <ButtonNew
+                    types="secondary"
+                    size="md"
+                    @click="toggleFilters"
+                  >
+                    {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+                  </ButtonNew>
+                  <ButtonNew
                     types="pdf"
                     size="md"
                     tooltips="Export Inventory Report"
@@ -41,6 +48,134 @@
                 </div>
               </div>
 
+              <!-- Filters Section -->
+              <div v-if="inventoryReportData && showFilters" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <!-- Search Filter -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search Product</label>
+                    <input
+                      v-model="filters.search"
+                      type="text"
+                      placeholder="Search by product name..."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <!-- Brand Filter -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                    <select
+                      v-model="filters.brand"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Brands</option>
+                      <option v-for="brand in availableBrands" :key="brand" :value="brand">{{ brand }}</option>
+                    </select>
+                  </div>
+
+                  <!-- Status Filter -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      v-model="filters.status"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Status</option>
+                      <option value="In Stock">In Stock</option>
+                      <option value="Low Stock">Low Stock</option>
+                      <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                  </div>
+
+                  <!-- Stock Quantity Range -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+                    <div class="flex space-x-2">
+                      <input
+                        v-model.number="filters.minStock"
+                        type="number"
+                        placeholder="Min"
+                        min="0"
+                        class="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        v-model.number="filters.maxStock"
+                        type="number"
+                        placeholder="Max"
+                        min="0"
+                        class="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Price Range -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                    <div class="flex space-x-2">
+                      <input
+                        v-model.number="filters.minPrice"
+                        type="number"
+                        placeholder="Min"
+                        min="0"
+                        step="0.01"
+                        class="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        v-model.number="filters.maxPrice"
+                        type="number"
+                        placeholder="Max"
+                        min="0"
+                        step="0.01"
+                        class="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Clear Filters Button -->
+                  <div class="flex items-end">
+                    <ButtonNew
+                      types="secondary"
+                      size="md"
+                      @click="clearFilters"
+                      class="w-full"
+                    >
+                      Clear Filters
+                    </ButtonNew>
+                  </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                <div v-if="hasActiveFilters" class="mt-3 flex flex-wrap gap-2">
+                  <span class="text-sm font-medium text-gray-700">Active filters:</span>
+                  <span v-if="filters.search" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Search: "{{ filters.search }}"
+                    <button @click="filters.search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                  </span>
+                  <span v-if="filters.brand" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Brand: {{ filters.brand }}
+                    <button @click="filters.brand = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
+                  </span>
+                  <span v-if="filters.status" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Status: {{ filters.status }}
+                    <button @click="filters.status = ''" class="ml-1 text-yellow-600 hover:text-yellow-800">×</button>
+                  </span>
+                  <span v-if="filters.minStock !== null || filters.maxStock !== null" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Stock: {{ filters.minStock || 0 }}-{{ filters.maxStock || '∞' }}
+                    <button @click="filters.minStock = null; filters.maxStock = null" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                  </span>
+                  <span v-if="filters.minPrice !== null || filters.maxPrice !== null" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Price: ₱{{ filters.minPrice || 0 }}-₱{{ filters.maxPrice || '∞' }}
+                    <button @click="filters.minPrice = null; filters.maxPrice = null" class="ml-1 text-red-600 hover:text-red-800">×</button>
+                  </span>
+                </div>
+
+                <!-- Results Count -->
+                <div v-if="filteredProducts" class="mt-3 text-sm text-gray-600">
+                  Showing {{ filteredProducts.length }} of {{ inventoryReportData.products.length }} products
+                </div>
+              </div>
+
               <div v-if="inventoryReportData" class="space-y-6">
                   <!-- Summary Stats -->
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -49,7 +184,7 @@
                         <div>
                           <div class="text-sm font-medium text-blue-600">Total Products</div>
                           <div class="text-2xl font-bold text-blue-900">
-                            {{ inventoryReportData.summary.totalProducts }}
+                            {{ hasActiveFilters ? filteredSummary.totalProducts : inventoryReportData.summary.totalProducts }}
                           </div>
                         </div>
                         <div class="text-blue-500">
@@ -65,7 +200,7 @@
                         <div>
                           <div class="text-sm font-medium text-green-600">Total Value</div>
                           <div class="text-2xl font-bold text-green-900">
-                            ₱{{ formatCurrency(inventoryReportData.summary.totalValue || 0) }}
+                            ₱{{ formatCurrency(hasActiveFilters ? filteredSummary.totalValue : inventoryReportData.summary.totalValue || 0) }}
                           </div>
                         </div>
                         <div class="text-green-500">
@@ -81,7 +216,7 @@
                         <div>
                           <div class="text-sm font-medium text-yellow-600">Low Stock</div>
                           <div class="text-2xl font-bold text-yellow-900">
-                            {{ inventoryReportData.summary.lowStockCount }}
+                            {{ hasActiveFilters ? filteredSummary.lowStockCount : inventoryReportData.summary.lowStockCount }}
                           </div>
                         </div>
                         <div class="text-yellow-500">
@@ -97,7 +232,7 @@
                         <div>
                           <div class="text-sm font-medium text-red-600">Out of Stock</div>
                           <div class="text-2xl font-bold text-red-900">
-                            {{ inventoryReportData.summary.outOfStockCount }}
+                            {{ hasActiveFilters ? filteredSummary.outOfStockCount : inventoryReportData.summary.outOfStockCount }}
                           </div>
                         </div>
                         <div class="text-red-500">
@@ -127,7 +262,27 @@
                           </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                          <tr v-for="product in inventoryReportData.products" :key="product.id" class="hover:bg-gray-50">
+                          <tr v-if="filteredProducts.length === 0">
+                            <td colspan="6" class="px-6 py-12 text-center">
+                              <div class="text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No products found</h3>
+                                <p class="mt-1 text-sm text-gray-500">Try adjusting your filters to see more results.</p>
+                                <div class="mt-6">
+                                  <ButtonNew
+                                    types="secondary"
+                                    size="sm"
+                                    @click="clearFilters"
+                                  >
+                                    Clear all filters
+                                  </ButtonNew>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr v-else v-for="product in filteredProducts" :key="product.id" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {{ product.name }}
                             </td>
@@ -174,7 +329,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
 import ButtonNew from '@/Components/ButtonNew.vue';
@@ -188,6 +343,17 @@ const $page = usePage();
 const inventoryReportData = ref(null);
 const loadingInventoryReport = ref(false);
 const currentDateTime = ref('');
+const showFilters = ref(false);
+
+const filters = ref({
+  search: '',
+  brand: '',
+  status: '',
+  minStock: null,
+  maxStock: null,
+  minPrice: null,
+  maxPrice: null
+});
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-PH', {
@@ -195,6 +361,92 @@ const formatCurrency = (amount) => {
     maximumFractionDigits: 2
   }).format(amount || 0);
 };
+
+const availableBrands = computed(() => {
+  if (!inventoryReportData.value?.products) return [];
+  const brands = [...new Set(inventoryReportData.value.products.map(product => product.brand))];
+  return brands.filter(brand => brand && brand !== 'No Brand').sort();
+});
+
+const filteredProducts = computed(() => {
+  if (!inventoryReportData.value?.products) return [];
+
+  let filtered = inventoryReportData.value.products;
+
+  if (filters.value.search) {
+    filtered = filtered.filter(product =>
+      product.name.toLowerCase().includes(filters.value.search.toLowerCase())
+    );
+  }
+
+  if (filters.value.brand) {
+    filtered = filtered.filter(product => product.brand === filters.value.brand);
+  }
+
+  if (filters.value.status) {
+    filtered = filtered.filter(product => product.status === filters.value.status);
+  }
+
+  if (filters.value.minStock !== null) {
+    filtered = filtered.filter(product => product.stock_quantity >= filters.value.minStock);
+  }
+
+  if (filters.value.maxStock !== null) {
+    filtered = filtered.filter(product => product.stock_quantity <= filters.value.maxStock);
+  }
+
+  if (filters.value.minPrice !== null) {
+    filtered = filtered.filter(product => product.price >= filters.value.minPrice);
+  }
+
+  if (filters.value.maxPrice !== null) {
+    filtered = filtered.filter(product => product.price <= filters.value.maxPrice);
+  }
+
+  return filtered;
+});
+
+const hasActiveFilters = computed(() => {
+  return filters.value.search ||
+         filters.value.brand ||
+         filters.value.status ||
+         filters.value.minStock !== null ||
+         filters.value.maxStock !== null ||
+         filters.value.minPrice !== null ||
+         filters.value.maxPrice !== null;
+});
+
+const toggleFilters = () => {
+  showFilters.value = !showFilters.value;
+};
+
+const clearFilters = () => {
+  filters.value = {
+    search: '',
+    brand: '',
+    status: '',
+    minStock: null,
+    maxStock: null,
+    minPrice: null,
+    maxPrice: null
+  };
+};
+
+const filteredSummary = computed(() => {
+  if (!filteredProducts.value) return null;
+
+  const totalProducts = filteredProducts.value.length;
+  const totalValue = filteredProducts.value.reduce((sum, product) => sum + product.value, 0);
+  const lowStockCount = filteredProducts.value.filter(product => product.status === 'Low Stock').length;
+  const outOfStockCount = filteredProducts.value.filter(product => product.status === 'Out of Stock').length;
+
+  return {
+    totalProducts,
+    totalValue,
+    lowStockCount,
+    outOfStockCount
+  };
+});
 
 const updateDateTime = () => {
   const now = new Date();
