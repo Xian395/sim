@@ -24,9 +24,20 @@ class StockInController extends Controller
     public function index()
     {
         $products = Product::with('category')
-            ->select('id', 'name', 'barcode', 'stock_quantity', 'item_code')
-            ->get();
-            
+            ->select('id', 'name', 'barcode', 'stock_quantity', 'item_code', 'image_path')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'barcode' => $product->barcode,
+                    'stock_quantity' => $product->stock_quantity,
+                    'item_code' => $product->item_code,
+                    'image_path' => $product->image_path,
+                    'image_url' => Product::getImageUrl($product->image_path),
+                ];
+            });
+
         return Inertia::render('Admin/StockIn', [
             'products' => $products,
         ]);
