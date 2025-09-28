@@ -88,8 +88,10 @@ class LogController extends Controller
 
     public function salesReport(Request $request)
     {
-        $period = $request->get('period', 'daily'); 
+        $period = $request->get('period', 'daily');
         $date = $request->get('date', now()->toDateString());
+        $startDate = $request->get('startDate', now()->toDateString());
+        $endDate = $request->get('endDate', now()->toDateString());
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 
@@ -109,6 +111,10 @@ class LogController extends Controller
                 $salesData = $this->getMonthlySales($year, $month);
                 $chartData = $this->getMonthlyChartData($year, $month);
                 break;
+            case 'range':
+                $salesData = $this->getRangeSales($startDate, $endDate);
+                $chartData = $this->getRangeChartData($startDate, $endDate);
+                break;
         }
 
         return response()->json([
@@ -116,6 +122,8 @@ class LogController extends Controller
             'chartData' => $chartData,
             'period' => $period,
             'date' => $date,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'year' => $year,
             'month' => $month
         ]);
@@ -126,6 +134,8 @@ class LogController extends Controller
     {
         $period = $request->get('period', 'daily');
         $date = $request->get('date', now()->toDateString());
+        $startDate = $request->get('startDate', now()->toDateString());
+        $endDate = $request->get('endDate', now()->toDateString());
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 
@@ -135,7 +145,7 @@ class LogController extends Controller
         foreach ($brands as $brand) {
             $productNames = $brand->products->pluck('name')->toArray();
 
-            $brandSales = $this->getBrandSalesForPeriod($productNames, $brand->name, $period, $date, $year, $month);
+            $brandSales = $this->getBrandSalesForPeriod($productNames, $brand->name, $period, $date, $startDate, $endDate, $year, $month);
             $brandSalesData[] = $brandSales;
         }
 
@@ -143,12 +153,14 @@ class LogController extends Controller
             'brandSales' => $brandSalesData,
             'period' => $period,
             'date' => $date,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'year' => $year,
             'month' => $month
         ]);
     }
 
-    private function getBrandSalesForPeriod($productNames, $brandName, $period, $date, $year, $month)
+    private function getBrandSalesForPeriod($productNames, $brandName, $period, $date, $startDate, $endDate, $year, $month)
     {
         switch ($period) {
             case 'daily':
@@ -157,6 +169,8 @@ class LogController extends Controller
                 return $this->getWeeklyBrandSales($productNames, $brandName, $date);
             case 'monthly':
                 return $this->getMonthlyBrandSales($productNames, $brandName, $year, $month);
+            case 'range':
+                return $this->getRangeBrandSales($productNames, $brandName, $startDate, $endDate);
             default:
                 return [];
         }
@@ -264,6 +278,50 @@ class LogController extends Controller
             'year' => $year,
             'month' => $month,
             'monthName' => $startDate->format('F'),
+            'dailyBreakdown' => $dailyBreakdown,
+        ];
+    }
+
+    private function getRangeBrandSales($productNames, $brandName, $startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $end = Carbon::parse($endDate)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$start, $end])
+            ->get();
+
+        $brandSales = $sales->filter(function ($sale) use ($productNames) {
+            return $this->saleContainsProducts($sale->details, $productNames);
+        });
+
+        $dailyBreakdown = [];
+        $currentDate = Carbon::parse($startDate);
+        $endDateCarbon = Carbon::parse($endDate);
+
+        while ($currentDate->lte($endDateCarbon)) {
+            $daySales = $brandSales->filter(function ($sale) use ($currentDate) {
+                return $sale->created_at->setTimezone('Asia/Manila')->isSameDay($currentDate);
+            });
+
+            $dailyBreakdown[] = [
+                'date' => $currentDate->toDateString(),
+                'dayName' => $currentDate->format('l'),
+                'amount' => $this->extractAmountFromSales($daySales),
+                'transactions' => $daySales->count(),
+            ];
+
+            $currentDate->addDay();
+        }
+
+        $totalAmount = $this->extractAmountFromSales($brandSales);
+
+        return [
+            'brand' => $brandName,
+            'totalAmount' => $totalAmount,
+            'totalTransactions' => $brandSales->count(),
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'dailyBreakdown' => $dailyBreakdown,
         ];
     }
@@ -496,6 +554,74 @@ private function getDailyChartData($date)
         }
 
         return $monthlyData;
+    }
+
+    private function getRangeSales($startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $end = Carbon::parse($endDate)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$start, $end])
+            ->with('user')
+            ->get();
+
+        $dailyBreakdown = [];
+        $currentDate = Carbon::parse($startDate);
+        $endDateCarbon = Carbon::parse($endDate);
+
+        while ($currentDate->lte($endDateCarbon)) {
+            $daySales = $sales->filter(function ($sale) use ($currentDate) {
+                return $sale->created_at->setTimezone('Asia/Manila')->isSameDay($currentDate);
+            });
+
+            $dailyBreakdown[] = [
+                'date' => $currentDate->toDateString(),
+                'dayName' => $currentDate->format('l'),
+                'amount' => $this->extractAmountFromSales($daySales),
+                'transactions' => $daySales->count(),
+            ];
+
+            $currentDate->addDay();
+        }
+
+        $totalAmount = $this->extractAmountFromSales($sales);
+
+        return [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalAmount' => $totalAmount,
+            'totalTransactions' => $sales->count(),
+            'averageTransaction' => $sales->count() > 0 ? $totalAmount / $sales->count() : 0,
+            'dailyBreakdown' => $dailyBreakdown,
+        ];
+    }
+
+    private function getRangeChartData($startDate, $endDate)
+    {
+        $start = Carbon::parse($startDate)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $end = Carbon::parse($endDate)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        $rangeData = [];
+        $currentDate = Carbon::parse($startDate);
+        $endDateCarbon = Carbon::parse($endDate);
+
+        while ($currentDate->lte($endDateCarbon)) {
+            $daySales = Log::where('action', 'sale')
+                ->whereDate('created_at', $currentDate->setTimezone('Asia/Manila'))
+                ->get();
+
+            $rangeData[] = [
+                'day' => $currentDate->format('M j'),
+                'date' => $currentDate->toDateString(),
+                'amount' => $this->extractAmountFromSales($daySales),
+                'transactions' => $daySales->count(),
+            ];
+
+            $currentDate->addDay();
+        }
+
+        return $rangeData;
     }
 
     private function calculateSalesAmount($startDate, $endDate)

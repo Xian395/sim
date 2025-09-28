@@ -132,6 +132,7 @@
                                             <option value="daily">Daily</option>
                                             <option value="weekly">Weekly</option>
                                             <option value="monthly">Monthly</option>
+                                            <option value="range">Date Range</option>
                                         </select>
                                     </div>
 
@@ -139,6 +140,26 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
                                         <input
                                             v-model="brandReportFilters.date"
+                                            @change="loadBrandSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="brandReportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                        <input
+                                            v-model="brandReportFilters.startDate"
+                                            @change="loadBrandSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="brandReportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                        <input
+                                            v-model="brandReportFilters.endDate"
                                             @change="loadBrandSalesReport"
                                             type="date"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -217,146 +238,159 @@
                                     </div>
                                     <div class="flex space-x-2">
                                         <ButtonNew
-                                            types="view"
-                                            @click="showSalesReport = !showSalesReport"
-                                        >
-                                            {{ showSalesReport ? 'Hide' : 'Load' }} Report
-                                        </ButtonNew>
-                                        <ButtonNew
                                             types="pdf"
                                             size="md"
                                             tooltips="Export Sales Report"
                                             @click="exportSalesReport"
-                                            v-if="showSalesReport && salesReportData"
+                                            v-if="salesReportData"
                                         >
                                             Export PDF
                                         </ButtonNew>
                                     </div>
                                 </div>
 
-                                <div v-if="showSalesReport">
-                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
-                                            <select
-                                                v-model="reportFilters.period"
-                                                @change="loadSalesReport"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option value="" disabled>Select a period</option>
-                                                <option value="daily">Daily</option>
-                                                <option value="weekly">Weekly</option>
-                                                <option value="monthly">Monthly</option>
-                                            </select>
-                                        </div>
-
-                                        <div v-if="reportFilters.period === 'daily' || reportFilters.period === 'weekly'">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                                            <input
-                                                v-model="reportFilters.date"
-                                                @change="loadSalesReport"
-                                                type="date"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </div>
-
-                                        <div v-if="reportFilters.period === 'monthly'">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                                            <select
-                                                v-model="reportFilters.year"
-                                                @change="loadSalesReport"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option v-for="year in availableYears" :key="year" :value="year">
-                                                    {{ year }}
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        <div v-if="reportFilters.period === 'monthly'">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                                            <select
-                                                v-model="reportFilters.month"
-                                                @change="loadSalesReport"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option v-for="(month, index) in months" :key="index" :value="index + 1">
-                                                    {{ month }}
-                                                </option>
-                                            </select>
-                                        </div>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                        <select
+                                            v-model="reportFilters.period"
+                                            @change="loadSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="" disabled>Select a period</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="range">Date Range</option>
+                                        </select>
                                     </div>
 
-                                    <!-- Sales Report Results -->
-                                    <div v-if="salesReportData" class="space-y-6">
-                                        <!-- Summary Stats -->
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                                                <div class="text-sm font-medium text-green-600">Total Sales</div>
-                                                <div class="text-2xl font-bold text-green-900">
-                                                    ₱{{ formatCurrency(salesReportData.salesData.totalAmount || 0) }}
-                                                </div>
-                                            </div>
-                                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                                                <div class="text-sm font-medium text-blue-600">Total Transactions</div>
-                                                <div class="text-2xl font-bold text-blue-900">
-                                                    {{ salesReportData.salesData.totalTransactions || 0 }}
-                                                </div>
-                                            </div>
-                                            <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                                                <div class="text-sm font-medium text-purple-600">Average Transaction</div>
-                                                <div class="text-2xl font-bold text-purple-900">
-                                                    ₱{{ formatCurrency(salesReportData.salesData.averageTransaction || 0) }}
-                                                </div>
+                                    <div v-if="reportFilters.period === 'daily' || reportFilters.period === 'weekly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                        <input
+                                            v-model="reportFilters.date"
+                                            @change="loadSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="reportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                        <input
+                                            v-model="reportFilters.startDate"
+                                            @change="loadSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="reportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                        <input
+                                            v-model="reportFilters.endDate"
+                                            @change="loadSalesReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="reportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                        <select
+                                            v-model="reportFilters.year"
+                                            @change="loadSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option v-for="year in availableYears" :key="year" :value="year">
+                                                {{ year }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div v-if="reportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                                        <select
+                                            v-model="reportFilters.month"
+                                            @change="loadSalesReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                                {{ month }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Sales Report Results -->
+                                <div v-if="salesReportData" class="space-y-6">
+                                    <!-- Summary Stats -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                            <div class="text-sm font-medium text-green-600">Total Sales</div>
+                                            <div class="text-2xl font-bold text-green-900">
+                                                ₱{{ formatCurrency(salesReportData.salesData.totalAmount || 0) }}
                                             </div>
                                         </div>
-
-                                        <!-- Chart -->
-                                        <div class="bg-white p-6 rounded-lg border border-gray-200">
-                                            <h4 class="text-lg font-medium text-gray-900 mb-4">Sales Chart</h4>
-                                            <div class="h-64">
-                                                <canvas ref="salesChart"></canvas>
+                                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                            <div class="text-sm font-medium text-blue-600">Total Transactions</div>
+                                            <div class="text-2xl font-bold text-blue-900">
+                                                {{ salesReportData.salesData.totalTransactions || 0 }}
                                             </div>
                                         </div>
-
-                                        <!-- Detailed Breakdown -->
-                                        <div class="bg-white rounded-lg border border-gray-200">
-                                            <div class="px-6 py-4 border-b border-gray-200">
-                                                <h4 class="text-lg font-medium text-gray-900">Detailed Breakdown</h4>
-                                            </div>
-                                            <div class="overflow-x-auto">
-                                                <table class="min-w-full divide-y divide-gray-200">
-                                                    <thead class="bg-gray-50">
-                                                        <tr>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                {{ reportFilters.period === 'daily' ? 'Hour' : 'Date' }}
-                                                            </th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales Amount</th>
-                                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="bg-white divide-y divide-gray-200">
-                                                        <tr v-for="item in getBreakdownData()" :key="item.key" class="hover:bg-gray-50">
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                {{ item.label }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                ₱{{ formatCurrency(item.amount) }}
-                                                            </td>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                {{ item.transactions }}
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                        <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                            <div class="text-sm font-medium text-purple-600">Average Transaction</div>
+                                            <div class="text-2xl font-bold text-purple-900">
+                                                ₱{{ formatCurrency(salesReportData.salesData.averageTransaction || 0) }}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div v-if="loadingSalesReport" class="text-center py-12">
-                                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                        <p class="mt-2 text-gray-600">Loading sales report...</p>
+                                    <!-- Chart -->
+                                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                                        <h4 class="text-lg font-medium text-gray-900 mb-4">Sales Chart</h4>
+                                        <div class="h-64">
+                                            <canvas ref="salesChart"></canvas>
+                                        </div>
                                     </div>
+
+                                    <!-- Detailed Breakdown -->
+                                    <div class="bg-white rounded-lg border border-gray-200">
+                                        <div class="px-6 py-4 border-b border-gray-200">
+                                            <h4 class="text-lg font-medium text-gray-900">Detailed Breakdown</h4>
+                                        </div>
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            {{ reportFilters.period === 'daily' ? 'Hour' : 'Date' }}
+                                                        </th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales Amount</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    <tr v-for="item in getBreakdownData()" :key="item.key" class="hover:bg-gray-50">
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ item.label }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            ₱{{ formatCurrency(item.amount) }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ item.transactions }}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="loadingSalesReport" class="text-center py-12">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    <p class="mt-2 text-gray-600">Loading sales report...</p>
                                 </div>
                             </div>
                         </div>
@@ -606,7 +640,6 @@ const filters = ref({
     sortOrder: "desc",
 });
 
-const showSalesReport = ref(false);
 const loadingSalesReport = ref(false);
 const salesReportData = ref(null);
 const salesChart = ref(null);
@@ -622,6 +655,8 @@ const activeTab = ref('brandSales');
 const reportFilters = ref({
     period: '',
     date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
 });
@@ -629,6 +664,8 @@ const reportFilters = ref({
 const brandReportFilters = ref({
     period: '',
     date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
 });
@@ -698,6 +735,8 @@ const loadSalesReport = async () => {
         const params = new URLSearchParams({
             period: reportFilters.value.period,
             date: reportFilters.value.date,
+            startDate: reportFilters.value.startDate,
+            endDate: reportFilters.value.endDate,
             year: reportFilters.value.year,
             month: reportFilters.value.month,
         });
@@ -705,7 +744,7 @@ const loadSalesReport = async () => {
         const response = await fetch(`/admin/logs/sales-report?${params}`);
         const data = await response.json();
         salesReportData.value = data;
-        
+
         await nextTick();
         renderChart();
     } catch (error) {
@@ -844,9 +883,14 @@ const exportSalesReport = async () => {
        doc.setFont(undefined, 'normal');
        doc.setFontSize(11);
        const periodText = `Period: ${reportFilters.value.period.charAt(0).toUpperCase() + reportFilters.value.period.slice(1)}`;
-       const dateText = reportFilters.value.period === 'monthly'
-           ? `Month: ${months[reportFilters.value.month - 1]} ${reportFilters.value.year}`
-           : `Date: ${reportFilters.value.date}`;
+       let dateText;
+       if (reportFilters.value.period === 'monthly') {
+           dateText = `Month: ${months[reportFilters.value.month - 1]} ${reportFilters.value.year}`;
+       } else if (reportFilters.value.period === 'range') {
+           dateText = `Range: ${reportFilters.value.startDate} to ${reportFilters.value.endDate}`;
+       } else {
+           dateText = `Date: ${reportFilters.value.date}`;
+       }
 
        doc.text(periodText, 14, yPosition);
        const dateTextWidth = doc.getTextWidth(dateText);
@@ -889,7 +933,15 @@ const exportSalesReport = async () => {
        doc.setFontSize(9);
        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
 
-       const filename = `sales-report-${reportFilters.value.period}-${reportFilters.value.date || `${reportFilters.value.year}-${reportFilters.value.month}`}.pdf`;
+       let filename = `sales-report-${reportFilters.value.period}`;
+       if (reportFilters.value.period === 'range') {
+           filename += `-${reportFilters.value.startDate}-to-${reportFilters.value.endDate}`;
+       } else if (reportFilters.value.period === 'monthly') {
+           filename += `-${reportFilters.value.year}-${reportFilters.value.month}`;
+       } else {
+           filename += `-${reportFilters.value.date}`;
+       }
+       filename += '.pdf';
        const pdfBlob = doc.output('blob');
        const pdfUrl = URL.createObjectURL(pdfBlob);
        window.open(pdfUrl, '_blank');
@@ -1111,6 +1163,8 @@ const loadBrandSalesReport = async () => {
         const params = new URLSearchParams({
             period: brandReportFilters.value.period,
             date: brandReportFilters.value.date,
+            startDate: brandReportFilters.value.startDate,
+            endDate: brandReportFilters.value.endDate,
             year: brandReportFilters.value.year,
             month: brandReportFilters.value.month,
         });
@@ -1158,9 +1212,14 @@ const exportBrandSalesReport = async () => {
         doc.setFont(undefined, 'normal');
         doc.setFontSize(11);
         const periodText = `Period: ${brandReportFilters.value.period.charAt(0).toUpperCase() + brandReportFilters.value.period.slice(1)}`;
-        const dateText = brandReportFilters.value.period === 'monthly'
-            ? `Month: ${months[brandReportFilters.value.month - 1]} ${brandReportFilters.value.year}`
-            : `Date: ${brandReportFilters.value.date}`;
+        let dateText;
+        if (brandReportFilters.value.period === 'monthly') {
+            dateText = `Month: ${months[brandReportFilters.value.month - 1]} ${brandReportFilters.value.year}`;
+        } else if (brandReportFilters.value.period === 'range') {
+            dateText = `Range: ${brandReportFilters.value.startDate} to ${brandReportFilters.value.endDate}`;
+        } else {
+            dateText = `Date: ${brandReportFilters.value.date}`;
+        }
 
         doc.text(periodText, 14, yPosition);
         const dateTextWidth = doc.getTextWidth(dateText);
@@ -1189,7 +1248,15 @@ const exportBrandSalesReport = async () => {
         doc.setFontSize(9);
         doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
 
-        const filename = `brand-sales-report-${brandReportFilters.value.period}-${brandReportFilters.value.date || `${brandReportFilters.value.year}-${brandReportFilters.value.month}`}.pdf`;
+        let filename = `brand-sales-report-${brandReportFilters.value.period}`;
+        if (brandReportFilters.value.period === 'range') {
+            filename += `-${brandReportFilters.value.startDate}-to-${brandReportFilters.value.endDate}`;
+        } else if (brandReportFilters.value.period === 'monthly') {
+            filename += `-${brandReportFilters.value.year}-${brandReportFilters.value.month}`;
+        } else {
+            filename += `-${brandReportFilters.value.date}`;
+        }
+        filename += '.pdf';
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(pdfUrl, '_blank');
@@ -1201,8 +1268,6 @@ const exportBrandSalesReport = async () => {
 };
 
 onMounted(() => {
-    if (showSalesReport.value) {
-        loadSalesReport();
-    }
+    // Sales report will load when user selects a period
 });
 </script>
