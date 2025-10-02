@@ -24,6 +24,15 @@ class LogController extends Controller
 
     public function index(Request $request)
     {
+        $salesSummary = $this->getSalesSummary();
+
+        return Inertia::render('Admin/Logs/Index', [
+            'salesSummary' => $salesSummary
+        ]);
+    }
+
+    public function activityLogs(Request $request)
+    {
         $query = Log::with('user');
 
         if ($request->filled('search')) {
@@ -61,28 +70,25 @@ class LogController extends Controller
         }
 
         if ($request->get('export') === 'all') {
-            $logs = $query->limit(10000)->get(); 
+            $logs = $query->limit(10000)->get();
             return response()->json([
                 'data' => $logs,
                 'total' => $logs->count()
             ]);
         }
 
-        $perPage = $request->get('per_page', 10); 
-        
+        $perPage = $request->get('per_page', 10);
+
         $allowedPerPage = [10, 50, 100, 500, 1000];
         if (!in_array((int)$perPage, $allowedPerPage)) {
-            $perPage = 10; 
+            $perPage = 10;
         }
 
         $logs = $query->paginate($perPage);
 
-        $salesSummary = $this->getSalesSummary();
-
-        return Inertia::render('Admin/Logs/Index', [
+        return Inertia::render('Admin/Logs/ActivityLogs', [
             'logs' => $logs,
-            'filters' => $request->only(['search', 'date_from', 'date_to', 'action', 'sort_by', 'sort_order', 'per_page']),
-            'salesSummary' => $salesSummary
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'action', 'sort_by', 'sort_order', 'per_page'])
         ]);
     }
 

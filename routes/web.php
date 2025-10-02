@@ -106,9 +106,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
-         Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
-         Route::get('/logs/sales-report', [LogController::class, 'salesReport'])->name('logs.sales-report');
-         Route::get('/logs/brand-sales-report', [LogController::class, 'brandSalesReport'])->name('logs.brand-sales-report');
+         Route::get('/reports', [LogController::class, 'index'])->name('logs.index');
+         Route::get('/activity-logs', [LogController::class, 'activityLogs'])->name('activity-logs.index');
+
+         // API endpoints for reports
+         Route::get('/api/sales-report', [LogController::class, 'salesReport'])->name('api.sales-report');
+         Route::get('/api/brand-sales-report', [LogController::class, 'brandSalesReport'])->name('api.brand-sales-report');
 
          Route::get('/inventory-reports', [InventoryReportsController::class, 'index'])->name('inventory-reports.index');
          Route::get('/inventory-reports/report', [InventoryReportsController::class, 'inventoryReport'])->name('inventory-reports.report');
