@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Brand;
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -60,5 +61,53 @@ class InventoryReportsController extends Controller
                 'outOfStockCount' => $outOfStockProducts->count(),
             ]
         ]);
+    }
+
+    public function stockHistory($productId)
+    {
+        $product = Product::findOrFail($productId);
+
+        // Get stock in/out logs for this product
+        $logs = Log::with('user')
+            ->whereIn('action', ['stock_in', 'stock_out'])
+            ->where('details', 'like', '%' . $product->name . '%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $stockHistory = $logs->map(function ($log) {
+            // Extract quantity from details
+            $quantity = $this->extractQuantityFromDetails($log->details);
+
+            return [
+                'id' => $log->id,
+                'action' => $log->action,
+                'quantity' => $quantity,
+                'user' => $log->user ? $log->user->name : 'Unknown User',
+                'details' => $log->details,
+                'created_at' => $log->created_at,
+            ];
+        });
+
+        return response()->json($stockHistory);
+    }
+
+    private function extractQuantityFromDetails($details)
+    {
+        // Pattern to match "Quantity: 10" or "Qty: 10" or similar
+        if (preg_match('/(?:quantity|qty):\s*(\d+)/i', $details, $matches)) {
+            return (int) $matches[1];
+        }
+
+        // Pattern to match "10 units" or "10 items"
+        if (preg_match('/(\d+)\s*(?:units|items)/i', $details, $matches)) {
+            return (int) $matches[1];
+        }
+
+        // Pattern to match numbers after product name
+        if (preg_match('/\[Qty:\s*(\d+)\]/i', $details, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return 0;
     }
 }

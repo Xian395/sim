@@ -259,11 +259,12 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr v-if="filteredProducts.length === 0">
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                               <div class="text-gray-500">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -303,6 +304,17 @@
                                 {{ product.status }}
                               </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                              <button
+                                @click="viewStockHistory(product.id)"
+                                class="text-blue-600 hover:text-blue-900 font-medium flex items-center"
+                              >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                View History
+                              </button>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -325,6 +337,90 @@
         <UnAuthorized />
       </div>
     </div>
+
+    <Modal :show="showStockHistoryModal" @close="closeStockHistoryModal" max-width="4xl">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Stock Movement History - {{ selectedProductName }}</h3>
+          <button @click="closeStockHistoryModal" class="text-gray-400 hover:text-gray-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="loadingStockHistory" class="text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading stock history...</p>
+        </div>
+
+        <div v-else-if="stockHistory && stockHistory.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="entry in stockHistory" :key="entry.id" class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {{ formatDate(entry.created_at) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span v-if="entry.action === 'stock_in'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Stock In
+                  </span>
+                  <span v-else-if="entry.action === 'stock_out'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                    </svg>
+                    Stock Out
+                  </span>
+                  <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ entry.action }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span :class="entry.action === 'stock_in' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                    {{ entry.action === 'stock_in' ? '+' : '-' }}{{ entry.quantity }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {{ entry.user }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">
+                  {{ entry.details }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="text-center py-8 text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <p class="mt-2">No stock movement history found for this product.</p>
+        </div>
+
+        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+          <ButtonNew
+            types="cancel"
+            size="md"
+            @click="closeStockHistoryModal"
+          >
+            Close
+          </ButtonNew>
+        </div>
+      </div>
+    </Modal>
   </AdminAuthenticatedLayout>
 </template>
 
@@ -334,6 +430,7 @@ import { usePage } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
 import ButtonNew from '@/Components/ButtonNew.vue';
 import UnAuthorized from "@/Components/UnAuthorized.vue";
+import Modal from '@/Components/Modal.vue';
 import { notify2, getLogoBase64 } from "@/globalFunctions.js";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -354,6 +451,11 @@ const filters = ref({
   minPrice: null,
   maxPrice: null
 });
+
+const showStockHistoryModal = ref(false);
+const loadingStockHistory = ref(false);
+const stockHistory = ref([]);
+const selectedProductName = ref('');
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-PH', {
@@ -485,6 +587,43 @@ const getStatusBadgeClass = (status) => {
     default:
       return 'bg-gray-100 text-gray-800';
   }
+};
+
+const viewStockHistory = async (productId) => {
+  const product = inventoryReportData.value.products.find(p => p.id === productId);
+  if (!product) return;
+
+  selectedProductName.value = product.name;
+  showStockHistoryModal.value = true;
+  loadingStockHistory.value = true;
+
+  try {
+    const response = await fetch(`/admin/inventory-reports/stock-history/${productId}`);
+    const data = await response.json();
+    stockHistory.value = data;
+  } catch (error) {
+    console.error('Error loading stock history:', error);
+    notify2('Failed to load stock history', 'error');
+  } finally {
+    loadingStockHistory.value = false;
+  }
+};
+
+const closeStockHistoryModal = () => {
+  showStockHistoryModal.value = false;
+  stockHistory.value = [];
+  selectedProductName.value = '';
+};
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString('en-PH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 const exportInventoryReport = async () => {
