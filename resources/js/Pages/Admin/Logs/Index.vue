@@ -63,38 +63,36 @@
                         <h2 class="text-2xl font-bold text-gray-800 mb-6">Business Reports</h2>
 
                         <!-- Tab Navigation -->
-                        <div class="border-b border-gray-200">
-                            <nav class="flex space-x-8" aria-label="Tabs">
-                                <button
-                                    @click="activeTab = 'brandSales'; brandReportFilters.period = 'daily'; loadBrandSalesReport()"
-                                    :class="[
-                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
-                                        activeTab === 'brandSales'
-                                            ? 'border-purple-500 text-purple-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    ]"
-                                >
-                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                                    </svg>
-                                    Brand Sales Report
-                                </button>
+                        <div class="flex flex-wrap gap-3 mb-6">
+                            <button
+                                @click="activeTab = 'sales'"
+                                :class="[
+                                    'flex items-center px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 shadow-md',
+                                    activeTab === 'sales'
+                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-300 transform scale-105'
+                                        : 'bg-white text-gray-700 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-lg'
+                                ]"
+                            >
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Sales Reports
+                            </button>
 
-                                <button
-                                    @click="activeTab = 'sales'"
-                                    :class="[
-                                        'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
-                                        activeTab === 'sales'
-                                            ? 'border-blue-500 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    ]"
-                                >
-                                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                    </svg>
-                                    Sales Reports
-                                </button>
-                            </nav>
+                            <button
+                                @click="activeTab = 'brandSales'; brandReportFilters.period = 'daily'; loadBrandSalesReport()"
+                                :class="[
+                                    'flex items-center px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 shadow-md',
+                                    activeTab === 'brandSales'
+                                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-300 transform scale-105'
+                                        : 'bg-white text-gray-700 border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 hover:shadow-lg'
+                                ]"
+                            >
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Brand Sales Report
+                            </button>
                         </div>
 
                         <!-- Tab Content -->
