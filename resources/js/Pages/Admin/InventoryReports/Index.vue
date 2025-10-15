@@ -305,15 +305,26 @@
                               </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                              <button
-                                @click="viewStockHistory(product.id)"
-                                class="text-blue-600 hover:text-blue-900 font-medium flex items-center"
-                              >
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                View History
-                              </button>
+                              <div class="flex space-x-2">
+                                <button
+                                  @click="viewStockHistory(product.id)"
+                                  class="text-blue-600 hover:text-blue-900 font-medium flex items-center"
+                                >
+                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                  </svg>
+                                  Stock History
+                                </button>
+                                <button
+                                  @click="viewSaleHistory(product.id)"
+                                  class="text-green-600 hover:text-green-900 font-medium flex items-center"
+                                >
+                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                  </svg>
+                                  Sale History
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -421,6 +432,75 @@
         </div>
       </div>
     </Modal>
+
+    <Modal :show="showSaleHistoryModal" @close="closeSaleHistoryModal" max-width="4xl">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Product Sale History - {{ selectedProductName }}</h3>
+            <p class="text-sm text-gray-500 mt-1">Showing sales from the last 7 days</p>
+          </div>
+          <button @click="closeSaleHistoryModal" class="text-gray-400 hover:text-gray-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="loadingSaleHistory" class="text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <p class="mt-2 text-gray-600">Loading sale history...</p>
+        </div>
+
+        <div v-else-if="saleHistory && saleHistory.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity Sold</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="entry in saleHistory" :key="entry.id" class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {{ formatDate(entry.date) }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    {{ entry.brand }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                  <span class="text-green-600 font-semibold">{{ entry.quantity }}</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">
+                  {{ entry.details }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="text-center py-8 text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          <p class="mt-2">No sales found for this product in the last 7 days.</p>
+        </div>
+
+        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+          <ButtonNew
+            types="cancel"
+            size="md"
+            @click="closeSaleHistoryModal"
+          >
+            Close
+          </ButtonNew>
+        </div>
+      </div>
+    </Modal>
   </AdminAuthenticatedLayout>
 </template>
 
@@ -456,6 +536,10 @@ const showStockHistoryModal = ref(false);
 const loadingStockHistory = ref(false);
 const stockHistory = ref([]);
 const selectedProductName = ref('');
+
+const showSaleHistoryModal = ref(false);
+const loadingSaleHistory = ref(false);
+const saleHistory = ref([]);
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-PH', {
@@ -612,6 +696,32 @@ const viewStockHistory = async (productId) => {
 const closeStockHistoryModal = () => {
   showStockHistoryModal.value = false;
   stockHistory.value = [];
+  selectedProductName.value = '';
+};
+
+const viewSaleHistory = async (productId) => {
+  const product = inventoryReportData.value.products.find(p => p.id === productId);
+  if (!product) return;
+
+  selectedProductName.value = product.name;
+  showSaleHistoryModal.value = true;
+  loadingSaleHistory.value = true;
+
+  try {
+    const response = await fetch(`/admin/inventory-reports/sale-history/${productId}`);
+    const data = await response.json();
+    saleHistory.value = data;
+  } catch (error) {
+    console.error('Error loading sale history:', error);
+    notify2('Failed to load sale history', 'error');
+  } finally {
+    loadingSaleHistory.value = false;
+  }
+};
+
+const closeSaleHistoryModal = () => {
+  showSaleHistoryModal.value = false;
+  saleHistory.value = [];
   selectedProductName.value = '';
 };
 

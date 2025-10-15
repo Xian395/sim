@@ -110,4 +110,72 @@ class InventoryReportsController extends Controller
 
         return 0;
     }
+
+    public function productSaleHistory($productId)
+    {
+        $product = Product::with('brand')->findOrFail($productId);
+
+        // Get sales from the last 7 days only
+        $oneWeekAgo = now()->subDays(7);
+
+        // Get sale logs for this product from the last week
+        $logs = Log::with('user')
+            ->where('action', 'sale')
+            ->where('created_at', '>=', $oneWeekAgo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Filter logs that contain this product in metadata or details
+        $salesHistory = $logs->filter(function ($log) use ($product) {
+            // Check if product name is in details
+            if (stripos($log->details, $product->name) !== false) {
+                return true;
+            }
+
+            // Check if product is in metadata
+            if ($log->metadata) {
+                $metadata = json_decode($log->metadata, true);
+                if (isset($metadata['items'])) {
+                    foreach ($metadata['items'] as $item) {
+                        if (isset($item['name']) && $item['name'] === $product->name) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        })->map(function ($log) use ($product) {
+            // Extract quantity for this product
+            $quantity = 0;
+
+            if ($log->metadata) {
+                $metadata = json_decode($log->metadata, true);
+                if (isset($metadata['items'])) {
+                    foreach ($metadata['items'] as $item) {
+                        if (isset($item['name']) && $item['name'] === $product->name) {
+                            $quantity = $item['quantity'] ?? 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to extracting from details if not found in metadata
+            if ($quantity === 0) {
+                $quantity = $this->extractQuantityFromDetails($log->details);
+            }
+
+            return [
+                'id' => $log->id,
+                'date' => $log->created_at,
+                'quantity' => $quantity,
+                'brand' => $product->brand ? $product->brand->name : 'No Brand',
+                'user' => $log->user ? $log->user->name : 'Unknown User',
+                'details' => $log->details,
+            ];
+        })->values();
+
+        return response()->json($salesHistory);
+    }
 }

@@ -116,6 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
          Route::get('/inventory-reports', [InventoryReportsController::class, 'index'])->name('inventory-reports.index');
          Route::get('/inventory-reports/report', [InventoryReportsController::class, 'inventoryReport'])->name('inventory-reports.report');
          Route::get('/inventory-reports/stock-history/{productId}', [InventoryReportsController::class, 'stockHistory'])->name('inventory-reports.stock-history');
+         Route::get('/inventory-reports/sale-history/{productId}', [InventoryReportsController::class, 'productSaleHistory'])->name('inventory-reports.sale-history');
 
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
         Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
