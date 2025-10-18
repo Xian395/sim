@@ -283,6 +283,15 @@
                                     </div>
                                 </template>
 
+                                <template #column-price="{ item }">
+                                    <div v-if="item.price" class="text-sm text-gray-900">
+                                        ₱{{ parseFloat(item.price).toFixed(2) }}
+                                    </div>
+                                    <div v-else class="text-sm font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded">
+                                        No price set
+                                    </div>
+                                </template>
+
                                 <template #column-categories="{ item }">
                                     <div class="flex flex-wrap gap-1">
                                         <span
@@ -521,7 +530,7 @@
                             <label
                                 for="price"
                                 class="block mb-2 text-sm font-medium text-gray-900"
-                                >Price</label
+                                >Selling Price (₱)</label
                             >
                             <input
                                 type="number"
@@ -530,8 +539,12 @@
                                 id="price"
                                 v-model="editForm.price"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                placeholder="0.00"
                                 required
                             />
+                            <p class="mt-1 text-xs text-gray-600">
+                                The price customers pay (You enter cost price when adding stock)
+                            </p>
                             <div
                                 v-if="editForm.errors.price"
                                 class="text-red-600 text-sm mt-1"
@@ -811,11 +824,12 @@
 
                 <div class="mt-4 text-center">
                     <div class="flex justify-center space-x-4">
-                        <div class="text-sm text-gray-600">
+                        <div v-if="selectedImage?.price" class="text-sm text-gray-600">
                             <span class="font-medium">Price:</span>
-                            ₱{{
-                                parseFloat(selectedImage?.price || 0).toFixed(2)
-                            }}
+                            ₱{{ parseFloat(selectedImage.price).toFixed(2) }}
+                        </div>
+                        <div v-else class="text-sm font-bold text-amber-600">
+                            <span class="font-medium">Price:</span> No price set
                         </div>
                         <div class="text-sm text-gray-600">
                             <span class="font-medium">Stock:</span>
@@ -1192,7 +1206,7 @@ const tableColumns = computed(() => [
     {
         key: "price",
         label: "Price",
-        type: "currency",
+        type: "custom",
         align: "left",
     },
     {
@@ -1397,7 +1411,7 @@ const exportToPDF = async () => {
         product.categories && product.categories.length > 0
             ? product.categories.map((cat) => cat.name).join(", ")
             : "No categories",
-        `${parseFloat(product.price || 0).toFixed(2)}`,
+        product.price ? `${parseFloat(product.price).toFixed(2)}` : "No price",
         product.stock_quantity || 0,
         getStockStatus(product.stock_quantity || 0),
         product.description || "",
@@ -1543,7 +1557,7 @@ const printBarcode = (product) => {
         </div>
         <div class="barcode-number">${product.barcode}</div>
         <div class="product-name">${product.name}</div>
-        <div class="product-name">₱${parseFloat(product.price).toFixed(2)}</div>
+        <div class="product-name">${product.price ? '₱' + parseFloat(product.price).toFixed(2) : 'No price set'}</div>
       </div>
       <div class="no-print" style="margin-top: 20px;">
         <button onclick="window.print()">Print</button>

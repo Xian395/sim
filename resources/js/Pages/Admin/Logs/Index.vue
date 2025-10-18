@@ -93,6 +93,21 @@
                                 </svg>
                                 Brand Sales Report
                             </button>
+
+                            <button
+                                @click="activeTab = 'income'; incomeReportFilters.period = 'daily'; loadProducts(); loadIncomeReport()"
+                                :class="[
+                                    'flex items-center px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 shadow-md',
+                                    activeTab === 'income'
+                                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-300 transform scale-105'
+                                        : 'bg-white text-gray-700 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-lg'
+                                ]"
+                            >
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Income & Profit Report
+                            </button>
                         </div>
 
                         <!-- Tab Content -->
@@ -224,6 +239,240 @@
                                 <div v-if="loadingBrandSalesReport" class="text-center py-12">
                                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                                     <p class="mt-2 text-gray-600">Loading brand sales report...</p>
+                                </div>
+                            </div>
+
+                            <!-- Income & Profit Report Tab -->
+                            <div v-if="activeTab === 'income'" class="space-y-6">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Income & Profit Analysis</h3>
+                                        <p class="text-sm text-gray-600">Detailed profit tracking with FIFO costing and acquisition price history</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <ButtonNew
+                                            types="pdf"
+                                            size="md"
+                                            tooltips="Export Income Report"
+                                            @click="exportIncomeReport"
+                                            v-if="incomeReportData"
+                                        >
+                                            Export PDF
+                                        </ButtonNew>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                        <select
+                                            v-model="incomeReportFilters.period"
+                                            @change="loadIncomeReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            <option value="" disabled>Select a period</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="range">Date Range</option>
+                                        </select>
+                                    </div>
+
+                                    <div v-if="incomeReportFilters.period === 'daily' || incomeReportFilters.period === 'weekly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                        <input
+                                            v-model="incomeReportFilters.date"
+                                            @change="loadIncomeReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="incomeReportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                        <input
+                                            v-model="incomeReportFilters.startDate"
+                                            @change="loadIncomeReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="incomeReportFilters.period === 'range'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                        <input
+                                            v-model="incomeReportFilters.endDate"
+                                            @change="loadIncomeReport"
+                                            type="date"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    </div>
+
+                                    <div v-if="incomeReportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                        <select
+                                            v-model="incomeReportFilters.year"
+                                            @change="loadIncomeReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            <option v-for="year in availableYears" :key="year" :value="year">
+                                                {{ year }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div v-if="incomeReportFilters.period === 'monthly'">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                                        <select
+                                            v-model="incomeReportFilters.month"
+                                            @change="loadIncomeReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                                {{ month }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Product</label>
+                                        <select
+                                            v-model="incomeReportFilters.product"
+                                            @change="loadIncomeReport"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            <option value="">All Products</option>
+                                            <option v-for="product in availableProducts" :key="product.id" :value="product.id">
+                                                {{ product.name }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Income Report Results -->
+                                <div v-if="incomeReportData" class="space-y-6">
+                                    <!-- Summary Stats -->
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                            <div class="text-sm font-medium text-blue-600">Total Revenue</div>
+                                            <div class="text-2xl font-bold text-blue-900">
+                                                ₱{{ formatCurrency(incomeReportData.summary.total_revenue || 0) }}
+                                            </div>
+                                        </div>
+                                        <div class="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                                            <div class="text-sm font-medium text-orange-600">Total Cost (FIFO)</div>
+                                            <div class="text-2xl font-bold text-orange-900">
+                                                ₱{{ formatCurrency(incomeReportData.summary.total_cost || 0) }}
+                                            </div>
+                                        </div>
+                                        <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 p-4 rounded-lg border border-emerald-200">
+                                            <div class="text-sm font-medium text-emerald-600">Net Profit</div>
+                                            <div class="text-2xl font-bold text-emerald-900">
+                                                ₱{{ formatCurrency(incomeReportData.summary.total_profit || 0) }}
+                                            </div>
+                                        </div>
+                                        <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                            <div class="text-sm font-medium text-purple-600">Profit Margin</div>
+                                            <div class="text-2xl font-bold text-purple-900">
+                                                {{ formatCurrency(incomeReportData.summary.profit_margin || 0) }}%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Products Breakdown -->
+                                    <div v-for="product in incomeReportData.products" :key="product.product_id" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 px-6 py-4 border-b border-emerald-200">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <h4 class="text-lg font-bold text-emerald-900">{{ product.product_name }}</h4>
+                                                    <p class="text-sm text-emerald-700">Item Code: {{ product.item_code }}</p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="text-sm text-emerald-700">Profit Margin</div>
+                                                    <div class="text-2xl font-bold text-emerald-900">{{ formatCurrency(product.profit_margin) }}%</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Product Summary -->
+                                        <div class="grid grid-cols-4 gap-4 p-4 bg-gray-50">
+                                            <div>
+                                                <div class="text-xs text-gray-600">Quantity Sold</div>
+                                                <div class="text-lg font-bold text-gray-900">{{ product.total_quantity_sold }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-gray-600">Total Revenue</div>
+                                                <div class="text-lg font-bold text-blue-600">₱{{ formatCurrency(product.total_revenue) }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-gray-600">Total Cost</div>
+                                                <div class="text-lg font-bold text-orange-600">₱{{ formatCurrency(product.total_cost) }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-gray-600">Net Profit</div>
+                                                <div class="text-lg font-bold text-emerald-600">₱{{ formatCurrency(product.total_profit) }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Acquisition Price History -->
+                                        <div v-if="product.acquisition_history && product.acquisition_history.length > 0" class="px-6 py-4 bg-yellow-50 border-t border-yellow-200">
+                                            <h5 class="text-sm font-semibold text-yellow-900 mb-2">📊 Acquisition Price History (Stock Added in Period)</h5>
+                                            <div class="grid grid-cols-5 gap-2 text-xs">
+                                                <div v-for="(history, idx) in product.acquisition_history" :key="idx" class="bg-white p-2 rounded border border-yellow-200">
+                                                    <div class="font-semibold text-yellow-900">{{ history.date }}</div>
+                                                    <div class="text-gray-600">Qty: {{ history.quantity }}</div>
+                                                    <div class="text-emerald-600 font-bold">₱{{ formatCurrency(history.acquisition_price) }}/unit</div>
+                                                    <div class="text-gray-500 text-xs">Remaining: {{ history.remaining_quantity }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Transactions Table -->
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-100">
+                                                    <tr>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Selling Price</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Cost (FIFO)</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profit</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Margin %</th>
+                                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    <tr v-for="transaction in product.transactions" :key="transaction.id" class="hover:bg-gray-50">
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ transaction.date }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ transaction.quantity }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-blue-600">₱{{ formatCurrency(transaction.selling_price) }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-orange-600">₱{{ formatCurrency(transaction.unit_cost) }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-900">₱{{ formatCurrency(transaction.revenue) }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-orange-900">₱{{ formatCurrency(transaction.cost) }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-emerald-600">₱{{ formatCurrency(transaction.profit) }}</td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm" :class="transaction.profit_margin > 30 ? 'text-emerald-600 font-bold' : transaction.profit_margin > 15 ? 'text-yellow-600' : 'text-red-600'">
+                                                            {{ formatCurrency(transaction.profit_margin) }}%
+                                                        </td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ transaction.user }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="loadingIncomeReport" class="text-center py-12">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                                    <p class="mt-2 text-gray-600">Loading income report...</p>
+                                </div>
+
+                                <div v-if="!incomeReportData && !loadingIncomeReport && incomeReportFilters.period" class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <p class="text-gray-600">No data available for the selected period</p>
                                 </div>
                             </div>
 
@@ -449,6 +698,20 @@ const brandReportFilters = ref({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
 });
+
+const incomeReportFilters = ref({
+    period: '',
+    date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    product: '',
+});
+
+const loadingIncomeReport = ref(false);
+const incomeReportData = ref(null);
+const availableProducts = ref([]);
 
 const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -817,7 +1080,180 @@ const exportBrandSalesReport = async () => {
     }
 };
 
+const loadIncomeReport = async () => {
+    loadingIncomeReport.value = true;
+    try {
+        const params = new URLSearchParams({
+            period: incomeReportFilters.value.period,
+            date: incomeReportFilters.value.date,
+            startDate: incomeReportFilters.value.startDate,
+            endDate: incomeReportFilters.value.endDate,
+            year: incomeReportFilters.value.year,
+            month: incomeReportFilters.value.month,
+            product: incomeReportFilters.value.product,
+        });
+
+        const response = await fetch(`/admin/api/income-report?${params}`);
+        const data = await response.json();
+        incomeReportData.value = data.incomeData;
+    } catch (error) {
+        console.error('Error loading income report:', error);
+        notify('Error loading income report. Please try again.', 'error');
+    } finally {
+        loadingIncomeReport.value = false;
+    }
+};
+
+const exportIncomeReport = async () => {
+    if (!incomeReportData.value) return;
+
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+
+        const logoBase64 = await getLogoBase64();
+
+        let yPosition = 8;
+
+        if (logoBase64) {
+            const logoWidth = 20;
+            const logoHeight = 20;
+            const logoX = (pageWidth - logoWidth) / 2;
+
+            doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+            yPosition += logoHeight + 2;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        const title = "INCOME & PROFIT REPORT";
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
+
+        yPosition += 4;
+
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(11);
+        const periodText = `Period: ${incomeReportFilters.value.period.charAt(0).toUpperCase() + incomeReportFilters.value.period.slice(1)}`;
+        let dateText;
+        if (incomeReportFilters.value.period === 'monthly') {
+            dateText = `Month: ${months[incomeReportFilters.value.month - 1]} ${incomeReportFilters.value.year}`;
+        } else if (incomeReportFilters.value.period === 'range') {
+            dateText = `Range: ${incomeReportFilters.value.startDate} to ${incomeReportFilters.value.endDate}`;
+        } else {
+            dateText = `Date: ${incomeReportFilters.value.date}`;
+        }
+
+        doc.text(periodText, 14, yPosition);
+        const dateTextWidth = doc.getTextWidth(dateText);
+        doc.text(dateText, pageWidth - dateTextWidth - 14, yPosition);
+
+        yPosition += 10;
+
+        // Summary Section
+        doc.setFontSize(13);
+        doc.text("Summary", 14, yPosition);
+
+        yPosition += 8;
+
+        doc.setFontSize(10);
+        doc.text(`• Total Revenue: PHP ${formatCurrency(incomeReportData.value.summary.total_revenue)}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Total Cost (FIFO): PHP ${formatCurrency(incomeReportData.value.summary.total_cost)}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Net Profit: PHP ${formatCurrency(incomeReportData.value.summary.total_profit)}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Profit Margin: ${formatCurrency(incomeReportData.value.summary.profit_margin)}%`, 18, yPosition);
+        yPosition += 10;
+
+        // Products breakdown
+        for (const product of incomeReportData.value.products) {
+            // Check if we need a new page
+            if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(product.product_name, 14, yPosition);
+            yPosition += 5;
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.text(`Item Code: ${product.item_code}`, 14, yPosition);
+            yPosition += 5;
+
+            doc.text(`Quantity Sold: ${product.total_quantity_sold} | Revenue: PHP ${formatCurrency(product.total_revenue)} | Cost: PHP ${formatCurrency(product.total_cost)} | Profit: PHP ${formatCurrency(product.total_profit)} | Margin: ${formatCurrency(product.profit_margin)}%`, 14, yPosition);
+            yPosition += 8;
+
+            // Transactions table for this product
+            const transactionRows = product.transactions.map(transaction => [
+                transaction.date,
+                transaction.quantity.toString(),
+                `PHP ${formatCurrency(transaction.selling_price)}`,
+                `PHP ${formatCurrency(transaction.unit_cost)}`,
+                `PHP ${formatCurrency(transaction.revenue)}`,
+                `PHP ${formatCurrency(transaction.cost)}`,
+                `PHP ${formatCurrency(transaction.profit)}`,
+                `${formatCurrency(transaction.profit_margin)}%`,
+            ]);
+
+            autoTable(doc, {
+                head: [['Date', 'Qty', 'Sell Price', 'Unit Cost', 'Revenue', 'Cost', 'Profit', 'Margin %']],
+                body: transactionRows,
+                startY: yPosition,
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [16, 185, 129], textColor: 255 },
+                margin: { left: 14, right: 14 },
+                didDrawPage: (data) => {
+                    yPosition = data.cursor.y + 10;
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+        }
+
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : yPosition;
+        const generatedText = `Generated on: ${new Date().toLocaleString()}`;
+        const textWidth = doc.getTextWidth(generatedText);
+        doc.setFontSize(9);
+        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
+
+        let filename = `income-report-${incomeReportFilters.value.period}`;
+        if (incomeReportFilters.value.period === 'range') {
+            filename += `-${incomeReportFilters.value.startDate}-to-${incomeReportFilters.value.endDate}`;
+        } else if (incomeReportFilters.value.period === 'monthly') {
+            filename += `-${incomeReportFilters.value.year}-${incomeReportFilters.value.month}`;
+        } else {
+            filename += `-${incomeReportFilters.value.date}`;
+        }
+        if (incomeReportFilters.value.product) {
+            filename += `-product-${incomeReportFilters.value.product}`;
+        }
+        filename += '.pdf';
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+
+    } catch (error) {
+        alert("Error generating PDF. Please try again.");
+        console.error(error);
+    }
+};
+
+const loadProducts = async () => {
+    try {
+        const response = await fetch('/admin/api/products-list');
+        if (response.ok) {
+            const products = await response.json();
+            availableProducts.value = products;
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+};
+
 onMounted(() => {
-    // Sales report will load when user selects a period
 });
 </script>

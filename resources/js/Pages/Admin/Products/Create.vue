@@ -85,7 +85,7 @@
                             </div>
 
                             <div class="mt-4">
-                                <InputLabel for="price" value="Price" />
+                                <InputLabel for="price" value="Selling Price (₱) - Optional" />
                                 <TextInput
                                     id="price"
                                     type="number"
@@ -93,9 +93,11 @@
                                     min="0.01"
                                     class="mt-1 block w-full"
                                     v-model="form.price"
-                                    placeholder="PHP"
-                                    required
+                                    placeholder="0.00"
                                 />
+                                <p class="mt-1 text-sm text-gray-600">
+                                    You can set this now or later when adding stock (after you know your acquisition cost). Products without a selling price cannot be sold at POS.
+                                </p>
                                 <InputError
                                     class="mt-2"
                                     :message="form.errors.price"

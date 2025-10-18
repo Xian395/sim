@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Log;
 use App\Models\Product;
 use App\Models\Brand;
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class LogController extends Controller
 {
@@ -29,6 +31,12 @@ class LogController extends Controller
         return Inertia::render('Admin/Logs/Index', [
             'salesSummary' => $salesSummary
         ]);
+    }
+
+    public function getProductsList()
+    {
+        $products = Product::orderBy('name')->get(['id', 'name', 'item_code']);
+        return response()->json($products);
     }
 
     public function activityLogs(Request $request)
@@ -722,5 +730,205 @@ private function getDailyChartData($date)
             echo "Date: {$sale->created_at}<br>";
             echo "---<br>";
         }
+    }
+
+    public function incomeReport(Request $request)
+    {
+        $period = $request->get('period', 'daily');
+        $date = $request->get('date', now()->toDateString());
+        $startDate = $request->get('startDate', now()->toDateString());
+        $endDate = $request->get('endDate', now()->toDateString());
+        $year = $request->get('year', now()->year);
+        $month = $request->get('month', now()->month);
+        $productFilter = $request->get('product', '');
+
+        $incomeData = [];
+
+        switch ($period) {
+            case 'daily':
+                $incomeData = $this->getDailyIncome($date, $productFilter);
+                break;
+            case 'weekly':
+                $incomeData = $this->getWeeklyIncome($date, $productFilter);
+                break;
+            case 'monthly':
+                $incomeData = $this->getMonthlyIncome($year, $month, $productFilter);
+                break;
+            case 'range':
+                $incomeData = $this->getRangeIncome($startDate, $endDate, $productFilter);
+                break;
+        }
+
+        return response()->json([
+            'incomeData' => $incomeData,
+            'period' => $period,
+            'date' => $date,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'year' => $year,
+            'month' => $month,
+            'productFilter' => $productFilter,
+        ]);
+    }
+
+    private function getDailyIncome($date, $productFilter = '')
+    {
+        $startDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $endDate = Carbon::parse($date)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        return $this->getIncomeForPeriod($startDate, $endDate, $productFilter);
+    }
+
+    private function getWeeklyIncome($date, $productFilter = '')
+    {
+        $startDate = Carbon::parse($date)->startOfWeek();
+        $endDate = Carbon::parse($date)->endOfWeek();
+
+        return $this->getIncomeForPeriod($startDate, $endDate, $productFilter);
+    }
+
+    private function getMonthlyIncome($year, $month, $productFilter = '')
+    {
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        return $this->getIncomeForPeriod($startDate, $endDate, $productFilter);
+    }
+
+    private function getRangeIncome($startDate, $endDate, $productFilter = '')
+    {
+        $start = Carbon::parse($startDate)->setTimezone('Asia/Manila')->startOfDay()->utc();
+        $end = Carbon::parse($endDate)->setTimezone('Asia/Manila')->endOfDay()->utc();
+
+        return $this->getIncomeForPeriod($start, $end, $productFilter);
+    }
+
+    private function getIncomeForPeriod($startDate, $endDate, $productFilter = '')
+    {
+        // Get all stock-out transactions (sales) in the period
+        $stockOutQuery = StockTransaction::with(['product', 'user'])
+            ->where('type', 'out')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()]);
+
+        if ($productFilter) {
+            $stockOutQuery->where('product_id', $productFilter);
+        }
+
+        $stockOuts = $stockOutQuery->get();
+
+        $productSales = [];
+        $totalRevenue = 0;
+        $totalCost = 0;
+        $totalProfit = 0;
+
+        foreach ($stockOuts as $stockOut) {
+            if (!$stockOut->product) continue;
+
+            $product = $stockOut->product;
+            $productId = $product->id;
+
+            if (!isset($productSales[$productId])) {
+                $productSales[$productId] = [
+                    'product_id' => $productId,
+                    'product_name' => $product->name,
+                    'item_code' => $product->item_code,
+                    'current_selling_price' => $product->price,
+                    'total_quantity_sold' => 0,
+                    'total_revenue' => 0,
+                    'total_cost' => 0,
+                    'total_profit' => 0,
+                    'profit_margin' => 0,
+                    'batches' => [],
+                    'transactions' => [],
+                ];
+            }
+
+            // Get selling price at time of sale (use current price as fallback)
+            $sellingPrice = $product->price;
+            $quantity = $stockOut->quantity;
+            $unitCost = $stockOut->unit_cost ?? 0;
+            $revenue = $sellingPrice * $quantity;
+            $cost = $unitCost * $quantity;
+            $profit = $revenue - $cost;
+
+            $productSales[$productId]['total_quantity_sold'] += $quantity;
+            $productSales[$productId]['total_revenue'] += $revenue;
+            $productSales[$productId]['total_cost'] += $cost;
+            $productSales[$productId]['total_profit'] += $profit;
+
+            // Store batch allocation details
+            if ($stockOut->batch_allocations) {
+                foreach ($stockOut->batch_allocations as $batch) {
+                    $productSales[$productId]['batches'][] = [
+                        'batch_id' => $batch['batch_id'] ?? null,
+                        'transaction_date' => $batch['transaction_date'] ?? null,
+                        'quantity' => $batch['quantity'] ?? 0,
+                        'unit_cost' => $batch['unit_cost'] ?? 0,
+                        'subtotal' => $batch['subtotal'] ?? 0,
+                    ];
+                }
+            }
+
+            $productSales[$productId]['transactions'][] = [
+                'id' => $stockOut->id,
+                'date' => $stockOut->transaction_date,
+                'quantity' => $quantity,
+                'selling_price' => $sellingPrice,
+                'unit_cost' => $unitCost,
+                'revenue' => $revenue,
+                'cost' => $cost,
+                'profit' => $profit,
+                'profit_margin' => $revenue > 0 ? ($profit / $revenue) * 100 : 0,
+                'user' => $stockOut->user ? $stockOut->user->name : 'Unknown',
+                'reason' => $stockOut->reason,
+            ];
+
+            $totalRevenue += $revenue;
+            $totalCost += $cost;
+            $totalProfit += $profit;
+        }
+
+        // Calculate profit margin for each product
+        foreach ($productSales as &$productSale) {
+            if ($productSale['total_revenue'] > 0) {
+                $productSale['profit_margin'] = ($productSale['total_profit'] / $productSale['total_revenue']) * 100;
+            }
+
+            // Get acquisition price history for this product
+            $productSale['acquisition_history'] = $this->getAcquisitionPriceHistory($productSale['product_id'], $startDate, $endDate);
+        }
+
+        return [
+            'summary' => [
+                'total_revenue' => $totalRevenue,
+                'total_cost' => $totalCost,
+                'total_profit' => $totalProfit,
+                'profit_margin' => $totalRevenue > 0 ? ($totalProfit / $totalRevenue) * 100 : 0,
+                'total_transactions' => $stockOuts->count(),
+            ],
+            'products' => array_values($productSales),
+        ];
+    }
+
+    private function getAcquisitionPriceHistory($productId, $startDate, $endDate)
+    {
+        $stockIns = StockTransaction::where('product_id', $productId)
+            ->where('type', 'in')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->orderBy('transaction_date', 'asc')
+            ->get();
+
+        $history = [];
+        foreach ($stockIns as $stockIn) {
+            $history[] = [
+                'date' => $stockIn->transaction_date,
+                'quantity' => $stockIn->quantity,
+                'acquisition_price' => $stockIn->acquisition_price ?? 0,
+                'remaining_quantity' => $stockIn->remaining_quantity ?? 0,
+                'total_cost' => ($stockIn->acquisition_price ?? 0) * $stockIn->quantity,
+            ];
+        }
+
+        return $history;
     }
 }

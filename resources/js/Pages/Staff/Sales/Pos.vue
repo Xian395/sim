@@ -269,9 +269,13 @@
                                     </div>
 
                                     <div class="space-y-2">
-                                        <p
+                                        <p v-if="product.price"
                                             class="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                                             ₱{{ parseFloat(product.price).toFixed(2) }}
+                                        </p>
+                                        <p v-else
+                                            class="text-sm font-bold text-amber-600 bg-amber-100 px-3 py-1.5 rounded-lg">
+                                            No price set
                                         </p>
                                         <div class="flex items-center justify-center space-x-2">
                                             <span v-if="product.stock_quantity === 0"
