@@ -198,36 +198,7 @@ class ProductController extends Controller
 
         $product->categories()->sync($categoryIds);
 
-        $updatedProduct = $product->fresh()->load(['categories', 'brand']);
-        $formattedProduct = [
-            'id' => $updatedProduct->id,
-            'item_code' => $updatedProduct->item_code,
-            'name' => $updatedProduct->name,
-            'barcode' => $updatedProduct->barcode,
-            'categories' => $updatedProduct->categories->map(function($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'status' => $category->status
-                ];
-            })->toArray(),
-            'brand' => $updatedProduct->brand ? [
-                'id' => $updatedProduct->brand->id,
-                'name' => $updatedProduct->brand->name
-            ] : null,
-            'price' => $updatedProduct->price,
-            'stock_quantity' => $updatedProduct->stock_quantity,
-            'description' => $updatedProduct->description,
-            'image_url' => $updatedProduct->image_path ? \App\Models\Product::getImageUrl($updatedProduct->image_path) : null,
-            'lastUpdated' => $updatedProduct->updated_at->diffForHumans(),
-        ];
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product updated successfully.',
-            'product' => $formattedProduct,
-            'redirect' => route('admin.products.index')
-        ]);
+        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
     public function destroy(Product $product)

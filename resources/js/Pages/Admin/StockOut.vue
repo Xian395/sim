@@ -353,7 +353,7 @@
 </template>
 
 <script setup>
-import { useForm, usePage } from "@inertiajs/vue3";
+import { useForm, usePage, router } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
 import AdminAuthenticatedLayout from "@/Layouts/AdminAuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
@@ -461,34 +461,35 @@ const handleImageError = (event) => {
     event.target.style.display = 'none';
 };
 
-// const submit = () => {
-//   form.post(route('admin.stock-out.store'), {
-//     onSuccess: () => {
-//       form.reset();
-//       clearSelection();
-//     },
-//     onError: (errors) => console.log('Validation errors:', errors),
-//   });
-// };
+const resetForm = () => {
+    form.reset();
+    form.product_id = "";
+    form.quantity = 1;
+    form.reason = "";
+    form.notes = "";
+    form.transaction_date = new Date().toISOString().split("T")[0];
+    form.clearErrors();
+    searchQuery.value = "";
+    selectedProduct.value = null;
+    filteredProducts.value = products;
+    highlightedIndex.value = -1;
+    maxQuantity.value = null;
+};
 
-const submit = async () => {
-    try {
-        const response = await axios.post(
-            route("admin.stock-out.store"),
-            form.data()
-        );
-
-        notify("Stock-out saved successfully.", "success");
-        form.reset();
-    } catch (error) {
-        if (error.response && error.response.data.errors) {
-            const errorMessages = Object.values(error.response.data.errors)
+const submit = () => {
+    form.post(route("admin.stock-out.store"), {
+        onSuccess: () => {
+            notify("Stock-out saved successfully.", "success");
+            resetForm();
+            // Reload the page to get updated product data
+            router.reload();
+        },
+        onError: (errors) => {
+            const errorMessages = Object.values(errors)
                 .flat()
                 .join("<br>");
-            notify(errorMessages, "error");
-        } else {
-            notify("Something went wrong. Please try again later.", "error");
-        }
-    }
+            notify(errorMessages || "Failed to remove stock. Please try again.", "error");
+        },
+    });
 };
 </script>

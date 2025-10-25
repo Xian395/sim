@@ -356,7 +356,7 @@
 </template>
 
 <script setup>
-import { useForm, usePage } from "@inertiajs/vue3";
+import { useForm, usePage, router } from "@inertiajs/vue3";
 import { computed, ref, nextTick } from "vue";
 import AdminAuthenticatedLayout from "@/Layouts/AdminAuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
@@ -473,24 +473,20 @@ const resetForm = () => {
     highlightedIndex.value = -1;
 };
 
-const submit = async () => {
-    try {
-        const response = await axios.post(
-            route("admin.stock-in.store"),
-            form.data()
-        );
-
-        notify("Stock-in saved successfully.", "success");
-        form.reset();
-    } catch (error) {
-        if (error.response && error.response.data.errors) {
-            const errorMessages = Object.values(error.response.data.errors)
+const submit = () => {
+    form.post(route("admin.stock-in.store"), {
+        onSuccess: () => {
+            notify("Stock-in saved successfully.", "success");
+            resetForm();
+            // Reload the page to get updated product data
+            router.reload();
+        },
+        onError: (errors) => {
+            const errorMessages = Object.values(errors)
                 .flat()
                 .join("<br>");
-            notify(errorMessages, "error");
-        } else {
-            notify("Something went wrong. Please try again later.", "error");
-        }
-    }
+            notify(errorMessages || "Failed to add stock. Please try again.", "error");
+        },
+    });
 };
 </script>

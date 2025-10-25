@@ -429,289 +429,178 @@
             </div>
         </div>
 
+        <!-- Edit Product Modal -->
         <Modal :show="showEditModal" @close="closeEditModal" max-width="xl">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        Edit Product
-                    </h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Edit Product</h3>
                     <button
                         @click="closeEditModal"
                         type="button"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
                     >
-                        <svg
-                            class="w-3 h-3"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 14 14"
-                        >
-                            <path
-                                stroke="currentColor"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                            />
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                         </svg>
-                        <span class="sr-only">Close modal</span>
                     </button>
                 </div>
 
-                <form @submit.prevent="submitEdit">
-                    <div
-                        class="grid grid-cols-1 gap-5.5 p-6.5 grid-auto-rows-[minmax(100px,_auto)]"
-                    >
-                        <div>
-                            <label
-                                for="item_code"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Item Code</label
-                            >
-                            <input
-                                type="text"
-                                id="item_code"
-                                v-model="editForm.item_code"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.item_code"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.item_code }}
-                            </div>
-                        </div>
+                <form @submit.prevent="submitEdit" class="space-y-4">
+                    <!-- Item Code -->
+                    <div>
+                        <label for="edit_item_code" class="block mb-2 text-sm font-medium text-gray-900">Item Code</label>
+                        <input
+                            type="text"
+                            id="edit_item_code"
+                            v-model="editForm.item_code"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required
+                        />
+                        <div v-if="editForm.errors.item_code" class="text-red-600 text-sm mt-1">{{ editForm.errors.item_code }}</div>
+                    </div>
 
-                        <div>
-                            <label
-                                for="name"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Name</label
-                            >
-                            <input
-                                type="text"
-                                id="name"
-                                v-model="editForm.name"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.name"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.name }}
-                            </div>
-                        </div>
+                    <!-- Name -->
+                    <div>
+                        <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900">Name</label>
+                        <input
+                            type="text"
+                            id="edit_name"
+                            v-model="editForm.name"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required
+                        />
+                        <div v-if="editForm.errors.name" class="text-red-600 text-sm mt-1">{{ editForm.errors.name }}</div>
+                    </div>
 
-                        <!-- <div>
-                            <label
-                                for="barcode"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Barcode</label
-                            >
-                            <input
-                                type="text"
-                                id="barcode"
-                                v-model="editForm.barcode"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.barcode"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.barcode }}
-                            </div>
-                        </div> -->
+                    <!-- Price -->
+                    <div>
+                        <label for="edit_price" class="block mb-2 text-sm font-medium text-gray-900">Selling Price (₱)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            id="edit_price"
+                            v-model="editForm.price"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            placeholder="0.00"
+                            required
+                        />
+                        <p class="mt-1 text-xs text-gray-600">The price customers pay (You enter cost price when adding stock)</p>
+                        <div v-if="editForm.errors.price" class="text-red-600 text-sm mt-1">{{ editForm.errors.price }}</div>
+                    </div>
 
-                        <div>
-                            <label
-                                for="price"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Selling Price (₱)</label
-                            >
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                id="price"
-                                v-model="editForm.price"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                placeholder="0.00"
-                                required
-                            />
-                            <p class="mt-1 text-xs text-gray-600">
-                                The price customers pay (You enter cost price when adding stock)
-                            </p>
-                            <div
-                                v-if="editForm.errors.price"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.price }}
-                            </div>
-                        </div>
+                    <!-- Categories -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Categories</label>
 
-                        <div>
-                            <label
-                                for="category_ids"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Categories</label
+                        <!-- Selected Categories Tags -->
+                        <div v-if="editSelectedCategories.length > 0" class="mb-3 flex flex-wrap gap-2">
+                            <span
+                                v-for="category in editSelectedCategories"
+                                :key="category.id"
+                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-300"
                             >
-                            <div
-                                class="mt-1 p-3 border border-gray-300 rounded-md bg-white max-h-48 overflow-y-auto"
-                            >
-                                <!-- Active categories -->
-                                <div
-                                    v-for="category in categories"
-                                    :key="category.id"
-                                    class="flex items-center mb-2 last:mb-0"
-                                >
-                                    <input
-                                        :id="'category_' + category.id"
-                                        type="checkbox"
-                                        :value="category.id"
-                                        v-model="editForm.category_ids"
-                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                    />
-                                    <label
-                                        :for="'category_' + category.id"
-                                        class="ml-2 text-sm text-gray-900 cursor-pointer"
-                                    >
-                                        {{ category.name }}
-                                    </label>
-                                </div>
-
-                                <!-- Inactive categories that are currently assigned -->
-                                <div v-if="currentProductInactiveCategories.length > 0" class="mt-3 pt-3 border-t border-gray-200">
-                                    <p class="text-xs text-orange-600 font-medium mb-2">⚠️ Archived Categories (Currently Assigned):</p>
-                                    <div
-                                        v-for="category in currentProductInactiveCategories"
-                                        :key="'inactive_' + category.id"
-                                        class="flex items-center mb-2 last:mb-0 bg-orange-50 p-2 rounded"
-                                    >
-                                        <input
-                                            :id="'inactive_category_' + category.id"
-                                            type="checkbox"
-                                            :value="category.id"
-                                            v-model="editForm.category_ids"
-                                            class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-orange-300 rounded"
-                                        />
-                                        <label
-                                            :for="'inactive_category_' + category.id"
-                                            class="ml-2 text-sm text-orange-800 cursor-pointer"
-                                        >
-                                            {{ category.name }} (Archived)
-                                        </label>
-                                    </div>
-                                    <p class="text-xs text-orange-600 mt-1">These categories are archived. Consider selecting active categories instead.</p>
-                                </div>
-
-                                <div
-                                    v-if="categories.length === 0 && currentProductInactiveCategories.length === 0"
-                                    class="text-sm text-gray-500 italic"
-                                >
-                                    No categories available
-                                </div>
-                            </div>
-                            <div class="mt-1">
-                                <p class="text-sm text-gray-600">
-                                    Select one or more categories for this
-                                    product
-                                </p>
-                            </div>
-                            <div
-                                v-if="editForm.errors.category_ids"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.category_ids }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                for="edit_brand_id"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Brand (Optional)</label
-                            >
-                            <div class="flex gap-2">
-                                <select
-                                    id="edit_brand_id"
-                                    v-model="editForm.brand_id"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                >
-                                    <option value="">Select a brand (optional)</option>
-                                    <option
-                                        v-for="brand in availableBrands"
-                                        :key="brand.id"
-                                        :value="brand.id"
-                                    >
-                                        {{ brand.name }}
-                                    </option>
-                                </select>
+                                {{ category.name }}
                                 <button
                                     type="button"
-                                    @click="openQuickBrandModal"
-                                    class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
-                                    title="Add New Brand"
+                                    @click="removeEditCategory(category.id)"
+                                    class="ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
                                 >
-                                    + Add Brand
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
                                 </button>
-                            </div>
-                            <div
-                                v-if="editForm.errors.brand_id"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.brand_id }}
-                            </div>
+                            </span>
                         </div>
 
-                        <div>
-                            <label
-                                for="description"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Description</label
-                            >
-                            <input
-                                type="text"
-                                id="description"
-                                v-model="editForm.description"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            />
-                            <div
-                                v-if="editForm.errors.description"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.description }}
-                            </div>
-                        </div>
+                        <!-- Add Category Button -->
+                        <button
+                            type="button"
+                            @click="openEditCategoryModal"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            + Add Category
+                        </button>
+
+                        <div v-if="editForm.errors.category_ids" class="text-red-600 text-sm mt-2">{{ editForm.errors.category_ids }}</div>
                     </div>
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <ButtonNew
-                            types="cancel"
-                            size="md"
-                            tooltips="Cancel and return to products list"
-                            @click="closeEditModal"
-                        >
-                            Cancel
-                        </ButtonNew>
 
-                        <ButtonNew
-                            types="save"
-                            size="md"
-                            tooltips="Update product"
-                            :class="{ 'opacity-50': editForm.processing }"
-                            :disabled="editForm.processing"
-                            @click="submitEdit"
+                    <!-- Brand -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Brand (Optional)</label>
+
+                        <!-- Selected Brand Tag -->
+                        <div v-if="editSelectedBrand" class="mb-3 flex items-center gap-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-300">
+                                {{ editSelectedBrand.name }}
+                                <button
+                                    type="button"
+                                    @click="removeEditBrand"
+                                    class="ml-2 text-green-600 hover:text-green-800 focus:outline-none"
+                                >
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+
+                        <!-- Add Brand Buttons -->
+                        <div v-if="!editSelectedBrand" class="flex gap-2">
+                            <button
+                                type="button"
+                                @click="openEditBrandModal"
+                                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                Select Brand
+                            </button>
+                            <button
+                                type="button"
+                                @click="openQuickBrandModal"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
+                                title="Create New Brand"
+                            >
+                                + New
+                            </button>
+                        </div>
+
+                        <div v-if="editForm.errors.brand_id" class="text-red-600 text-sm mt-2">{{ editForm.errors.brand_id }}</div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="edit_description" class="block mb-2 text-sm font-medium text-gray-900">Description</label>
+                        <input
+                            type="text"
+                            id="edit_description"
+                            v-model="editForm.description"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        />
+                        <div v-if="editForm.errors.description" class="text-red-600 text-sm mt-1">{{ editForm.errors.description }}</div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-2 pt-4 border-t">
+                        <button
+                            type="button"
+                            @click="closeEditModal"
+                            class="px-4 py-2 text-gray-700 bg-orange-500 hover:bg-orange-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
-                            {{ editForm.processing ? "Updating..." : "Save" }}
-                        </ButtonNew>
+                            <span class="mdi mdi-close-box"></span> Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="editForm.processing"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                            <span class="mdi mdi-content-save-check"></span> {{ editForm.processing ? "Updating..." : "Save" }}
+                        </button>
                     </div>
                 </form>
             </div>
         </Modal>
 
+        <!-- Delete Confirmation Modal -->
         <Modal :show="showDeleteModal" @close="closeDeleteModal">
             <div class="p-4 md:p-5 text-center">
                 <svg
@@ -911,6 +800,24 @@
                 </form>
             </div>
         </Modal>
+
+        <!-- Edit - Category Selection Modal -->
+        <CategorySelectionModal
+            :show="showEditCategoryModal"
+            :categories="categories"
+            :selectedCategories="editSelectedCategories"
+            @close="closeEditCategoryModal"
+            @toggle="toggleEditCategoryFromModal"
+        />
+
+        <!-- Edit - Brand Selection Modal -->
+        <BrandSelectionModal
+            :show="showEditBrandModal"
+            :brands="availableBrands"
+            :selectedBrand="editSelectedBrand"
+            @close="closeEditBrandModal"
+            @select="selectEditBrandFromModal"
+        />
     </AdminAuthenticatedLayout>
 </template>
 
@@ -923,6 +830,8 @@ import { defineProps, ref, computed, watch } from "vue";
 import { notify, getLogoBase64 } from "@/globalFunctions.js";
 import ButtonNew from "@/Components/ButtonNew.vue";
 import ButtonCard from "@/Components/ButtonCard.vue";
+import CategorySelectionModal from "./CategorySelectionModal.vue";
+import BrandSelectionModal from "./BrandSelectionModal.vue";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 
@@ -943,6 +852,18 @@ const dataTable = ref();
 // Quick Brand Modal
 const showQuickBrandModal = ref(false);
 const availableBrands = ref([...props.brands]);
+
+// Edit Modal - Categories & Brand
+const editSelectedCategories = ref([]);
+const showEditCategoryModal = ref(false);
+const editSelectedBrand = ref(null);
+const showEditBrandModal = ref(false);
+const editCategorySearch = ref("");
+const editBrandSearch = ref("");
+const editFilteredCategories = ref([]);
+const editFilteredBrands = ref([]);
+const showEditCategoryDropdown = ref(false);
+const showEditBrandDropdown = ref(false);
 
 const filters = ref({
     search: "",
@@ -1184,6 +1105,15 @@ const currentProductInactiveCategories = computed(() => {
     );
 });
 
+// Edit Modal - Computed properties for autocomplete
+const editDisplayedCategories = computed(() => {
+    return editFilteredCategories.value.slice(0, 5);
+});
+
+const editDisplayedBrands = computed(() => {
+    return editFilteredBrands.value.slice(0, 5);
+});
+
 const tableColumns = computed(() => [
     {
         key: "item_code",
@@ -1261,6 +1191,15 @@ const openEditModal = (product) => {
         : []; // Updated
     editForm.brand_id = product.brand ? product.brand.id : "";
     editForm.description = product.description || "";
+
+    // Populate autocomplete selections
+    editSelectedCategories.value = product.categories || [];
+    editSelectedBrand.value = product.brand || null;
+    editCategorySearch.value = "";
+    editBrandSearch.value = "";
+    editFilteredCategories.value = [...props.categories];
+    editFilteredBrands.value = [...availableBrands.value];
+
     showEditModal.value = true;
 };
 
@@ -1269,6 +1208,16 @@ const closeEditModal = () => {
     editingProduct.value = null;
     editForm.reset();
     editForm.clearErrors();
+
+    // Reset autocomplete state
+    editSelectedCategories.value = [];
+    editSelectedBrand.value = null;
+    editCategorySearch.value = "";
+    editBrandSearch.value = "";
+    editFilteredCategories.value = [];
+    editFilteredBrands.value = [];
+    showEditCategoryDropdown.value = false;
+    showEditBrandDropdown.value = false;
 };
 
 const openDeleteConfirmation = (product) => {
@@ -1321,27 +1270,22 @@ const reload = () => {
     });
 };
 
-const submitEdit = async () => {
+const submitEdit = () => {
     if (!editingProduct.value) return;
 
-    try {
-        await axios.put(`/admin/products/${editingProduct.value.id}`, editForm);
-        closeEditModal();
-        reload();
-        notify("Product updated successfully!", "success");
-    } catch (error) {
-        if (
-            error.response &&
-            error.response.data &&
-            error.response.data.errors
-        ) {
-            editForm.errors = error.response.data.errors;
-        }
-        notify(
-            "Failed to update product. Please check the form fields.",
-            "error"
-        );
-    }
+    editForm.put(route('admin.products.update', editingProduct.value.id), {
+        onSuccess: () => {
+            closeEditModal();
+            notify("Product updated successfully!", "success");
+            reload();
+        },
+        onError: () => {
+            notify(
+                "Failed to update product. Please check the form fields.",
+                "error"
+            );
+        },
+    });
 };
 
 const exportToPDF = async () => {
@@ -1609,6 +1553,7 @@ const createQuickBrand = async () => {
             // Auto-select the newly created brand in edit form
             if (editingProduct.value) {
                 editForm.brand_id = newBrand.id;
+                editSelectedBrand.value = newBrand;
             }
 
             // Close modal and notify
@@ -1627,5 +1572,59 @@ const createQuickBrand = async () => {
             notify('Something went wrong while creating the brand.', 'error');
         }
     }
+};
+
+// ========== Edit Modal - Category Functions ==========
+
+const removeEditCategory = (categoryId) => {
+    editSelectedCategories.value = editSelectedCategories.value.filter(
+        (c) => c.id !== categoryId
+    );
+    editForm.category_ids = editForm.category_ids.filter(
+        (id) => id !== categoryId
+    );
+};
+
+const openEditCategoryModal = () => {
+    showEditCategoryModal.value = true;
+};
+
+const closeEditCategoryModal = () => {
+    showEditCategoryModal.value = false;
+};
+
+const toggleEditCategoryFromModal = (category) => {
+    const index = editSelectedCategories.value.findIndex((c) => c.id === category.id);
+    if (index > -1) {
+        removeEditCategory(category.id);
+    } else {
+        editSelectedCategories.value.push(category);
+        editForm.category_ids.push(category.id);
+    }
+};
+
+// ========== Edit Modal - Brand Functions ==========
+
+const selectEditBrand = (brand) => {
+    editSelectedBrand.value = brand;
+    editForm.brand_id = brand.id;
+};
+
+const removeEditBrand = () => {
+    editSelectedBrand.value = null;
+    editForm.brand_id = "";
+};
+
+const openEditBrandModal = () => {
+    showEditBrandModal.value = true;
+};
+
+const closeEditBrandModal = () => {
+    showEditBrandModal.value = false;
+};
+
+const selectEditBrandFromModal = (brand) => {
+    selectEditBrand(brand);
+    closeEditBrandModal();
 };
 </script>
