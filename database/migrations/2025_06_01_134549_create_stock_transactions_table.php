@@ -14,7 +14,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->enum('type', ['in', 'out']);
             $table->integer('quantity');
+            $table->decimal('acquisition_price', 10, 2)->nullable();
+            $table->decimal('unit_cost', 10, 2)->nullable();
+            $table->integer('remaining_quantity')->nullable();
+            $table->json('batch_allocations')->nullable();
             $table->string('reason')->nullable();
+            $table->text('notes')->nullable();
             $table->date('transaction_date');
             $table->timestamps();
         });
