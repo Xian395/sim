@@ -653,7 +653,7 @@ const showStockAlerts = () => {
   
   if (out_of_stock > 0) {
     notify2(
-      `⚠️ Warning: ${out_of_stock} product${out_of_stock > 1 ? 's are' : ' is'} out of stock!`,
+      `Warning: ${out_of_stock} product${out_of_stock > 1 ? 's are' : ' is'} out of stock!`,
       'error',
     );
   }
@@ -670,7 +670,7 @@ const showStockAlerts = () => {
   if (out_of_stock === 0 && low_stock === 0 && calculatedStats.value.total_products > 0) {
     setTimeout(() => {
       notify2(
-        '✅ All products are well-stocked!',
+        'All products are well-stocked!',
         'success',
       );
     }, 500);

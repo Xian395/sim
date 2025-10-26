@@ -33,174 +33,162 @@
                             </ButtonNew>
                         </div>
                     </div>
-
-                    <div class="p-6">
-                        <div class="p-6 border-b bg-gray-50">
-                            <div
-                                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end"
-                            >
-                                <div
-                                    class="sm:col-span-2 lg:col-span-2 xl:col-span-2"
-                                >
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Search</label
-                                    >
-                                    <input
-                                        v-model="filters.search"
-                                        @input="applyFilters"
-                                        type="text"
+                    
+                    <!-- Compact Search and Filter Bar -->
+                    <div class="bg-white/90 backdrop-blur-xl shadow-lg border border-gray-200 mx-6 mt-4 rounded-2xl">
+                        <!-- Compact Header Section -->
+                        <div class="p-3 space-y-3">
+                            <!-- Search Bar -->
+                            <div class="flex gap-3 items-center">
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input v-model="filters.search" @input="applyFilters" type="text"
                                         placeholder="Search products..."
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                        class="block w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300" />
                                 </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Category</label
-                                    >
-                                    <select
-                                        v-model="filters.category"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Categories</option>
-                                        <option
-                                            v-for="category in categories"
-                                            :key="category.id"
-                                            :value="category.id"
-                                        >
-                                            {{ category.name }}
-                                        </option>
-                                    </select>
-                                </div>
+                                <!-- Toggle Filters Button -->
+                                <button @click="showAdvancedFilters = !showAdvancedFilters"
+                                    class="px-3 py-2.5 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl hover:bg-white hover:border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm font-medium flex items-center space-x-2 transition-all duration-200 group whitespace-nowrap">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    <span>Filters</span>
+                                </button>
+                            </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Brand</label
-                                    >
-                                    <select
-                                        v-model="filters.brand"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Brands</option>
-                                        <option
-                                            v-for="brand in brands"
-                                            :key="brand.id"
-                                            :value="brand.id"
-                                        >
-                                            {{ brand.name }}
-                                        </option>
-                                    </select>
-                                </div>
+                            <!-- Advanced Filters (Collapsible) -->
+                            <transition name="slide-down">
+                                <div v-if="showAdvancedFilters" class="space-y-3 pt-2 border-t border-gray-200">
+                                    <!-- First Row of Filters -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                        <!-- Category Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.category" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Categories</option>
+                                                <option v-for="category in categories" :key="category.id" :value="category.id">
+                                                    {{ category.name }}
+                                                </option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Stock Status</label
-                                    >
-                                    <select
-                                        v-model="filters.stockStatus"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Stock</option>
-                                        <option value="out_of_stock">
-                                            Out of Stock
-                                        </option>
-                                        <option value="low_stock">
-                                            Low Stock
-                                        </option>
-                                        <option value="in_stock">
-                                            In Stock
-                                        </option>
-                                    </select>
-                                </div>
+                                        <!-- Brand Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.brand" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Brands</option>
+                                                <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                                                    {{ brand.name }}
+                                                </option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Sort By</label
-                                    >
-                                    <select
-                                        v-model="filters.sortBy"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="name">Name</option>
-                                        <option value="item_code">
-                                            Item Code
-                                        </option>
-                                        <option value="price_low">
-                                            Price (lowest)
-                                        </option>
-                                        <option value="price_high">
-                                            Price (highest)
-                                        </option>
-                                        <option value="stock_low">
-                                            Stock (lowest)
-                                        </option>
-                                        <option value="stock_high">
-                                            Stock (highest)
-                                        </option>
-                                        <option value="created_at_newest">
-                                            Date Added (newest)
-                                        </option>
-                                        <option value="created_at_oldest">
-                                            Date Added (oldest)
-                                        </option>
-                                    </select>
-                                </div>
+                                        <!-- Stock Status Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.stockStatus" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Stock</option>
+                                                <option value="out_of_stock">Out</option>
+                                                <option value="low_stock">Low</option>
+                                                <option value="in_stock">In Stock</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                    >
-                                        Price Range
-                                    </label>
-                                    <div class="flex space-x-2">
-                                        <input
-                                            v-model="filters.priceMin"
-                                            @input="applyFilters"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            placeholder="Min"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <input
-                                            v-model="filters.priceMax"
-                                            @input="applyFilters"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            placeholder="Max"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
+                                        <!-- Sort By -->
+                                        <div class="relative">
+                                            <select v-model="filters.sortBy" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="name">By Name</option>
+                                                <option value="price_low">Price Low</option>
+                                                <option value="price_high">Price High</option>
+                                                <option value="stock_low">Stock Low</option>
+                                                <option value="stock_high">Stock High</option>
+                                                <option value="created_at_newest">Newest</option>
+                                                <option value="created_at_oldest">Oldest</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Clear Filters -->
+                                        <button @click="clearFilters"
+                                            :class="[
+                                                'px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200',
+                                                hasActiveFilters
+                                                    ? 'text-red-600 hover:text-white hover:bg-red-500 bg-red-50 border-2 border-red-200 hover:border-red-500'
+                                                    : 'text-gray-400 bg-gray-100 border-2 border-gray-200 cursor-not-allowed'
+                                            ]"
+                                            :disabled="!hasActiveFilters">
+                                            Clear
+                                        </button>
+                                    </div>
+
+                                    <!-- Price Range Row -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                                        <div>
+                                            <input
+                                                v-model="filters.priceMin"
+                                                @input="applyFilters"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Min Price"
+                                                class="w-full px-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500" />
+                                        </div>
+                                        <div>
+                                            <input
+                                                v-model="filters.priceMax"
+                                                @input="applyFilters"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Max Price"
+                                                class="w-full px-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500" />
+                                        </div>
                                     </div>
                                 </div>
+                            </transition>
 
-                                <div class="flex justify-end lg:justify-start">
-                                    <button
-                                        @click="clearFilters"
-                                        class="w-full lg:w-auto px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors whitespace-nowrap"
-                                    >
-                                        Clear Filters
-                                    </button>
-                                </div>
+                            <!-- Stats Bar -->
+                            <div class="flex flex-wrap gap-2 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 text-xs font-medium">
+                                <span class="text-gray-600">{{ filteredProducts.length }} products found</span>
+                                <span v-if="isFiltered" class="text-blue-600">(filtered)</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="p-6">
-                            <div class="mb-4 text-sm text-gray-600">
-                                {{ filteredProducts.length }} products found
-                                <span v-if="isFiltered">(filtered)</span>
-                            </div>
-
-                            <DataTable
+                    <!-- Products Table -->
+                    <div class="p-6">
+                        <DataTable
                                 :data="paginatedProducts"
                                 :columns="tableColumns"
                                 :empty-message="'No products found'"
@@ -415,7 +403,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
 
@@ -865,6 +852,8 @@ const editFilteredBrands = ref([]);
 const showEditCategoryDropdown = ref(false);
 const showEditBrandDropdown = ref(false);
 
+const showAdvancedFilters = ref(false);
+
 const filters = ref({
     search: "",
     category: "",
@@ -1066,6 +1055,18 @@ const isFiltered = computed(() => {
     );
 });
 
+const hasActiveFilters = computed(() => {
+    return (
+        filters.value.search ||
+        filters.value.category ||
+        filters.value.brand ||
+        filters.value.stockStatus ||
+        filters.value.priceMin ||
+        filters.value.priceMax ||
+        filters.value.sortBy !== "name"
+    );
+});
+
 watch(
     () => filteredProducts.value.length,
     () => {
@@ -1087,7 +1088,7 @@ const clearFilters = () => {
         priceMin: "",
         priceMax: "",
     };
-    currentPage.value = 1;
+    applyFilters();
 };
 
 const currentProductInactiveCategories = computed(() => {
@@ -1628,3 +1629,59 @@ const selectEditBrandFromModal = (brand) => {
     closeEditBrandModal();
 };
 </script>
+
+<style scoped>
+/* Slide Down Transition for Filters */
+.slide-down-enter-active,
+.slide-down-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+.slide-down-enter-to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hide default select dropdown arrow */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    padding-right: 2.5rem;
+}
+
+select::-ms-expand {
+    display: none;
+}
+</style>
