@@ -1163,6 +1163,7 @@ const tableColumns = computed(() => [
         label: "Actions",
         type: "custom",
         align: "right",
+        sticky: false,
     },
 ]);
 

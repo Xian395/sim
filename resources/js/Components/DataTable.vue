@@ -1,15 +1,25 @@
 <template>
-  <div class="overflow-x-auto">
-    <table ref="table" class="min-w-full divide-y divide-gray-200">
+  <div class="overflow-x-auto" ref="scrollContainer"
+    @mousedown="startDrag"
+    @mousemove="dragScroll"
+    @mouseup="endDrag"
+    @mouseleave="endDrag"
+    :class="isDragging ? 'cursor-grabbing' : 'cursor-grab'">
+    <table ref="table" class="min-w-full divide-y divide-gray-200 select-none">
+      <colgroup>
+        <col v-for="(column, index) in columns" :key="column.key"
+          :style="getColStyle(column, index)">
+      </colgroup>
       <thead class="bg-gray-50">
         <tr>
-          <th 
-            v-for="column in columns" 
+          <th
+            v-for="column in columns"
             :key="column.key"
             :class="[
               'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider',
-              column.align === 'right' ? 'text-right' : 
-              column.align === 'center' ? 'text-center' : 'text-left'
+              column.align === 'right' ? 'text-right' :
+              column.align === 'center' ? 'text-center' : 'text-left',
+              column.sticky ? 'sticky right-0 bg-gray-50 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]' : ''
             ]"
           >
             {{ column.label }}
@@ -17,18 +27,25 @@
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-        <tr 
-          v-for="item in data" 
-          :key="item[itemKey]" 
-          class="hover:bg-gray-50"
+        <tr
+          v-for="item in data"
+          :key="item[itemKey]"
+          @click="selectRow(item, itemKey)"
+          :class="[
+            'cursor-pointer transition-colors duration-150',
+            selectedRowKey === item[itemKey]
+              ? 'bg-blue-100 hover:bg-blue-200'
+              : 'hover:bg-gray-50'
+          ]"
         >
-          <td 
-            v-for="column in columns" 
+          <td
+            v-for="column in columns"
             :key="column.key"
             :class="[
               'px-6 py-4 whitespace-nowrap',
-              column.align === 'right' ? 'text-right' : 
-              column.align === 'center' ? 'text-center' : 'text-left'
+              column.align === 'right' ? 'text-right' :
+              column.align === 'center' ? 'text-center' : 'text-left',
+              column.sticky ? 'sticky right-0 bg-white z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]' : ''
             ]"
           >
             <slot 
@@ -123,6 +140,35 @@ const props = defineProps({
 });
 
 const table = ref();
+const scrollContainer = ref();
+const isDragging = ref(false);
+const dragStartX = ref(0);
+const dragScrollLeft = ref(0);
+const selectedRowKey = ref(null);
+
+const startDrag = (e) => {
+  isDragging.value = true;
+  dragStartX.value = e.pageX - scrollContainer.value.offsetLeft;
+  dragScrollLeft.value = scrollContainer.value.scrollLeft;
+};
+
+const dragScroll = (e) => {
+  if (!isDragging.value) return;
+
+  e.preventDefault();
+  const x = e.pageX - scrollContainer.value.offsetLeft;
+  const walk = (x - dragStartX.value) * 1; // 1 = scroll speed
+  scrollContainer.value.scrollLeft = dragScrollLeft.value - walk;
+};
+
+const endDrag = () => {
+  isDragging.value = false;
+};
+
+const selectRow = (item, itemKey) => {
+  const key = item[itemKey];
+  selectedRowKey.value = selectedRowKey.value === key ? null : key;
+};
 
 const getNestedValue = (obj, path) => {
   return path.split('.').reduce((current, key) => {
@@ -141,6 +187,16 @@ const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString();
+};
+
+const getColStyle = (column, index) => {
+  if (column.sticky) {
+    return {
+      position: 'sticky',
+      right: 0
+    };
+  }
+  return {};
 };
 
 defineExpose({

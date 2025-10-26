@@ -17,103 +17,167 @@
                         </ButtonNew>
                     </div>
 
-                    <!-- Filters Section -->
-                    <div class="p-6 border-b bg-gray-50">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 items-end">
-                            <!-- Search -->
-                            <div class="sm:col-span-2 lg:col-span-2 xl:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                                <input
-                                    v-model="filters.search"
-                                    @input="applyFilters"
-                                    type="text"
-                                    placeholder="Search logs..."
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
+                    <!-- Compact Search and Filter Bar -->
+                    <div class="bg-white/90 backdrop-blur-xl shadow-lg border border-gray-200 mx-6 mt-4 rounded-2xl">
+                        <!-- Compact Header Section -->
+                        <div class="p-3 space-y-3">
+                            <!-- Search Bar -->
+                            <div class="flex gap-3 items-center">
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input v-model="filters.search" @input="applyFilters" type="text"
+                                        placeholder="Search logs..."
+                                        class="block w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300" />
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-                                <input
-                                    v-model="filters.dateFrom"
-                                    @change="applyFilters"
-                                    type="date"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-                                <input
-                                    v-model="filters.dateTo"
-                                    @change="applyFilters"
-                                    type="date"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Action</label>
-                                <select
-                                    v-model="filters.action"
-                                    @change="applyFilters"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Actions</option>
-                                    <option value="auth">Login</option>
-                                    <option value="stock_in">Stock In</option>
-                                    <option value="stock_out">Stock Out</option>
-                                    <option value="sale">Sale</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                                <select
-                                    v-model="filters.sortBy"
-                                    @change="applyFilters"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="created_at">Date</option>
-                                    <option value="action">Action</option>
-                                    <option value="user.name">User</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
-                                <select
-                                    v-model="filters.sortOrder"
-                                    @change="applyFilters"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="desc">Newest First</option>
-                                    <option value="asc">Oldest First</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Show</label>
-                                <select
-                                    v-model="itemsPerPage"
-                                    @change="handleItemsPerPageChange"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option :value="10">10</option>
-                                    <option :value="50">50</option>
-                                    <option :value="100">100</option>
-                                    <option :value="500">500</option>
-                                    <option :value="1000">1000</option>
-                                </select>
-                            </div>
-                            <div class="sm:col-span-2 lg:col-span-4 xl:col-span-1 flex justify-end lg:justify-start">
-                                <button
-                                    @click="clearFilters"
-                                    class="w-full lg:w-auto px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors whitespace-nowrap"
-                                >
-                                    Clear Filters
+                                <!-- Toggle Filters Button -->
+                                <button @click="showAdvancedFilters = !showAdvancedFilters"
+                                    class="px-3 py-2.5 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl hover:bg-white hover:border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm font-medium flex items-center space-x-2 transition-all duration-200 group whitespace-nowrap">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    <span>Filters</span>
                                 </button>
                             </div>
 
+                            <!-- Advanced Filters (Collapsible) -->
+                            <transition name="slide-down">
+                                <div v-if="showAdvancedFilters" class="space-y-3 pt-2 border-t border-gray-200">
+                                    <!-- First Row of Filters -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                        <!-- From Date Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">From Date</label>
+                                            <input v-model="filters.dateFrom" @change="applyFilters"
+                                                type="date"
+                                                class="w-full pl-3 pr-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium transition-all duration-200" />
+                                        </div>
+
+                                        <!-- To Date Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">To Date</label>
+                                            <input v-model="filters.dateTo" @change="applyFilters"
+                                                type="date"
+                                                class="w-full pl-3 pr-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium transition-all duration-200" />
+                                        </div>
+
+                                        <!-- Action Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Action</label>
+                                            <select v-model="filters.action" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Actions</option>
+                                                <option value="auth">Login</option>
+                                                <option value="stock_in">Stock In</option>
+                                                <option value="stock_out">Stock Out</option>
+                                                <option value="sale">Sale</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sort By Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Sort By</label>
+                                            <select v-model="filters.sortBy" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="created_at">Date</option>
+                                                <option value="action">Action</option>
+                                                <option value="user.name">User</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Second Row of Filters -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                        <!-- Order Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Order</label>
+                                            <select v-model="filters.sortOrder" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="desc">Newest First</option>
+                                                <option value="asc">Oldest First</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Show Filter -->
+                                        <div class="relative">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Show</label>
+                                            <select v-model="itemsPerPage" @change="handleItemsPerPageChange"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option :value="10">10</option>
+                                                <option :value="50">50</option>
+                                                <option :value="100">100</option>
+                                                <option :value="500">500</option>
+                                                <option :value="1000">1000</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Clear Filters Button -->
+                                        <div class="flex items-end">
+                                            <button
+                                                @click="clearFilters"
+                                                class="w-full px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap"
+                                            >
+                                                Clear Filters
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Active Filters Display -->
+                                    <div v-if="hasActiveFilters" class="mt-3 flex flex-wrap gap-2">
+                                        <span class="text-xs font-medium text-gray-700">Active filters:</span>
+                                        <span v-if="filters.search" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Search: "{{ filters.search }}"
+                                            <button @click="filters.search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                        </span>
+                                        <span v-if="filters.dateFrom" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            From: {{ filters.dateFrom }}
+                                            <button @click="filters.dateFrom = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
+                                        </span>
+                                        <span v-if="filters.dateTo" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            To: {{ filters.dateTo }}
+                                            <button @click="filters.dateTo = ''" class="ml-1 text-yellow-600 hover:text-yellow-800">×</button>
+                                        </span>
+                                        <span v-if="filters.action" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            Action: {{ formatAction(filters.action) }}
+                                            <button @click="filters.action = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                                        </span>
+                                        <span v-if="filters.sortBy !== 'created_at'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                                            Sort: {{ filters.sortBy === 'action' ? 'Action' : 'User' }}
+                                            <button @click="filters.sortBy = 'created_at'" class="ml-1 text-pink-600 hover:text-pink-800">×</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
                     </div>
 
@@ -159,7 +223,7 @@
                             </div>
                             <div class="flex space-x-2">
                                 <button
-                                    v-for="link in logs.links"
+                                    v-for="link in formatPaginationLinks"
                                     :key="link.label"
                                     @click="loadPage(link.url)"
                                     :disabled="!link.url"
@@ -227,6 +291,7 @@ import { autoTable } from "jspdf-autotable";
 import ButtonNew from "@/Components/ButtonNew.vue";
 import { getLogoBase64 } from "@/globalFunctions.js";
 
+
 const { logs } = defineProps(["logs"]);
 
 const filters = ref({
@@ -238,6 +303,7 @@ const filters = ref({
     sortOrder: "desc",
 });
 
+const showAdvancedFilters = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
@@ -259,6 +325,17 @@ const isFiltered = computed(() => {
         filters.value.dateFrom ||
         filters.value.dateTo ||
         filters.value.action
+    );
+});
+
+const hasActiveFilters = computed(() => {
+    return (
+        filters.value.search ||
+        filters.value.dateFrom ||
+        filters.value.dateTo ||
+        filters.value.action ||
+        filters.value.sortBy !== "created_at" ||
+        filters.value.sortOrder !== "desc"
     );
 });
 
@@ -453,4 +530,105 @@ const handleItemsPerPageChange = () => {
         preserveScroll: true,
     });
 };
+
+const formatPaginationLinks = computed(() => {
+    if (!logs.links) return [];
+
+    const formatted = [];
+    let previousWasEllipsis = false;
+
+    logs.links.forEach((link, index) => {
+        // Always include Previous and Next buttons
+        if (link.label.includes('Previous') || link.label.includes('Next')) {
+            formatted.push(link);
+            previousWasEllipsis = false;
+            return;
+        }
+
+        // Get the page number from label
+        const pageNum = parseInt(link.label);
+        const isNumber = !isNaN(pageNum);
+
+        if (!isNumber) {
+            formatted.push(link);
+            previousWasEllipsis = false;
+            return;
+        }
+
+        // Show first 2 pages, last 2 pages, and current page +/- 1
+        const totalPages = Math.max(...logs.links.map(l => {
+            const num = parseInt(l.label);
+            return isNaN(num) ? 0 : num;
+        }));
+
+        const currentPageNum = logs.links.findIndex(l => l.active) > 0
+            ? parseInt(logs.links.find(l => l.active)?.label || 1)
+            : 1;
+
+        const shouldShow =
+            pageNum <= 2 ||  // First 2 pages
+            pageNum >= totalPages - 1 ||  // Last 2 pages
+            Math.abs(pageNum - currentPageNum) <= 1;  // Current page +/- 1
+
+        if (shouldShow) {
+            formatted.push(link);
+            previousWasEllipsis = false;
+        } else if (!previousWasEllipsis) {
+            // Add ellipsis only once between groups
+            formatted.push({
+                label: '...',
+                url: null,
+                active: false
+            });
+            previousWasEllipsis = true;
+        }
+    });
+
+    return formatted;
+});
 </script>
+
+<style scoped>
+/* Slide Down Transition for Filters */
+.slide-down-enter-active,
+.slide-down-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+.slide-down-enter-to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+/* Hide default select dropdown arrow */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    padding-right: 2.5rem;
+}
+
+select::-ms-expand {
+    display: none;
+}
+</style>
