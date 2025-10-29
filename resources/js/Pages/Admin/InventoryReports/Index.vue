@@ -249,87 +249,62 @@
                     <div class="px-6 py-4 border-b border-gray-200">
                       <h4 class="text-lg font-medium text-gray-900">Product Inventory Details</h4>
                     </div>
-                    <div class="overflow-x-auto">
-                      <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                          <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                          <tr v-if="filteredProducts.length === 0">
-                            <td colspan="7" class="px-6 py-12 text-center">
-                              <div class="text-gray-500">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-                                <p class="mt-1 text-sm text-gray-500">Try adjusting your filters to see more results.</p>
-                                <div class="mt-6">
-                                  <ButtonNew
-                                    types="secondary"
-                                    size="sm"
-                                    @click="clearFilters"
-                                  >
-                                    Clear all filters
-                                  </ButtonNew>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr v-else v-for="product in filteredProducts" :key="product.id" class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {{ product.name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {{ product.brand }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {{ product.stock_quantity }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ₱{{ formatCurrency(product.price) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ₱{{ formatCurrency(product.value) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                              <span :class="getStatusBadgeClass(product.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                {{ product.status }}
-                              </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                              <div class="flex space-x-2">
-                                <button
-                                  @click="viewStockHistory(product.id)"
-                                  class="text-blue-600 hover:text-blue-900 font-medium flex items-center"
-                                >
-                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                  </svg>
-                                  Stock History
-                                </button>
-                                <button
-                                  @click="viewSaleHistory(product.id)"
-                                  class="text-green-600 hover:text-green-900 font-medium flex items-center"
-                                >
-                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                  </svg>
-                                  Sale History
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                    <DataTable
+                      :data="filteredProducts"
+                      :columns="tableColumns"
+                      itemKey="id"
+                      emptyMessage="No products found"
+                    >
+                      <template #column-status="{ value }">
+                        <span :class="getStatusBadgeClass(value)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                          {{ value }}
+                        </span>
+                      </template>
+
+                      <template #column-actions="{ item }">
+                        <ButtonCard>
+                          <template #edit>
+                            <ButtonNew
+                              types="view"
+                              class="text-blue-600 hover:text-blue-900"
+                              @click="viewStockHistory(item.id)"
+                              tooltips="Stock History"
+                            >
+                              Stock
+                            </ButtonNew>
+                          </template>
+                          <template #delete>
+                            <ButtonNew
+                              types="archive"
+                              class="text-green-600 hover:text-green-900"
+                              @click="viewSaleHistory(item.id)"
+                              tooltips="Sale History"
+                            >
+                              Sale
+                            </ButtonNew>
+                          </template>
+                        </ButtonCard>
+                      </template>
+
+                      <template #empty-state>
+                        <div class="text-center py-12">
+                          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <h3 class="mt-2 text-sm font-medium text-gray-900">No products found</h3>
+                          <p class="mt-1 text-sm text-gray-500">Try adjusting your filters to see more results.</p>
+                          <div class="mt-6">
+                            <ButtonNew
+                              types="secondary"
+                              size="sm"
+                              @click="clearFilters"
+                            >
+                              Clear all filters
+                            </ButtonNew>
+                          </div>
+                        </div>
+                      </template>
+                    </DataTable>
                   </div>
                 </div>
 
@@ -509,8 +484,10 @@ import { ref, onMounted, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
 import ButtonNew from '@/Components/ButtonNew.vue';
+import ButtonCard from '@/Components/ButtonCard.vue';
 import UnAuthorized from "@/Components/UnAuthorized.vue";
 import Modal from '@/Components/Modal.vue';
+import DataTable from '@/Components/DataTable.vue';
 import { notify2, getLogoBase64 } from "@/globalFunctions.js";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -632,6 +609,18 @@ const filteredSummary = computed(() => {
     lowStockCount,
     outOfStockCount
   };
+});
+
+const tableColumns = computed(() => {
+  return [
+    { key: 'name', label: 'Product Name', type: 'text', align: 'left' },
+    { key: 'brand', label: 'Brand', type: 'text', align: 'left' },
+    { key: 'stock_quantity', label: 'Stock Quantity', type: 'number', align: 'left' },
+    { key: 'price', label: 'Unit Price', type: 'currency', align: 'left' },
+    { key: 'value', label: 'Total Value', type: 'currency', align: 'left' },
+    { key: 'status', label: 'Status', type: 'text', align: 'left' },
+    { key: 'actions', label: 'Actions', type: 'text', align: 'left', sticky: false }
+  ];
 });
 
 const updateDateTime = () => {

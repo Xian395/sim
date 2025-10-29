@@ -85,7 +85,7 @@
                             </div>
 
                             <div class="mt-4">
-                                <InputLabel for="price" value="Price" />
+                                <InputLabel for="price" value="Selling Price (₱) - Optional" />
                                 <TextInput
                                     id="price"
                                     type="number"
@@ -93,9 +93,11 @@
                                     min="0.01"
                                     class="mt-1 block w-full"
                                     v-model="form.price"
-                                    placeholder="PHP"
-                                    required
+                                    placeholder="0.00"
                                 />
+                                <!-- <p class="mt-1 text-sm text-gray-600">
+                                    You can set this now or later when adding stock (after you know your acquisition cost). Products without a selling price cannot be sold at POS.
+                                </p> -->
                                 <InputError
                                     class="mt-2"
                                     :message="form.errors.price"
@@ -104,44 +106,95 @@
 
                             <div class="mt-4">
                                 <InputLabel
-                                    for="category_ids"
+                                    for="category_search"
                                     value="Categories"
                                 />
-                                <div
-                                    class="mt-1 p-3 border border-gray-300 rounded-md bg-white max-h-48 overflow-y-auto"
-                                >
-                                    <div
-                                        v-for="category in categories"
+
+                                <!-- Selected Categories Tags -->
+                                <div v-if="selectedCategories.length > 0" class="mt-2 flex flex-wrap gap-2">
+                                    <span
+                                        v-for="category in selectedCategories"
                                         :key="category.id"
-                                        class="flex items-center mb-2 last:mb-0"
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-300"
                                     >
-                                        <input
-                                            :id="'category_' + category.id"
-                                            type="checkbox"
-                                            :value="category.id"
-                                            v-model="form.category_ids"
-                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        />
-                                        <label
-                                            :for="'category_' + category.id"
-                                            class="ml-2 text-sm text-gray-900 cursor-pointer"
+                                        {{ category.name }}
+                                        <button
+                                            type="button"
+                                            @click="removeCategory(category.id)"
+                                            class="ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
                                         >
-                                            {{ category.name }}
-                                        </label>
-                                    </div>
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                </div>
+
+                                <!-- Category Search Input -->
+                                <div class="relative mt-2">
+                                    <input
+                                        ref="categoryInput"
+                                        id="category_search"
+                                        type="text"
+                                        v-model="categorySearch"
+                                        @input="filterCategories"
+                                        @focus="showCategoryDropdown = true; filterCategories(); updateCategoryDropdownPosition();"
+                                        @blur="handleCategoryBlur"
+                                        placeholder="Type to search or click to browse..."
+                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    />
+                                </div>
+
+                                <!-- Category Dropdown (Teleported) -->
+                                <Teleport to="body">
                                     <div
-                                        v-if="categories.length === 0"
-                                        class="text-sm text-gray-500 italic"
+                                        v-if="showCategoryDropdown && filteredCategories.length > 0"
+                                        :style="categoryDropdownStyle"
+                                        class="fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden flex flex-col"
+                                        style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);"
                                     >
-                                        No categories available
+                                        <div class="overflow-y-auto flex-1">
+                                            <div
+                                                v-for="(category, index) in displayedCategories"
+                                                :key="category.id"
+                                                @mousedown.prevent="addCategory(category)"
+                                                class="px-4 py-2 cursor-pointer hover:bg-indigo-50 border-b border-gray-100 last:border-b-0"
+                                            >
+                                                {{ category.name }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Show More Button -->
+                                        <div
+                                            v-if="filteredCategories.length > categoryDisplayLimit"
+                                            class="border-t border-gray-200 bg-gray-50"
+                                        >
+                                            <button
+                                                type="button"
+                                                @mousedown.prevent="openCategoryModal"
+                                                class="w-full px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                                            >
+                                                View all {{ filteredCategories.length }} categories
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="mt-1">
+
+                                    <!-- No results -->
+                                    <div
+                                        v-if="showCategoryDropdown && categorySearch && filteredCategories.length === 0"
+                                        :style="categoryDropdownStyle"
+                                        class="fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-center text-gray-500"
+                                        style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);"
+                                    >
+                                        No categories found
+                                    </div>
+                                </Teleport>
+
+                                <!-- <div class="mt-1">
                                     <p class="text-sm text-gray-600">
-                                        Select one or more active categories for this
-                                        product. Only active categories are available for selection.
+                                        Type to search and select one or more active categories for this product.
                                     </p>
-                                </div>
+                                </div> -->
                                 <InputError
                                     class="mt-2"
                                     :message="form.errors.category_ids"
@@ -149,31 +202,95 @@
                             </div>
 
                             <div class="mt-4">
-                                <InputLabel for="brand_id" value="Brand (Optional)" />
-                                <div class="flex gap-2">
-                                    <select
-                                        id="brand_id"
-                                        v-model="form.brand_id"
-                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    >
-                                        <option value="">Select a brand (optional)</option>
-                                        <option
-                                            v-for="brand in availableBrands"
-                                            :key="brand.id"
-                                            :value="brand.id"
+                                <InputLabel for="brand_search" value="Brand (Optional)" />
+
+                                <!-- Selected Brand Tag -->
+                                <div v-if="selectedBrand" class="mt-2">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-300">
+                                        {{ selectedBrand.name }}
+                                        <button
+                                            type="button"
+                                            @click="removeBrand"
+                                            class="ml-2 text-green-600 hover:text-green-800 focus:outline-none"
                                         >
-                                            {{ brand.name }}
-                                        </option>
-                                    </select>
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                </div>
+
+                                <!-- Brand Search Input -->
+                                <div class="relative mt-2 flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input
+                                            ref="brandInput"
+                                            id="brand_search"
+                                            type="text"
+                                            v-model="brandSearch"
+                                            @input="filterBrands"
+                                            @focus="showBrandDropdown = true; filterBrands(); updateBrandDropdownPosition();"
+                                            @blur="handleBrandBlur"
+                                            placeholder="Type to search or click to browse..."
+                                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                            :disabled="!!selectedBrand"
+                                        />
+                                    </div>
+
                                     <button
                                         type="button"
                                         @click="openQuickBrandModal"
                                         class="mt-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
                                         title="Add New Brand"
                                     >
-                                        + Add Brand
+                                        + Add
                                     </button>
                                 </div>
+
+                                <!-- Brand Dropdown (Teleported) -->
+                                <Teleport to="body">
+                                    <div
+                                        v-if="showBrandDropdown && filteredBrands.length > 0 && !selectedBrand"
+                                        :style="brandDropdownStyle"
+                                        class="fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden flex flex-col"
+                                        style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);"
+                                    >
+                                            <div class="overflow-y-auto flex-1">
+                                                <div
+                                                    v-for="brand in displayedBrands"
+                                                    :key="brand.id"
+                                                    @mousedown.prevent="selectBrand(brand)"
+                                                    class="px-4 py-2 cursor-pointer hover:bg-green-50 border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    {{ brand.name }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Show More Button -->
+                                            <div
+                                                v-if="filteredBrands.length > brandDisplayLimit"
+                                                class="border-t border-gray-200 bg-gray-50"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    @mousedown.prevent="openBrandModal"
+                                                    class="w-full px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                                                >
+                                                    View all {{ filteredBrands.length }} brands
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- No results -->
+                                        <div
+                                            v-if="showBrandDropdown && brandSearch && filteredBrands.length === 0 && !selectedBrand"
+                                            :style="brandDropdownStyle"
+                                            class="fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-center text-gray-500"
+                                            style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);"
+                                        >
+                                            No brands found
+                                        </div>
+                                </Teleport>
                                 <InputError class="mt-2" :message="form.errors.brand_id" />
                             </div>
 
@@ -319,6 +436,140 @@
                 </form>
             </div>
         </Modal>
+
+        <!-- Category Selection Modal -->
+        <Modal :show="showCategoryModal" @close="closeCategoryModal" max-width="4xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        Select Categories
+                    </h3>
+                    <button
+                        @click="closeCategoryModal"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Search in Modal -->
+                <div class="mb-4">
+                    <input
+                        type="text"
+                        v-model="categoryModalSearch"
+                        @input="filterModalCategories"
+                        placeholder="Search categories..."
+                        class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    />
+                </div>
+
+                <!-- 2-Column Grid -->
+                <div class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2">
+                    <div
+                        v-for="category in modalFilteredCategories"
+                        :key="category.id"
+                        @click="toggleCategoryFromModal(category)"
+                        :class="[
+                            'px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-150',
+                            selectedCategories.some(c => c.id === category.id)
+                                ? 'border-blue-500 bg-blue-50 text-blue-900 font-semibold'
+                                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                        ]"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span>{{ category.name }}</span>
+                            <svg
+                                v-if="selectedCategories.some(c => c.id === category.id)"
+                                class="w-5 h-5 text-blue-600"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                            >
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button
+                        type="button"
+                        @click="closeCategoryModal"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                    >
+                        Done ({{ selectedCategories.length }} selected)
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Brand Selection Modal -->
+        <Modal :show="showBrandModal" @close="closeBrandModal" max-width="4xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        Select Brand
+                    </h3>
+                    <button
+                        @click="closeBrandModal"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Search in Modal -->
+                <div class="mb-4">
+                    <input
+                        type="text"
+                        v-model="brandModalSearch"
+                        @input="filterModalBrands"
+                        placeholder="Search brands..."
+                        class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    />
+                </div>
+
+                <!-- 2-Column Grid -->
+                <div class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2">
+                    <div
+                        v-for="brand in modalFilteredBrands"
+                        :key="brand.id"
+                        @click="selectBrandFromModal(brand)"
+                        :class="[
+                            'px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-150',
+                            selectedBrand && selectedBrand.id === brand.id
+                                ? 'border-green-500 bg-green-50 text-green-900 font-semibold'
+                                : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
+                        ]"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span>{{ brand.name }}</span>
+                            <svg
+                                v-if="selectedBrand && selectedBrand.id === brand.id"
+                                class="w-5 h-5 text-green-600"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                            >
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button
+                        type="button"
+                        @click="closeBrandModal"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                    >
+                        Done
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </AdminAuthenticatedLayout>
 </template>
 
@@ -344,10 +595,48 @@ const $page = usePage();
 const showQuickBrandModal = ref(false);
 const availableBrands = ref([...props.brands]);
 
+// Category autocomplete
+const categoryInput = ref(null);
+const categorySearch = ref("");
+const filteredCategories = ref([...props.categories]);
+const showCategoryDropdown = ref(false);
+const selectedCategories = ref([]);
+const categoryDisplayLimit = 5;
+const categoryDropdownStyle = ref({});
+
+// Category modal
+const showCategoryModal = ref(false);
+const categoryModalSearch = ref("");
+const modalFilteredCategories = ref([...props.categories]);
+
+// Brand autocomplete
+const brandInput = ref(null);
+const brandSearch = ref("");
+const filteredBrands = ref([...props.brands]);
+const showBrandDropdown = ref(false);
+const selectedBrand = ref(null);
+const brandDisplayLimit = 5;
+const brandDropdownStyle = ref({});
+
+// Brand modal
+const showBrandModal = ref(false);
+const brandModalSearch = ref("");
+const modalFilteredBrands = ref([...props.brands]);
+
+// Computed properties for displaying limited items (always show first 5 in dropdown)
+const displayedCategories = computed(() => {
+    return filteredCategories.value.slice(0, categoryDisplayLimit);
+});
+
+const displayedBrands = computed(() => {
+    return filteredBrands.value.slice(0, brandDisplayLimit);
+});
+
 const form = useForm({
     name: "",
     item_code: "",
     price: "",
+    cost_price: "",
     category_ids: [],
     brand_id: "",
     description: "",
@@ -364,6 +653,183 @@ const handleFileUpload = (event) => {
     if (file) {
         form.productimage = file;
     }
+};
+
+// Position dropdown functions
+const updateCategoryDropdownPosition = () => {
+    if (categoryInput.value) {
+        const rect = categoryInput.value.getBoundingClientRect();
+        categoryDropdownStyle.value = {
+            position: 'fixed',
+            top: `${rect.bottom + 4}px`,
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+        };
+    }
+};
+
+const updateBrandDropdownPosition = () => {
+    if (brandInput.value) {
+        const rect = brandInput.value.getBoundingClientRect();
+        brandDropdownStyle.value = {
+            position: 'fixed',
+            top: `${rect.bottom + 4}px`,
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+        };
+    }
+};
+
+// Category autocomplete functions
+const filterCategories = () => {
+    const query = categorySearch.value.toLowerCase();
+
+    // If no query, show all available categories
+    if (!query) {
+        filteredCategories.value = props.categories.filter(cat =>
+            !selectedCategories.value.some(selected => selected.id === cat.id)
+        );
+        return;
+    }
+
+    // Filter by query
+    filteredCategories.value = props.categories.filter(category =>
+        category.name.toLowerCase().includes(query) &&
+        !selectedCategories.value.some(selected => selected.id === category.id)
+    );
+};
+
+const addCategory = (category) => {
+    if (!selectedCategories.value.some(c => c.id === category.id)) {
+        selectedCategories.value.push(category);
+        form.category_ids.push(category.id);
+    }
+    categorySearch.value = "";
+    filteredCategories.value = props.categories.filter(cat =>
+        !selectedCategories.value.some(selected => selected.id === cat.id)
+    );
+    showCategoryDropdown.value = false;
+};
+
+const removeCategory = (categoryId) => {
+    selectedCategories.value = selectedCategories.value.filter(c => c.id !== categoryId);
+    form.category_ids = form.category_ids.filter(id => id !== categoryId);
+    filteredCategories.value = props.categories.filter(cat =>
+        !selectedCategories.value.some(selected => selected.id === cat.id)
+    );
+};
+
+const handleCategoryBlur = () => {
+    setTimeout(() => {
+        showCategoryDropdown.value = false;
+    }, 200);
+};
+
+// Brand autocomplete functions
+const filterBrands = () => {
+    const query = brandSearch.value.toLowerCase();
+
+    // If no query, show all brands
+    if (!query) {
+        filteredBrands.value = [...availableBrands.value];
+        return;
+    }
+
+    // Filter by query
+    filteredBrands.value = availableBrands.value.filter(brand =>
+        brand.name.toLowerCase().includes(query)
+    );
+};
+
+const selectBrand = (brand) => {
+    selectedBrand.value = brand;
+    form.brand_id = brand.id;
+    brandSearch.value = brand.name;
+    showBrandDropdown.value = false;
+};
+
+const removeBrand = () => {
+    selectedBrand.value = null;
+    form.brand_id = "";
+    brandSearch.value = "";
+    filteredBrands.value = [...availableBrands.value];
+};
+
+const handleBrandBlur = () => {
+    setTimeout(() => {
+        showBrandDropdown.value = false;
+    }, 200);
+};
+
+// Category Modal Functions
+const openCategoryModal = () => {
+    showCategoryModal.value = true;
+    showCategoryDropdown.value = false;
+    categoryModalSearch.value = "";
+    filterModalCategories();
+};
+
+const closeCategoryModal = () => {
+    showCategoryModal.value = false;
+};
+
+const filterModalCategories = () => {
+    const query = categoryModalSearch.value.toLowerCase();
+    if (!query) {
+        modalFilteredCategories.value = props.categories.filter(cat =>
+            !selectedCategories.value.some(selected => selected.id === cat.id)
+        );
+    } else {
+        modalFilteredCategories.value = props.categories.filter(category =>
+            category.name.toLowerCase().includes(query) &&
+            !selectedCategories.value.some(selected => selected.id === category.id)
+        );
+    }
+};
+
+const toggleCategoryFromModal = (category) => {
+    const index = selectedCategories.value.findIndex(c => c.id === category.id);
+    if (index > -1) {
+        // Remove if already selected
+        selectedCategories.value.splice(index, 1);
+        form.category_ids = form.category_ids.filter(id => id !== category.id);
+    } else {
+        // Add if not selected
+        selectedCategories.value.push(category);
+        form.category_ids.push(category.id);
+    }
+    // Refresh filtered list
+    filterModalCategories();
+};
+
+// Brand Modal Functions
+const openBrandModal = () => {
+    showBrandModal.value = true;
+    showBrandDropdown.value = false;
+    brandModalSearch.value = "";
+    filterModalBrands();
+};
+
+const closeBrandModal = () => {
+    showBrandModal.value = false;
+};
+
+const filterModalBrands = () => {
+    const query = brandModalSearch.value.toLowerCase();
+    if (!query) {
+        modalFilteredBrands.value = [...availableBrands.value];
+    } else {
+        modalFilteredBrands.value = availableBrands.value.filter(brand =>
+            brand.name.toLowerCase().includes(query)
+        );
+    }
+};
+
+const selectBrandFromModal = (brand) => {
+    selectedBrand.value = brand;
+    form.brand_id = brand.id;
+    brandSearch.value = brand.name;
+    closeBrandModal();
 };
 
 const submit = async () => {
@@ -447,9 +913,10 @@ const createQuickBrand = async () => {
             // Add the new brand to the available brands list
             const newBrand = response.data.brand;
             availableBrands.value.push(newBrand);
+            filteredBrands.value.push(newBrand);
 
-            // Auto-select the newly created brand
-            form.brand_id = newBrand.id;
+            // Auto-select the newly created brand using autocomplete
+            selectBrand(newBrand);
 
             // Close modal and notify
             closeQuickBrandModal();

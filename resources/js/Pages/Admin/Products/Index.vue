@@ -33,174 +33,162 @@
                             </ButtonNew>
                         </div>
                     </div>
-
-                    <div class="p-6">
-                        <div class="p-6 border-b bg-gray-50">
-                            <div
-                                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end"
-                            >
-                                <div
-                                    class="sm:col-span-2 lg:col-span-2 xl:col-span-2"
-                                >
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Search</label
-                                    >
-                                    <input
-                                        v-model="filters.search"
-                                        @input="applyFilters"
-                                        type="text"
+                    
+                    <!-- Compact Search and Filter Bar -->
+                    <div class="bg-white/90 backdrop-blur-xl shadow-lg border border-gray-200 mx-6 mt-4 rounded-2xl">
+                        <!-- Compact Header Section -->
+                        <div class="p-3 space-y-3">
+                            <!-- Search Bar -->
+                            <div class="flex gap-3 items-center">
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input v-model="filters.search" @input="applyFilters" type="text"
                                         placeholder="Search products..."
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                        class="block w-full pl-10 pr-10 py-2.5 text-sm bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300" />
                                 </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Category</label
-                                    >
-                                    <select
-                                        v-model="filters.category"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Categories</option>
-                                        <option
-                                            v-for="category in categories"
-                                            :key="category.id"
-                                            :value="category.id"
-                                        >
-                                            {{ category.name }}
-                                        </option>
-                                    </select>
-                                </div>
+                                <!-- Toggle Filters Button -->
+                                <button @click="showAdvancedFilters = !showAdvancedFilters"
+                                    class="px-3 py-2.5 bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-xl hover:bg-white hover:border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm font-medium flex items-center space-x-2 transition-all duration-200 group whitespace-nowrap">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    <span>Filters</span>
+                                </button>
+                            </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Brand</label
-                                    >
-                                    <select
-                                        v-model="filters.brand"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Brands</option>
-                                        <option
-                                            v-for="brand in brands"
-                                            :key="brand.id"
-                                            :value="brand.id"
-                                        >
-                                            {{ brand.name }}
-                                        </option>
-                                    </select>
-                                </div>
+                            <!-- Advanced Filters (Collapsible) -->
+                            <transition name="slide-down">
+                                <div v-if="showAdvancedFilters" class="space-y-3 pt-2 border-t border-gray-200">
+                                    <!-- First Row of Filters -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                        <!-- Category Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.category" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Categories</option>
+                                                <option v-for="category in categories" :key="category.id" :value="category.id">
+                                                    {{ category.name }}
+                                                </option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Stock Status</label
-                                    >
-                                    <select
-                                        v-model="filters.stockStatus"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Stock</option>
-                                        <option value="out_of_stock">
-                                            Out of Stock
-                                        </option>
-                                        <option value="low_stock">
-                                            Low Stock
-                                        </option>
-                                        <option value="in_stock">
-                                            In Stock
-                                        </option>
-                                    </select>
-                                </div>
+                                        <!-- Brand Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.brand" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Brands</option>
+                                                <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                                                    {{ brand.name }}
+                                                </option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                        >Sort By</label
-                                    >
-                                    <select
-                                        v-model="filters.sortBy"
-                                        @change="applyFilters"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="name">Name</option>
-                                        <option value="item_code">
-                                            Item Code
-                                        </option>
-                                        <option value="price_low">
-                                            Price (lowest)
-                                        </option>
-                                        <option value="price_high">
-                                            Price (highest)
-                                        </option>
-                                        <option value="stock_low">
-                                            Stock (lowest)
-                                        </option>
-                                        <option value="stock_high">
-                                            Stock (highest)
-                                        </option>
-                                        <option value="created_at_newest">
-                                            Date Added (newest)
-                                        </option>
-                                        <option value="created_at_oldest">
-                                            Date Added (oldest)
-                                        </option>
-                                    </select>
-                                </div>
+                                        <!-- Stock Status Filter -->
+                                        <div class="relative">
+                                            <select v-model="filters.stockStatus" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="">All Stock</option>
+                                                <option value="out_of_stock">Out</option>
+                                                <option value="low_stock">Low</option>
+                                                <option value="in_stock">In Stock</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 mb-2"
-                                    >
-                                        Price Range
-                                    </label>
-                                    <div class="flex space-x-2">
-                                        <input
-                                            v-model="filters.priceMin"
-                                            @input="applyFilters"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            placeholder="Min"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <input
-                                            v-model="filters.priceMax"
-                                            @input="applyFilters"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            placeholder="Max"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
+                                        <!-- Sort By -->
+                                        <div class="relative">
+                                            <select v-model="filters.sortBy" @change="applyFilters"
+                                                class="appearance-none w-full pl-3 pr-8 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-pointer transition-all duration-200">
+                                                <option value="name">By Name</option>
+                                                <option value="price_low">Price Low</option>
+                                                <option value="price_high">Price High</option>
+                                                <option value="stock_low">Stock Low</option>
+                                                <option value="stock_high">Stock High</option>
+                                                <option value="created_at_newest">Newest</option>
+                                                <option value="created_at_oldest">Oldest</option>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Clear Filters -->
+                                        <button @click="clearFilters"
+                                            :class="[
+                                                'px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200',
+                                                hasActiveFilters
+                                                    ? 'text-red-600 hover:text-white hover:bg-red-500 bg-red-50 border-2 border-red-200 hover:border-red-500'
+                                                    : 'text-gray-400 bg-gray-100 border-2 border-gray-200 cursor-not-allowed'
+                                            ]"
+                                            :disabled="!hasActiveFilters">
+                                            Clear
+                                        </button>
+                                    </div>
+
+                                    <!-- Price Range Row -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                                        <div>
+                                            <input
+                                                v-model="filters.priceMin"
+                                                @input="applyFilters"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Min Price"
+                                                class="w-full px-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500" />
+                                        </div>
+                                        <div>
+                                            <input
+                                                v-model="filters.priceMax"
+                                                @input="applyFilters"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Max Price"
+                                                class="w-full px-3 py-2 text-xs bg-white/70 backdrop-blur-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500" />
+                                        </div>
                                     </div>
                                 </div>
+                            </transition>
 
-                                <div class="flex justify-end lg:justify-start">
-                                    <button
-                                        @click="clearFilters"
-                                        class="w-full lg:w-auto px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors whitespace-nowrap"
-                                    >
-                                        Clear Filters
-                                    </button>
-                                </div>
+                            <!-- Stats Bar -->
+                            <div class="flex flex-wrap gap-2 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 text-xs font-medium">
+                                <span class="text-gray-600">{{ filteredProducts.length }} products found</span>
+                                <span v-if="isFiltered" class="text-blue-600">(filtered)</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="p-6">
-                            <div class="mb-4 text-sm text-gray-600">
-                                {{ filteredProducts.length }} products found
-                                <span v-if="isFiltered">(filtered)</span>
-                            </div>
-
-                            <DataTable
+                    <!-- Products Table -->
+                    <div class="p-6">
+                        <DataTable
                                 :data="paginatedProducts"
                                 :columns="tableColumns"
                                 :empty-message="'No products found'"
@@ -280,6 +268,15 @@
                                         class="text-sm text-gray-500 truncate max-w-xs"
                                     >
                                         {{ item.description }}
+                                    </div>
+                                </template>
+
+                                <template #column-price="{ item }">
+                                    <div v-if="item.price" class="text-sm text-gray-900">
+                                        ₱{{ parseFloat(item.price).toFixed(2) }}
+                                    </div>
+                                    <div v-else class="text-sm font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded">
+                                        No price set
                                     </div>
                                 </template>
 
@@ -406,7 +403,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
 
@@ -420,285 +416,178 @@
             </div>
         </div>
 
+        <!-- Edit Product Modal -->
         <Modal :show="showEditModal" @close="closeEditModal" max-width="xl">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        Edit Product
-                    </h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Edit Product</h3>
                     <button
                         @click="closeEditModal"
                         type="button"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
                     >
-                        <svg
-                            class="w-3 h-3"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 14 14"
-                        >
-                            <path
-                                stroke="currentColor"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                            />
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                         </svg>
-                        <span class="sr-only">Close modal</span>
                     </button>
                 </div>
 
-                <form @submit.prevent="submitEdit">
-                    <div
-                        class="grid grid-cols-1 gap-5.5 p-6.5 grid-auto-rows-[minmax(100px,_auto)]"
-                    >
-                        <div>
-                            <label
-                                for="item_code"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Item Code</label
-                            >
-                            <input
-                                type="text"
-                                id="item_code"
-                                v-model="editForm.item_code"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.item_code"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.item_code }}
-                            </div>
-                        </div>
+                <form @submit.prevent="submitEdit" class="space-y-4">
+                    <!-- Item Code -->
+                    <div>
+                        <label for="edit_item_code" class="block mb-2 text-sm font-medium text-gray-900">Item Code</label>
+                        <input
+                            type="text"
+                            id="edit_item_code"
+                            v-model="editForm.item_code"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required
+                        />
+                        <div v-if="editForm.errors.item_code" class="text-red-600 text-sm mt-1">{{ editForm.errors.item_code }}</div>
+                    </div>
 
-                        <div>
-                            <label
-                                for="name"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Name</label
-                            >
-                            <input
-                                type="text"
-                                id="name"
-                                v-model="editForm.name"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.name"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.name }}
-                            </div>
-                        </div>
+                    <!-- Name -->
+                    <div>
+                        <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900">Name</label>
+                        <input
+                            type="text"
+                            id="edit_name"
+                            v-model="editForm.name"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required
+                        />
+                        <div v-if="editForm.errors.name" class="text-red-600 text-sm mt-1">{{ editForm.errors.name }}</div>
+                    </div>
 
-                        <!-- <div>
-                            <label
-                                for="barcode"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Barcode</label
-                            >
-                            <input
-                                type="text"
-                                id="barcode"
-                                v-model="editForm.barcode"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.barcode"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.barcode }}
-                            </div>
-                        </div> -->
+                    <!-- Price -->
+                    <div>
+                        <label for="edit_price" class="block mb-2 text-sm font-medium text-gray-900">Selling Price (₱)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            id="edit_price"
+                            v-model="editForm.price"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            placeholder="0.00"
+                            required
+                        />
+                        <p class="mt-1 text-xs text-gray-600">The price customers pay (You enter cost price when adding stock)</p>
+                        <div v-if="editForm.errors.price" class="text-red-600 text-sm mt-1">{{ editForm.errors.price }}</div>
+                    </div>
 
-                        <div>
-                            <label
-                                for="price"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Price</label
-                            >
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                id="price"
-                                v-model="editForm.price"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                required
-                            />
-                            <div
-                                v-if="editForm.errors.price"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.price }}
-                            </div>
-                        </div>
+                    <!-- Categories -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Categories</label>
 
-                        <div>
-                            <label
-                                for="category_ids"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Categories</label
+                        <!-- Selected Categories Tags -->
+                        <div v-if="editSelectedCategories.length > 0" class="mb-3 flex flex-wrap gap-2">
+                            <span
+                                v-for="category in editSelectedCategories"
+                                :key="category.id"
+                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-300"
                             >
-                            <div
-                                class="mt-1 p-3 border border-gray-300 rounded-md bg-white max-h-48 overflow-y-auto"
-                            >
-                                <!-- Active categories -->
-                                <div
-                                    v-for="category in categories"
-                                    :key="category.id"
-                                    class="flex items-center mb-2 last:mb-0"
-                                >
-                                    <input
-                                        :id="'category_' + category.id"
-                                        type="checkbox"
-                                        :value="category.id"
-                                        v-model="editForm.category_ids"
-                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                    />
-                                    <label
-                                        :for="'category_' + category.id"
-                                        class="ml-2 text-sm text-gray-900 cursor-pointer"
-                                    >
-                                        {{ category.name }}
-                                    </label>
-                                </div>
-
-                                <!-- Inactive categories that are currently assigned -->
-                                <div v-if="currentProductInactiveCategories.length > 0" class="mt-3 pt-3 border-t border-gray-200">
-                                    <p class="text-xs text-orange-600 font-medium mb-2">⚠️ Archived Categories (Currently Assigned):</p>
-                                    <div
-                                        v-for="category in currentProductInactiveCategories"
-                                        :key="'inactive_' + category.id"
-                                        class="flex items-center mb-2 last:mb-0 bg-orange-50 p-2 rounded"
-                                    >
-                                        <input
-                                            :id="'inactive_category_' + category.id"
-                                            type="checkbox"
-                                            :value="category.id"
-                                            v-model="editForm.category_ids"
-                                            class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-orange-300 rounded"
-                                        />
-                                        <label
-                                            :for="'inactive_category_' + category.id"
-                                            class="ml-2 text-sm text-orange-800 cursor-pointer"
-                                        >
-                                            {{ category.name }} (Archived)
-                                        </label>
-                                    </div>
-                                    <p class="text-xs text-orange-600 mt-1">These categories are archived. Consider selecting active categories instead.</p>
-                                </div>
-
-                                <div
-                                    v-if="categories.length === 0 && currentProductInactiveCategories.length === 0"
-                                    class="text-sm text-gray-500 italic"
-                                >
-                                    No categories available
-                                </div>
-                            </div>
-                            <div class="mt-1">
-                                <p class="text-sm text-gray-600">
-                                    Select one or more categories for this
-                                    product
-                                </p>
-                            </div>
-                            <div
-                                v-if="editForm.errors.category_ids"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.category_ids }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                for="edit_brand_id"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Brand (Optional)</label
-                            >
-                            <div class="flex gap-2">
-                                <select
-                                    id="edit_brand_id"
-                                    v-model="editForm.brand_id"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                >
-                                    <option value="">Select a brand (optional)</option>
-                                    <option
-                                        v-for="brand in availableBrands"
-                                        :key="brand.id"
-                                        :value="brand.id"
-                                    >
-                                        {{ brand.name }}
-                                    </option>
-                                </select>
+                                {{ category.name }}
                                 <button
                                     type="button"
-                                    @click="openQuickBrandModal"
-                                    class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
-                                    title="Add New Brand"
+                                    @click="removeEditCategory(category.id)"
+                                    class="ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
                                 >
-                                    + Add Brand
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
                                 </button>
-                            </div>
-                            <div
-                                v-if="editForm.errors.brand_id"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.brand_id }}
-                            </div>
+                            </span>
                         </div>
 
-                        <div>
-                            <label
-                                for="description"
-                                class="block mb-2 text-sm font-medium text-gray-900"
-                                >Description</label
-                            >
-                            <input
-                                type="text"
-                                id="description"
-                                v-model="editForm.description"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            />
-                            <div
-                                v-if="editForm.errors.description"
-                                class="text-red-600 text-sm mt-1"
-                            >
-                                {{ editForm.errors.description }}
-                            </div>
-                        </div>
+                        <!-- Add Category Button -->
+                        <button
+                            type="button"
+                            @click="openEditCategoryModal"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            + Add Category
+                        </button>
+
+                        <div v-if="editForm.errors.category_ids" class="text-red-600 text-sm mt-2">{{ editForm.errors.category_ids }}</div>
                     </div>
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <ButtonNew
-                            types="cancel"
-                            size="md"
-                            tooltips="Cancel and return to products list"
-                            @click="closeEditModal"
-                        >
-                            Cancel
-                        </ButtonNew>
 
-                        <ButtonNew
-                            types="save"
-                            size="md"
-                            tooltips="Update product"
-                            :class="{ 'opacity-50': editForm.processing }"
-                            :disabled="editForm.processing"
-                            @click="submitEdit"
+                    <!-- Brand -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Brand (Optional)</label>
+
+                        <!-- Selected Brand Tag -->
+                        <div v-if="editSelectedBrand" class="mb-3 flex items-center gap-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-300">
+                                {{ editSelectedBrand.name }}
+                                <button
+                                    type="button"
+                                    @click="removeEditBrand"
+                                    class="ml-2 text-green-600 hover:text-green-800 focus:outline-none"
+                                >
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+
+                        <!-- Add Brand Buttons -->
+                        <div v-if="!editSelectedBrand" class="flex gap-2">
+                            <button
+                                type="button"
+                                @click="openEditBrandModal"
+                                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                Select Brand
+                            </button>
+                            <button
+                                type="button"
+                                @click="openQuickBrandModal"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 whitespace-nowrap"
+                                title="Create New Brand"
+                            >
+                                + New
+                            </button>
+                        </div>
+
+                        <div v-if="editForm.errors.brand_id" class="text-red-600 text-sm mt-2">{{ editForm.errors.brand_id }}</div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="edit_description" class="block mb-2 text-sm font-medium text-gray-900">Description</label>
+                        <input
+                            type="text"
+                            id="edit_description"
+                            v-model="editForm.description"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        />
+                        <div v-if="editForm.errors.description" class="text-red-600 text-sm mt-1">{{ editForm.errors.description }}</div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-2 pt-4 border-t">
+                        <button
+                            type="button"
+                            @click="closeEditModal"
+                            class="px-4 py-2 text-gray-700 bg-orange-500 hover:bg-orange-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
-                            {{ editForm.processing ? "Updating..." : "Save" }}
-                        </ButtonNew>
+                            <span class="mdi mdi-close-box"></span> Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="editForm.processing"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                            <span class="mdi mdi-content-save-check"></span> {{ editForm.processing ? "Updating..." : "Save" }}
+                        </button>
                     </div>
                 </form>
             </div>
         </Modal>
 
+        <!-- Delete Confirmation Modal -->
         <Modal :show="showDeleteModal" @close="closeDeleteModal">
             <div class="p-4 md:p-5 text-center">
                 <svg
@@ -811,11 +700,12 @@
 
                 <div class="mt-4 text-center">
                     <div class="flex justify-center space-x-4">
-                        <div class="text-sm text-gray-600">
+                        <div v-if="selectedImage?.price" class="text-sm text-gray-600">
                             <span class="font-medium">Price:</span>
-                            ₱{{
-                                parseFloat(selectedImage?.price || 0).toFixed(2)
-                            }}
+                            ₱{{ parseFloat(selectedImage.price).toFixed(2) }}
+                        </div>
+                        <div v-else class="text-sm font-bold text-amber-600">
+                            <span class="font-medium">Price:</span> No price set
                         </div>
                         <div class="text-sm text-gray-600">
                             <span class="font-medium">Stock:</span>
@@ -897,6 +787,24 @@
                 </form>
             </div>
         </Modal>
+
+        <!-- Edit - Category Selection Modal -->
+        <CategorySelectionModal
+            :show="showEditCategoryModal"
+            :categories="categories"
+            :selectedCategories="editSelectedCategories"
+            @close="closeEditCategoryModal"
+            @toggle="toggleEditCategoryFromModal"
+        />
+
+        <!-- Edit - Brand Selection Modal -->
+        <BrandSelectionModal
+            :show="showEditBrandModal"
+            :brands="availableBrands"
+            :selectedBrand="editSelectedBrand"
+            @close="closeEditBrandModal"
+            @select="selectEditBrandFromModal"
+        />
     </AdminAuthenticatedLayout>
 </template>
 
@@ -909,6 +817,8 @@ import { defineProps, ref, computed, watch } from "vue";
 import { notify, getLogoBase64 } from "@/globalFunctions.js";
 import ButtonNew from "@/Components/ButtonNew.vue";
 import ButtonCard from "@/Components/ButtonCard.vue";
+import CategorySelectionModal from "./CategorySelectionModal.vue";
+import BrandSelectionModal from "./BrandSelectionModal.vue";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 
@@ -929,6 +839,20 @@ const dataTable = ref();
 // Quick Brand Modal
 const showQuickBrandModal = ref(false);
 const availableBrands = ref([...props.brands]);
+
+// Edit Modal - Categories & Brand
+const editSelectedCategories = ref([]);
+const showEditCategoryModal = ref(false);
+const editSelectedBrand = ref(null);
+const showEditBrandModal = ref(false);
+const editCategorySearch = ref("");
+const editBrandSearch = ref("");
+const editFilteredCategories = ref([]);
+const editFilteredBrands = ref([]);
+const showEditCategoryDropdown = ref(false);
+const showEditBrandDropdown = ref(false);
+
+const showAdvancedFilters = ref(false);
 
 const filters = ref({
     search: "",
@@ -1131,6 +1055,18 @@ const isFiltered = computed(() => {
     );
 });
 
+const hasActiveFilters = computed(() => {
+    return (
+        filters.value.search ||
+        filters.value.category ||
+        filters.value.brand ||
+        filters.value.stockStatus ||
+        filters.value.priceMin ||
+        filters.value.priceMax ||
+        filters.value.sortBy !== "name"
+    );
+});
+
 watch(
     () => filteredProducts.value.length,
     () => {
@@ -1152,7 +1088,7 @@ const clearFilters = () => {
         priceMin: "",
         priceMax: "",
     };
-    currentPage.value = 1;
+    applyFilters();
 };
 
 const currentProductInactiveCategories = computed(() => {
@@ -1168,6 +1104,15 @@ const currentProductInactiveCategories = computed(() => {
         category.status === 'inactive' &&
         productCategoryIds.includes(category.id)
     );
+});
+
+// Edit Modal - Computed properties for autocomplete
+const editDisplayedCategories = computed(() => {
+    return editFilteredCategories.value.slice(0, 5);
+});
+
+const editDisplayedBrands = computed(() => {
+    return editFilteredBrands.value.slice(0, 5);
 });
 
 const tableColumns = computed(() => [
@@ -1192,7 +1137,7 @@ const tableColumns = computed(() => [
     {
         key: "price",
         label: "Price",
-        type: "currency",
+        type: "custom",
         align: "left",
     },
     {
@@ -1218,6 +1163,7 @@ const tableColumns = computed(() => [
         label: "Actions",
         type: "custom",
         align: "right",
+        sticky: false,
     },
 ]);
 
@@ -1247,6 +1193,15 @@ const openEditModal = (product) => {
         : []; // Updated
     editForm.brand_id = product.brand ? product.brand.id : "";
     editForm.description = product.description || "";
+
+    // Populate autocomplete selections
+    editSelectedCategories.value = product.categories || [];
+    editSelectedBrand.value = product.brand || null;
+    editCategorySearch.value = "";
+    editBrandSearch.value = "";
+    editFilteredCategories.value = [...props.categories];
+    editFilteredBrands.value = [...availableBrands.value];
+
     showEditModal.value = true;
 };
 
@@ -1255,6 +1210,16 @@ const closeEditModal = () => {
     editingProduct.value = null;
     editForm.reset();
     editForm.clearErrors();
+
+    // Reset autocomplete state
+    editSelectedCategories.value = [];
+    editSelectedBrand.value = null;
+    editCategorySearch.value = "";
+    editBrandSearch.value = "";
+    editFilteredCategories.value = [];
+    editFilteredBrands.value = [];
+    showEditCategoryDropdown.value = false;
+    showEditBrandDropdown.value = false;
 };
 
 const openDeleteConfirmation = (product) => {
@@ -1307,27 +1272,22 @@ const reload = () => {
     });
 };
 
-const submitEdit = async () => {
+const submitEdit = () => {
     if (!editingProduct.value) return;
 
-    try {
-        await axios.put(`/admin/products/${editingProduct.value.id}`, editForm);
-        closeEditModal();
-        reload();
-        notify("Product updated successfully!", "success");
-    } catch (error) {
-        if (
-            error.response &&
-            error.response.data &&
-            error.response.data.errors
-        ) {
-            editForm.errors = error.response.data.errors;
-        }
-        notify(
-            "Failed to update product. Please check the form fields.",
-            "error"
-        );
-    }
+    editForm.put(route('admin.products.update', editingProduct.value.id), {
+        onSuccess: () => {
+            closeEditModal();
+            notify("Product updated successfully!", "success");
+            reload();
+        },
+        onError: () => {
+            notify(
+                "Failed to update product. Please check the form fields.",
+                "error"
+            );
+        },
+    });
 };
 
 const exportToPDF = async () => {
@@ -1397,7 +1357,7 @@ const exportToPDF = async () => {
         product.categories && product.categories.length > 0
             ? product.categories.map((cat) => cat.name).join(", ")
             : "No categories",
-        `${parseFloat(product.price || 0).toFixed(2)}`,
+        product.price ? `${parseFloat(product.price).toFixed(2)}` : "No price",
         product.stock_quantity || 0,
         getStockStatus(product.stock_quantity || 0),
         product.description || "",
@@ -1543,7 +1503,7 @@ const printBarcode = (product) => {
         </div>
         <div class="barcode-number">${product.barcode}</div>
         <div class="product-name">${product.name}</div>
-        <div class="product-name">₱${parseFloat(product.price).toFixed(2)}</div>
+        <div class="product-name">${product.price ? '₱' + parseFloat(product.price).toFixed(2) : 'No price set'}</div>
       </div>
       <div class="no-print" style="margin-top: 20px;">
         <button onclick="window.print()">Print</button>
@@ -1595,6 +1555,7 @@ const createQuickBrand = async () => {
             // Auto-select the newly created brand in edit form
             if (editingProduct.value) {
                 editForm.brand_id = newBrand.id;
+                editSelectedBrand.value = newBrand;
             }
 
             // Close modal and notify
@@ -1614,4 +1575,114 @@ const createQuickBrand = async () => {
         }
     }
 };
+
+// ========== Edit Modal - Category Functions ==========
+
+const removeEditCategory = (categoryId) => {
+    editSelectedCategories.value = editSelectedCategories.value.filter(
+        (c) => c.id !== categoryId
+    );
+    editForm.category_ids = editForm.category_ids.filter(
+        (id) => id !== categoryId
+    );
+};
+
+const openEditCategoryModal = () => {
+    showEditCategoryModal.value = true;
+};
+
+const closeEditCategoryModal = () => {
+    showEditCategoryModal.value = false;
+};
+
+const toggleEditCategoryFromModal = (category) => {
+    const index = editSelectedCategories.value.findIndex((c) => c.id === category.id);
+    if (index > -1) {
+        removeEditCategory(category.id);
+    } else {
+        editSelectedCategories.value.push(category);
+        editForm.category_ids.push(category.id);
+    }
+};
+
+// ========== Edit Modal - Brand Functions ==========
+
+const selectEditBrand = (brand) => {
+    editSelectedBrand.value = brand;
+    editForm.brand_id = brand.id;
+};
+
+const removeEditBrand = () => {
+    editSelectedBrand.value = null;
+    editForm.brand_id = "";
+};
+
+const openEditBrandModal = () => {
+    showEditBrandModal.value = true;
+};
+
+const closeEditBrandModal = () => {
+    showEditBrandModal.value = false;
+};
+
+const selectEditBrandFromModal = (brand) => {
+    selectEditBrand(brand);
+    closeEditBrandModal();
+};
 </script>
+
+<style scoped>
+/* Slide Down Transition for Filters */
+.slide-down-enter-active,
+.slide-down-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+.slide-down-enter-to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+}
+
+.slide-down-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hide default select dropdown arrow */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    padding-right: 2.5rem;
+}
+
+select::-ms-expand {
+    display: none;
+}
+</style>

@@ -6,7 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class StockTransaction extends Model
 {
-    protected $fillable = ['product_id', 'user_id', 'type', 'quantity', 'reason', 'transaction_date'];
+    protected $fillable = [
+        'product_id',
+        'user_id',
+        'type',
+        'quantity',
+        'acquisition_price',
+        'unit_cost',
+        'remaining_quantity',
+        'batch_allocations',
+        'reason',
+        'transaction_date'
+    ];
+
+    protected $casts = [
+        'batch_allocations' => 'array',
+        'acquisition_price' => 'decimal:2',
+        'unit_cost' => 'decimal:2',
+    ];
 
     public function product()
     {

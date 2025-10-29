@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\StockTransaction;
+use App\Services\FifoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -59,6 +60,13 @@ class StockOutController extends Controller
             return redirect()->back()->with('error', 'Insufficient stock. Available: ' . $product->stock_quantity);
         }
 
+        // Apply FIFO stock deduction
+        try {
+            $fifoResult = FifoService::deductStock($product->id, $validated['quantity']);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'FIFO Error: ' . $e->getMessage());
+        }
+
         $product->decrement('stock_quantity', $validated['quantity']);
 
         StockTransaction::create([
@@ -66,12 +74,13 @@ class StockOutController extends Controller
             'user_id' => auth()->id(),
             'type' => 'out',
             'quantity' => $validated['quantity'],
+            'unit_cost' => $fifoResult['average_cost'],
+            'batch_allocations' => $fifoResult['batch_allocations'],
             'reason' => $validated['reason'],
-            'notes' => $validated['notes'] ?? null,
             'transaction_date' => $validated['transaction_date'],
         ]);
 
-        $request->session()->flash('log_details', "Removed {$validated['quantity']} units of [{$product->barcode}] {$product->name} (Reason: {$validated['reason']}).");
+        $request->session()->flash('log_details', "Removed {$validated['quantity']} units of [{$product->barcode}] {$product->name} (Reason: {$validated['reason']}) - Avg Cost: ₱" . number_format($fifoResult['average_cost'], 2) . "/unit.");
 
         return redirect()->back()->with('success', 'Stock removed successfully.');
     }

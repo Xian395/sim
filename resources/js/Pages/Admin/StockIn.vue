@@ -236,6 +236,79 @@
                             </div>
 
                             <div class="mb-4">
+                                <InputLabel for="acquisition_price" value="Acquisition/Cost Price (₱)" />
+                                <TextInput
+                                    id="acquisition_price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    class="mt-1 block w-full"
+                                    v-model="form.acquisition_price"
+                                    required
+                                    placeholder="0.00"
+                                />
+                                <InputError
+                                    class="mt-2"
+                                    :message="form.errors.acquisition_price"
+                                />
+                                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-blue-700">
+                                                <strong>Cost Price:</strong> How much you paid to acquire this stock from your supplier.<br>
+                                                <strong>Selling Price:</strong> The price customers pay (set when creating the product).<br>
+                                                <span v-if="selectedProduct" class="inline-block mt-1 px-2 py-1 bg-blue-100 rounded">
+                                                    This product's selling price: <strong>₱{{ selectedProduct.price || 'Not set' }}</strong>
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <InputLabel for="selling_price" value="Selling Price (₱) - Optional" />
+                                <TextInput
+                                    id="selling_price"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    class="mt-1 block w-full"
+                                    v-model="form.selling_price"
+                                    placeholder="0.00"
+                                />
+                                <InputError
+                                    class="mt-2"
+                                    :message="form.errors.selling_price"
+                                />
+                                <div class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-md">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-emerald-700">
+                                                Now that you know your <strong>acquisition cost</strong>, you can set the <strong>selling price</strong> for this product.<br>
+                                                <span v-if="selectedProduct && selectedProduct.price">
+                                                    Current selling price: <strong>₱{{ selectedProduct.price }}</strong> (leave blank to keep unchanged)
+                                                </span>
+                                                <span v-else class="text-amber-700 font-medium">
+                                                    ⚠️ This product has NO selling price set. It cannot be sold at POS until you set one!
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
                                 <InputLabel
                                     for="transaction_date"
                                     value="Transaction Date"
@@ -283,7 +356,7 @@
 </template>
 
 <script setup>
-import { useForm, usePage } from "@inertiajs/vue3";
+import { useForm, usePage, router } from "@inertiajs/vue3";
 import { computed, ref, nextTick } from "vue";
 import AdminAuthenticatedLayout from "@/Layouts/AdminAuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
@@ -300,6 +373,8 @@ const $page = usePage();
 const form = useForm({
     product_id: "",
     quantity: "1",
+    acquisition_price: "",
+    selling_price: "",
     transaction_date: new Date().toISOString().split("T")[0],
 });
 
@@ -313,6 +388,7 @@ const isFormValid = computed(() => {
     return (
         !!form.product_id &&
         parseInt(form.quantity) >= 1 &&
+        parseFloat(form.acquisition_price) >= 0 &&
         form.transaction_date
     );
 });
@@ -387,6 +463,8 @@ const resetForm = () => {
     form.reset();
     form.product_id = "";
     form.quantity = "1";
+    form.acquisition_price = "";
+    form.selling_price = "";
     form.transaction_date = new Date().toISOString().split("T")[0];
     form.clearErrors();
     searchQuery.value = "";
@@ -395,24 +473,20 @@ const resetForm = () => {
     highlightedIndex.value = -1;
 };
 
-const submit = async () => {
-    try {
-        const response = await axios.post(
-            route("admin.stock-in.store"),
-            form.data()
-        );
-
-        notify("Stock-in saved successfully.", "success");
-        form.reset();
-    } catch (error) {
-        if (error.response && error.response.data.errors) {
-            const errorMessages = Object.values(error.response.data.errors)
+const submit = () => {
+    form.post(route("admin.stock-in.store"), {
+        onSuccess: () => {
+            notify("Stock-in saved successfully.", "success");
+            resetForm();
+            // Reload the page to get updated product data
+            router.reload();
+        },
+        onError: (errors) => {
+            const errorMessages = Object.values(errors)
                 .flat()
                 .join("<br>");
-            notify(errorMessages, "error");
-        } else {
-            notify("Something went wrong. Please try again later.", "error");
-        }
-    }
+            notify(errorMessages || "Failed to add stock. Please try again.", "error");
+        },
+    });
 };
 </script>

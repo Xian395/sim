@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\StockTransaction;
+use App\Services\FifoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -157,7 +159,23 @@ class PosController extends Controller
                 $subtotal = $product->price * $item['quantity'];
                 $total += $subtotal;
 
+                // Apply FIFO stock deduction
+                $fifoResult = FifoService::deductStock($product->id, $item['quantity']);
+
+                // Decrement the product's stock quantity
                 $product->decrement('stock_quantity', $item['quantity']);
+
+                // Create stock-out transaction with FIFO batch allocations
+                StockTransaction::create([
+                    'product_id' => $product->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'out',
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $fifoResult['average_cost'],
+                    'batch_allocations' => $fifoResult['batch_allocations'],
+                    'reason' => 'Sale',
+                    'transaction_date' => now()->toDateString(),
+                ]);
 
                 $sale_items[] = [
                     'id' => $product->id,
@@ -166,6 +184,8 @@ class PosController extends Controller
                     'quantity' => $item['quantity'],
                     'price' => $product->price,
                     'subtotal' => $subtotal,
+                    'cost' => $fifoResult['total_cost'],
+                    'profit' => $subtotal - $fifoResult['total_cost'],
                 ];
 
                 $product_names[] = "{$product->name} [Qty: {$item['quantity']}]";
