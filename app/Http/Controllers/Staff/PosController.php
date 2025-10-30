@@ -72,9 +72,9 @@ class PosController extends Controller
         case 'category':
             $productsQuery->leftJoin('product_categories', 'products.id', '=', 'product_categories.product_id')
                          ->leftJoin('categories', 'product_categories.category_id', '=', 'categories.id')
-                         ->orderBy('categories.name', $sortOrder)
-                         ->orderBy('products.name', 'asc')
-                         ->groupBy('products.id'); 
+                         ->groupBy('products.id')
+                         ->orderBy(DB::raw('MIN(categories.name)'), $sortOrder)
+                         ->orderBy('products.name', 'asc');
             break;
         case 'item_code':
             $productsQuery->orderBy('item_code', $sortOrder);
