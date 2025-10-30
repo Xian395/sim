@@ -59,17 +59,18 @@ class AdminDashboardController extends Controller
             // or similar patterns
             foreach ($products as $product) {
                 $productName = $product->name;
+                $escapedProductName = preg_quote($productName, '/');
 
                 // Look for patterns like "ProductName [Qty: X]" or "ProductName (Qty: X)"
                 $patterns = [
-                    "/{$productName}\s*\[Qty:\s*(\d+)\]/i",
-                    "/{$productName}\s*\(Qty:\s*(\d+)\)/i",
-                    "/{$productName}\s*-\s*(\d+)/i",
-                    "/{$productName}\s*:\s*(\d+)/i"
+                    "/{$escapedProductName}\s*\[Qty:\s*(\d+)\]/i",
+                    "/{$escapedProductName}\s*\(Qty:\s*(\d+)\)/i",
+                    "/{$escapedProductName}\s*-\s*(\d+)/i",
+                    "/{$escapedProductName}\s*:\s*(\d+)/i"
                 ];
 
                 foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $details, $matches)) {
+                    if (preg_match($pattern, $details, $matches) && isset($matches[1])) {
                         $quantity = (int) $matches[1];
                         $productSales[$productName]['total_sales'] += $quantity;
                         break; // Found a match for this product, move to next
