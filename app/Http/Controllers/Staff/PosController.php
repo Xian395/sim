@@ -70,8 +70,8 @@ class PosController extends Controller
             $productsQuery->orderBy('stock_quantity', $sortOrder);
             break;
         case 'category':
-            $productsQuery->leftJoin('category_product', 'products.id', '=', 'category_product.product_id')
-                         ->leftJoin('categories', 'category_product.category_id', '=', 'categories.id')
+            $productsQuery->leftJoin('product_categories', 'products.id', '=', 'product_categories.product_id')
+                         ->leftJoin('categories', 'product_categories.category_id', '=', 'categories.id')
                          ->orderBy('categories.name', $sortOrder)
                          ->orderBy('products.name', 'asc')
                          ->groupBy('products.id'); 
