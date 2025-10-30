@@ -23,7 +23,7 @@ class PosController extends Controller
     $stockFilter = $request->input('stock', 'all'); 
 
     $productsQuery = Product::with('categories')
-        ->select('id', 'barcode', 'name', 'stock_quantity', 'price', 'item_code', 'image_path');
+        ->select('products.id', 'products.barcode', 'products.name', 'products.stock_quantity', 'products.price', 'products.item_code', 'products.image_path');
 
     if (!empty($query)) {
         $productsQuery->where(function ($q) use ($query) {

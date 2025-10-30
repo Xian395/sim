@@ -1459,6 +1459,18 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
+/* Fix doubled dropdown icons */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none !important;
+    background-image: none !important;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
 /* Responsive Grid Improvements */
 @media (max-width: 640px) {
     .grid-responsive {
