@@ -96,7 +96,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="text-sm text-gray-600 mt-1">
-                                                        <span class="font-medium">Code:</span>
+                                                        <span class="font-medium">Item Code:</span>
                                                         <span class="font-mono text-gray-700">{{ product.barcode }}</span>
                                                     </div>
                                                 </div>
@@ -156,7 +156,7 @@
                                                         <div
                                                             class="text-sm text-blue-700 mt-1"
                                                         >
-                                                            <span class="font-medium">Barcode:</span>
+                                                            <span class="font-medium">Item Code:</span>
                                                             <span class="font-mono bg-white px-2 py-1 rounded border">{{
                                                                 selectedProduct.barcode
                                                             }}</span>
