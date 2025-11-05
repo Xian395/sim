@@ -1110,33 +1110,33 @@ const generateReceipt = () => {
         doc.setFontSize(8);
         doc.setFont(undefined, "normal");
         doc.text(
-            "123 Main Street",
+            "P-2, San Roque",
             doc.internal.pageSize.getWidth() / 2,
             currentY,
             { align: "center" }
         );
         currentY += 4;
         doc.text(
-            "Surigao City, Philippines XXX",
+            "Tubajon, Dinagat island",
             doc.internal.pageSize.getWidth() / 2,
             currentY,
             { align: "center" }
         );
         currentY += 4;
         doc.text(
-            "Tel: (XX) XXXX-XXXX",
+            "Tel: 09389181833",
             doc.internal.pageSize.getWidth() / 2,
             currentY,
             { align: "center" }
         );
         currentY += 4;
-        doc.text(
-            "TIN: XXX-XXX-XXX-XXX",
-            doc.internal.pageSize.getWidth() / 2,
-            currentY,
-            { align: "center" }
-        );
-        currentY += 8;
+        // doc.text(
+        //     "TIN: XXX-XXX-XXX-XXX",
+        //     doc.internal.pageSize.getWidth() / 2,
+        //     currentY,
+        //     { align: "center" }
+        // );
+        // currentY += 8;
 
         doc.setLineWidth(0.1);
         doc.line(5, currentY, 75, currentY);
@@ -1167,7 +1167,7 @@ const generateReceipt = () => {
         currentY += 4;
         doc.text(`Cashier: ${receiptData.staff_name}`, 5, currentY);
         currentY += 4;
-        doc.text(`Terminal: POS-XXX`, 5, currentY);
+        doc.text(`Terminal: POS-01`, 5, currentY);
         currentY += 8;
 
         doc.line(5, currentY, 75, currentY);
@@ -1186,12 +1186,12 @@ const generateReceipt = () => {
         doc.setFontSize(6);
         doc.setFont(undefined, "normal");
         receiptData.items.forEach((item) => {
-            const itemName =
-                item.display_name.length > 100
-                    ? item.display_name.substring(0, 20) + "..."
-                    : item.display_name;
+            // Split item name to fit within available width (5 to 40, which is 35mm)
+            const maxWidth = 35; // Available width for item name in mm
+            const itemLines = doc.splitTextToSize(item.display_name, maxWidth);
 
-            doc.text(itemName, 5, currentY);
+            // Place quantity, price, and amount on the first line
+            doc.text(itemLines[0], 5, currentY);
             doc.text(item.quantity.toString(), 45, currentY, {
                 align: "center",
             });
@@ -1205,6 +1205,12 @@ const generateReceipt = () => {
                 { align: "right" }
             );
             currentY += 4;
+
+            // Add remaining lines of item name if they exist
+            for (let i = 1; i < itemLines.length; i++) {
+                doc.text(itemLines[i], 5, currentY);
+                currentY += 4;
+            }
         });
 
         currentY += 2;
@@ -1271,13 +1277,13 @@ const generateReceipt = () => {
 
         doc.setFontSize(8);
         doc.setFont(undefined, "normal");
-        doc.text(
-            "VAT REG TIN: XXX-XXX-XXX-XXX",
-            doc.internal.pageSize.getWidth() / 2,
-            currentY,
-            { align: "center" }
-        );
-        currentY += 4;
+        // doc.text(
+        //     "VAT REG TIN: XXX-XXX-XXX-XXX",
+        //     doc.internal.pageSize.getWidth() / 2,
+        //     currentY,
+        //     { align: "center" }
+        // );
+        // currentY += 4;
         doc.text(
             "THIS SERVES AS YOUR OFFICIAL RECEIPT",
             doc.internal.pageSize.getWidth() / 2,
@@ -1311,12 +1317,12 @@ const generateReceipt = () => {
             { align: "center" }
         );
         currentY += 3;
-        doc.text(
-            "Customer Hotline: (XX) XXXX-XXXX",
-            doc.internal.pageSize.getWidth() / 2,
-            currentY,
-            { align: "center" }
-        );
+        // doc.text(
+        //     "Customer Hotline: (XX) XXXX-XXXX",
+        //     doc.internal.pageSize.getWidth() / 2,
+        //     currentY,
+        //     { align: "center" }
+        // );
 
         const pdfBlob = doc.output("blob");
         const pdfUrl = URL.createObjectURL(pdfBlob);
