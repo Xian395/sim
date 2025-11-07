@@ -644,6 +644,179 @@
                     </div>
                 </div>
 
+                <!-- Staff Sales Report Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800">Staff Sales Report</h2>
+                                <p class="text-gray-600 text-sm mt-1">Track individual staff member sales performance</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <ButtonNew
+                                    types="pdf"
+                                    size="md"
+                                    tooltips="Export Staff Sales Report"
+                                    @click="exportStaffSalesReport"
+                                    v-if="staffSalesReportData"
+                                >
+                                    Export PDF
+                                </ButtonNew>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                                <select
+                                    v-model="staffReportFilters.period"
+                                    @change="loadStaffSalesReport"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="" disabled>Select a period</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="range">Date Range</option>
+                                </select>
+                            </div>
+
+                            <div v-if="staffReportFilters.period === 'daily' || staffReportFilters.period === 'weekly'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                <input
+                                    v-model="staffReportFilters.date"
+                                    @change="loadStaffSalesReport"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+
+                            <div v-if="staffReportFilters.period === 'range'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                <input
+                                    v-model="staffReportFilters.startDate"
+                                    @change="loadStaffSalesReport"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+
+                            <div v-if="staffReportFilters.period === 'range'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                <input
+                                    v-model="staffReportFilters.endDate"
+                                    @change="loadStaffSalesReport"
+                                    type="date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+
+                            <div v-if="staffReportFilters.period === 'monthly'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Month & Year</label>
+                                <input
+                                    v-model="staffReportFilters.monthYear"
+                                    @change="loadStaffSalesReport"
+                                    type="month"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Staff Sales Data -->
+                        <div v-if="staffSalesReportData" class="space-y-6">
+                            <!-- Summary Stats -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
+                                    <div class="text-sm font-medium text-indigo-600">Total Sales</div>
+                                    <div class="text-2xl font-bold text-indigo-900">
+                                        ₱{{ formatCurrency(staffSalesReportData.summary.totalSales || 0) }}
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                    <div class="text-sm font-medium text-blue-600">Total Transactions</div>
+                                    <div class="text-2xl font-bold text-blue-900">
+                                        {{ staffSalesReportData.summary.totalTransactions || 0 }}
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                    <div class="text-sm font-medium text-purple-600">Average per Staff</div>
+                                    <div class="text-2xl font-bold text-purple-900">
+                                        ₱{{ formatCurrency(staffSalesReportData.summary.averagePerStaff || 0) }}
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-lg border border-cyan-200">
+                                    <div class="text-sm font-medium text-cyan-600">Total Staff</div>
+                                    <div class="text-2xl font-bold text-cyan-900">
+                                        {{ staffSalesReportData.staffSales?.length || 0 }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Staff Sales Table -->
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-200">
+                                    <h4 class="text-lg font-medium text-gray-900">Staff Performance Breakdown</h4>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Name</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Transaction</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <tr v-for="staff in staffSalesReportData.staffSales" :key="staff.id" class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ staff.name }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="getRoleClass(staff.role)">
+                                                        {{ staff.role }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
+                                                    ₱{{ formatCurrency(staff.totalSales) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ staff.totalTransactions }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₱{{ formatCurrency(staff.averageTransaction) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 bg-gray-200 rounded-full h-2">
+                                                            <div class="bg-indigo-600 h-2 rounded-full" :style="{ width: staff.percentage + '%' }"></div>
+                                                        </div>
+                                                        <span class="font-medium text-gray-900">{{ staff.percentage.toFixed(1) }}%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="loadingStaffSalesReport" class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                            <p class="mt-2 text-gray-600">Loading staff sales report...</p>
+                        </div>
+
+                        <div v-if="!staffSalesReportData && !loadingStaffSalesReport && staffReportFilters.period" class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p class="text-gray-600">No data available for the selected period</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         <div v-else class="py-12">
@@ -708,6 +881,17 @@ const incomeReportFilters = ref({
     month: new Date().getMonth() + 1,
     product: '',
 });
+
+const staffReportFilters = ref({
+    period: 'daily',
+    date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+    monthYear: new Date().toISOString().slice(0, 7),
+});
+
+const loadingStaffSalesReport = ref(false);
+const staffSalesReportData = ref(null);
 
 const loadingIncomeReport = ref(false);
 const incomeReportData = ref(null);
@@ -1254,6 +1438,150 @@ const loadProducts = async () => {
     }
 };
 
+const loadStaffSalesReport = async () => {
+    loadingStaffSalesReport.value = true;
+    try {
+        const params = new URLSearchParams({
+            period: staffReportFilters.value.period,
+            date: staffReportFilters.value.date,
+            startDate: staffReportFilters.value.startDate,
+            endDate: staffReportFilters.value.endDate,
+            monthYear: staffReportFilters.value.monthYear,
+        });
+
+        console.log('Loading staff sales report with params:', params.toString());
+        const response = await fetch(`/admin/api/staff-sales-report?${params}`);
+
+        if (!response.ok) {
+            console.error('API error response:', response.status, response.statusText);
+            notify(`Error loading report: ${response.statusText}`, 'error');
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Staff sales report data received:', data);
+        staffSalesReportData.value = data;
+    } catch (error) {
+        console.error('Error loading staff sales report:', error);
+        notify('Error loading staff sales report. Please try again.', 'error');
+    } finally {
+        loadingStaffSalesReport.value = false;
+    }
+};
+
+const getRoleClass = (role) => {
+    const roleClasses = {
+        'admin': 'bg-red-100 text-red-800',
+        'manager': 'bg-orange-100 text-orange-800',
+        'staff': 'bg-blue-100 text-blue-800',
+    };
+    return roleClasses[role] || 'bg-gray-100 text-gray-800';
+};
+
+const exportStaffSalesReport = async () => {
+    if (!staffSalesReportData.value) return;
+
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+
+        const logoBase64 = await getLogoBase64();
+
+        let yPosition = 8;
+
+        if (logoBase64) {
+            const logoWidth = 20;
+            const logoHeight = 20;
+            const logoX = (pageWidth - logoWidth) / 2;
+
+            doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+            yPosition += logoHeight + 2;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        const title = "STAFF SALES REPORT";
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
+
+        yPosition += 4;
+
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(11);
+        const periodText = `Period: ${staffReportFilters.value.period.charAt(0).toUpperCase() + staffReportFilters.value.period.slice(1)}`;
+        let dateText;
+        if (staffReportFilters.value.period === 'monthly') {
+            dateText = `Month: ${staffReportFilters.value.monthYear}`;
+        } else if (staffReportFilters.value.period === 'range') {
+            dateText = `Range: ${staffReportFilters.value.startDate} to ${staffReportFilters.value.endDate}`;
+        } else {
+            dateText = `Date: ${staffReportFilters.value.date}`;
+        }
+
+        doc.text(periodText, 14, yPosition);
+        const dateTextWidth = doc.getTextWidth(dateText);
+        doc.text(dateText, pageWidth - dateTextWidth - 14, yPosition);
+
+        yPosition += 10;
+
+        doc.setFontSize(13);
+        doc.text("Summary", 14, yPosition);
+
+        yPosition += 8;
+
+        doc.setFontSize(10);
+        doc.text(`• Total Sales: PHP ${formatCurrency(staffSalesReportData.value.summary.totalSales)}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Total Transactions: ${staffSalesReportData.value.summary.totalTransactions}`, 18, yPosition);
+        yPosition += 7;
+        doc.text(`• Average per Staff: PHP ${formatCurrency(staffSalesReportData.value.summary.averagePerStaff)}`, 18, yPosition);
+        yPosition += 10;
+
+        const tableRows = staffSalesReportData.value.staffSales.map(staff => [
+            staff.name,
+            staff.role,
+            `PHP ${formatCurrency(staff.totalSales)}`,
+            staff.totalTransactions.toString(),
+            `PHP ${formatCurrency(staff.averageTransaction)}`,
+            `${staff.percentage.toFixed(1)}%`,
+        ]);
+
+        autoTable(doc, {
+            head: [['Staff Name', 'Role', 'Total Sales', 'Transactions', 'Avg Transaction', 'Percentage']],
+            body: tableRows,
+            startY: yPosition,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+            margin: { left: 14, right: 14, top: 10 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY || yPosition + 10;
+        const generatedText = `Generated on: ${new Date().toLocaleString()}`;
+        const textWidth = doc.getTextWidth(generatedText);
+        doc.setFontSize(9);
+        doc.text(generatedText, pageWidth - 14 - textWidth, finalY + 8);
+
+        let filename = `staff-sales-report-${staffReportFilters.value.period}`;
+        if (staffReportFilters.value.period === 'range') {
+            filename += `-${staffReportFilters.value.startDate}-to-${staffReportFilters.value.endDate}`;
+        } else if (staffReportFilters.value.period === 'monthly') {
+            filename += `-${staffReportFilters.value.monthYear}`;
+        } else {
+            filename += `-${staffReportFilters.value.date}`;
+        }
+        filename += '.pdf';
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+
+    } catch (error) {
+        alert("Error generating PDF. Please try again.");
+        console.error(error);
+    }
+};
+
 onMounted(() => {
+    // Load staff sales report for today by default
+    loadStaffSalesReport();
 });
 </script>

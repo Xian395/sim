@@ -192,11 +192,9 @@ class LogController extends Controller
 
     private function getDailyBrandSales($productNames, $brandName, $date)
     {
-        $startDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay()->utc();
-        $endDate = Carbon::parse($date)->setTimezone('Asia/Manila')->endOfDay()->utc();
-
+        // Use simple date comparison instead of timezone conversion
         $sales = Log::where('action', 'sale')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereDate('created_at', $date)
             ->get();
 
         $brandSales = $sales->filter(function ($sale) use ($productNames) {
@@ -380,14 +378,9 @@ class LogController extends Controller
 
 private function getDailySales($date)
 {
-    $startDate = Carbon::parse($date)->setTimezone('UTC')->startOfDay();
-    $endDate = Carbon::parse($date)->setTimezone('UTC')->endOfDay();
-
-    $startDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay()->utc();
-    $endDate = Carbon::parse($date)->setTimezone('Asia/Manila')->endOfDay()->utc();
-
+    // Use simple date comparison instead of timezone conversion
     $sales = Log::where('action', 'sale')
-        ->whereBetween('created_at', [$startDate, $endDate])
+        ->whereDate('created_at', $date)
         ->with('user')
         ->get();
 
@@ -491,25 +484,25 @@ private function getDailySales($date)
     
 private function getDailyChartData($date)
 {
-    $startDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay()->utc();
-    $endDate = Carbon::parse($date)->setTimezone('Asia/Manila')->endOfDay()->utc();
+    // Get all sales for this date
+    $sales = Log::where('action', 'sale')
+        ->whereDate('created_at', $date)
+        ->get();
 
     $hourlyData = [];
-    
-    $philippinesDate = Carbon::parse($date)->setTimezone('Asia/Manila')->startOfDay();
-    
+
+    // Group sales by hour
     for ($hour = 0; $hour < 24; $hour++) {
-        $hourStart = $philippinesDate->copy()->addHours($hour);
-        $hourEnd = $hourStart->copy()->addHour();
-        
-        $hourStartUTC = $hourStart->copy()->utc();
-        $hourEndUTC = $hourEnd->copy()->utc();
+        $hourlySales = $sales->filter(function ($sale) use ($hour) {
+            return $sale->created_at->setTimezone('Asia/Manila')->hour == $hour;
+        });
 
-        $hourlySales = Log::where('action', 'sale')
-            ->whereBetween('created_at', [$hourStartUTC, $hourEndUTC])
-            ->get();
-
-        $hour12 = $hourStart->format('g:00 A');
+        $hour12 = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
+        if ($hour < 12) {
+            $hour12 = ($hour === 0 ? 12 : $hour) . ':00 AM';
+        } else {
+            $hour12 = ($hour === 12 ? 12 : $hour - 12) . ':00 PM';
+        }
 
         $hourlyData[] = [
             'hour' => $hour12,
@@ -930,5 +923,146 @@ private function getDailyChartData($date)
         }
 
         return $history;
+    }
+
+    public function staffSalesReport(Request $request)
+    {
+        $period = $request->get('period', 'daily');
+        $date = $request->get('date', now()->toDateString());
+        $startDate = $request->get('startDate', now()->toDateString());
+        $endDate = $request->get('endDate', now()->toDateString());
+        $monthYear = $request->get('monthYear', now()->format('Y-m'));
+
+        $staffSalesData = [];
+
+        switch ($period) {
+            case 'daily':
+                $staffSalesData = $this->getStaffSalesByPeriod($date, null, 'daily');
+                break;
+            case 'weekly':
+                $staffSalesData = $this->getStaffSalesByPeriod($date, null, 'weekly');
+                break;
+            case 'monthly':
+                list($year, $month) = explode('-', $monthYear);
+                $staffSalesData = $this->getStaffSalesByPeriod(null, ['year' => $year, 'month' => $month], 'monthly');
+                break;
+            case 'range':
+                $staffSalesData = $this->getStaffSalesByDateRange($startDate, $endDate);
+                break;
+        }
+
+        return response()->json([
+            'staffSales' => $staffSalesData,
+            'summary' => $this->calculateStaffSalesSummary($staffSalesData),
+            'period' => $period,
+        ]);
+    }
+
+    private function getStaffSalesByPeriod($date = null, $monthData = null, $type = 'daily')
+    {
+        if ($type === 'daily') {
+            // Query by date string instead of timezone conversion
+            $sales = Log::where('action', 'sale')
+                ->whereDate('created_at', $date)
+                ->with('user')
+                ->get();
+        } elseif ($type === 'weekly') {
+            $startDate = Carbon::parse($date)->startOfWeek();
+            $endDate = Carbon::parse($date)->endOfWeek();
+
+            $sales = Log::where('action', 'sale')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->with('user')
+                ->get();
+        } elseif ($type === 'monthly') {
+            $startDate = Carbon::createFromDate($monthData['year'], $monthData['month'], 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($monthData['year'], $monthData['month'], 1)->endOfMonth();
+
+            $sales = Log::where('action', 'sale')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->with('user')
+                ->get();
+        }
+
+        return $this->groupSalesByStaff($sales);
+    }
+
+    private function getStaffSalesByDateRange($startDate, $endDate)
+    {
+        $startDateTime = Carbon::parse($startDate)->startOfDay();
+        $endDateTime = Carbon::parse($endDate)->endOfDay();
+
+        $sales = Log::where('action', 'sale')
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
+            ->with('user')
+            ->get();
+
+        return $this->groupSalesByStaff($sales);
+    }
+
+    private function groupSalesByStaff($sales)
+    {
+        $staffSales = [];
+
+        foreach ($sales as $sale) {
+            if (!$sale->user) {
+                continue; // Skip sales without associated user
+            }
+
+            $staffId = $sale->user_id;
+            $staffName = $sale->user->name ?? 'Unknown';
+            $staffRole = $sale->user->role ?? 'staff';
+            $amount = $this->extractAmountFromDetails($sale->details);
+
+            if (!isset($staffSales[$staffId])) {
+                $staffSales[$staffId] = [
+                    'id' => $staffId,
+                    'name' => $staffName,
+                    'role' => $staffRole,
+                    'totalSales' => 0,
+                    'totalTransactions' => 0,
+                    'percentage' => 0,
+                ];
+            }
+
+            $staffSales[$staffId]['totalSales'] += $amount;
+            $staffSales[$staffId]['totalTransactions']++;
+        }
+
+        // Calculate averages and percentages
+        $totalSales = array_sum(array_column($staffSales, 'totalSales'));
+
+        foreach ($staffSales as &$staff) {
+            $staff['averageTransaction'] = $staff['totalTransactions'] > 0 ? $staff['totalSales'] / $staff['totalTransactions'] : 0;
+            $staff['percentage'] = $totalSales > 0 ? ($staff['totalSales'] / $totalSales) * 100 : 0;
+        }
+
+        // Sort by total sales descending
+        usort($staffSales, function ($a, $b) {
+            return $b['totalSales'] <=> $a['totalSales'];
+        });
+
+        return array_values($staffSales);
+    }
+
+    private function calculateStaffSalesSummary($staffSalesData)
+    {
+        $totalSales = 0;
+        $totalTransactions = 0;
+
+        foreach ($staffSalesData as $staff) {
+            $totalSales += $staff['totalSales'];
+            $totalTransactions += $staff['totalTransactions'];
+        }
+
+        $staffCount = count($staffSalesData);
+        $averagePerStaff = $staffCount > 0 ? $totalSales / $staffCount : 0;
+
+        return [
+            'totalSales' => $totalSales,
+            'totalTransactions' => $totalTransactions,
+            'averagePerStaff' => $averagePerStaff,
+            'staffCount' => $staffCount,
+        ];
     }
 }
