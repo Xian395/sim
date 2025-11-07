@@ -813,7 +813,7 @@ import { usePage, Link, router, useForm } from "@inertiajs/vue3";
 import AdminAuthenticatedLayout from "@/Layouts/AdminAuthenticatedLayout.vue";
 import Modal from "@/Components/Modal.vue";
 import DataTable from "@/Components/DataTable.vue";
-import { defineProps, ref, computed, watch } from "vue";
+import { defineProps, ref, computed, watch, onMounted } from "vue";
 import { notify, getLogoBase64 } from "@/globalFunctions.js";
 import ButtonNew from "@/Components/ButtonNew.vue";
 import ButtonCard from "@/Components/ButtonCard.vue";
@@ -866,6 +866,18 @@ const filters = ref({
 
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
+
+// Initialize filters from URL query parameters
+const initializeFiltersFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.has('stockStatus')) {
+        const stockStatus = urlParams.get('stockStatus');
+        if (stockStatus) {
+            filters.value.stockStatus = stockStatus;
+        }
+    }
+};
 
 const viewImage = (product) => {
     selectedImage.value = product;
@@ -1629,6 +1641,11 @@ const selectEditBrandFromModal = (brand) => {
     selectEditBrand(brand);
     closeEditBrandModal();
 };
+
+// Initialize filters from URL when component mounts
+onMounted(() => {
+    initializeFiltersFromUrl();
+});
 </script>
 
 <style scoped>

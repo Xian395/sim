@@ -459,15 +459,19 @@ const updateDateTime = () => {
 };
 
 const handleStatsCardClick = (filter) => {
-  const routes = {
-    'all': '/admin/products', 
-    'in-stock': '/admin/products', 
-    'low-stock': '/admin/products', 
-    'out-of-stock': '/admin/products' 
+  const stockStatusMap = {
+    'all': '',
+    'in-stock': 'in_stock',
+    'low-stock': 'low_stock',
+    'out-of-stock': 'out_of_stock'
   };
 
-  if (routes[filter]) {
-    router.visit(routes[filter]);
+  const stockStatus = stockStatusMap[filter];
+
+  if (stockStatus) {
+    router.get(route('admin.products.index'), { stockStatus });
+  } else {
+    router.get(route('admin.products.index'));
   }
 };
 
