@@ -8,12 +8,12 @@
                 'translate-x-0': sidebarOpen,
                 '-translate-x-full': !sidebarOpen,
             }"
-            class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform bg-white border-r border-gray-200 lg:translate-x-0"
+            class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform bg-white border-r border-gray-200 lg:translate-x-0 flex flex-col"
             aria-label="Sidebar"
         >
             <!-- Sidebar Header -->
             <div
-                class="flex items-center justify-between p-3 border-b border-gray-200"
+                class="flex items-center justify-between p-3 border-b border-gray-200 flex-shrink-0"
             >
                 <Link
                     :href="route('admin.dashboard')"
@@ -55,7 +55,7 @@
             </div>
 
             <!-- Sidebar Content -->
-            <div v-if="$page.props.auth.user.role === 'admin'" class="h-full px-3 pb-4 overflow-y-auto bg-white">
+            <div v-if="$page.props.auth.user.role === 'admin'" class="flex-1 px-3 pb-4 overflow-y-auto bg-white">
                 <ul class="space-y-2 font-medium mt-4">
                     <!-- Dashboard -->
                     <li>
@@ -389,7 +389,7 @@
                 </ul>
 
                 <!-- Sidebar Footer -->
-                <div
+                <!-- <div
                     class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200"
                 >
                     <div class="flex items-center p-2 text-gray-700 rounded-lg">
@@ -412,7 +412,7 @@
                             $page.props.auth.user.name
                         }}</span>
                     </div>
-                </div>
+                </div> -->
             </div>
         </aside>
 
