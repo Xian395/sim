@@ -138,9 +138,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
          Route::get('/pos/suggestions', [PosController::class, 'suggestions'])->name('pos.suggestions');
         Route::post('/pos/quick-add', [PosController::class, 'quickAdd'])->name('pos.quick-add');
-    
+
         // Route::post('/pos/scan', [PosController::class, 'scanBarcode'])->name('pos.scan');
     });
+
+    Route::get('/staff/transactions', [PosController::class, 'transactions'])->name('staff.transactions');
 
 
 });

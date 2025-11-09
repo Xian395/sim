@@ -315,4 +315,172 @@ class PosController extends Controller
             'message' => "Added {$product->name} to cart"
         ]);
     }
+
+    public function transactions(Request $request)
+    {
+        $userId = auth()->id();
+        $page = $request->input('page', 1);
+        $perPage = intval($request->input('per_page')) ?: 10;
+        $search = $request->input('search', '');
+        $period = $request->input('period', 'all');
+
+        // Build date range based on period
+        $dateRange = $this->getDateRange($period);
+
+        $query = \App\Models\Log::where('action', 'sale')
+            ->where('user_id', $userId)
+            ->when($search, function ($q) use ($search) {
+                return $q->where('details', 'like', "%{$search}%");
+            });
+
+        // Apply date filter if not 'all'
+        if ($period !== 'all') {
+            $query->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
+        }
+
+        $query->orderBy('created_at', 'desc');
+        $total = $query->count();
+
+        // Get all sales for summary calculation (not paginated)
+        $allSalesQuery = \App\Models\Log::where('action', 'sale')
+            ->where('user_id', $userId);
+
+        if ($period !== 'all') {
+            $allSalesQuery->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
+        }
+
+        $allSalesQuery->orderBy('created_at', 'desc');
+        $allSalesLogs = $allSalesQuery->get();
+
+        // Calculate summary
+        $summary = $this->calculateSalesSummary($allSalesLogs);
+
+        $logs = $query->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        $transactions = $logs->map(function ($sale) {
+            $details = $sale->details;
+            $products = [];
+            $totalAmount = 0;
+            $paymentAmount = 0;
+            $changeAmount = 0;
+
+            // Extract products with quantities using regex
+            if (preg_match_all('/(.+?)\s*\[Qty:\s*(\d+)\]/', $details, $matches)) {
+                for ($i = 0; $i < count($matches[0]); $i++) {
+                    $products[] = [
+                        'name' => trim($matches[1][$i]),
+                        'qty' => (int)$matches[2][$i],
+                    ];
+                }
+            }
+
+            // Extract Total amount
+            if (preg_match('/Total:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                $totalAmount = (float)str_replace(',', '', $match[1]);
+            }
+
+            // Extract Payment amount
+            if (preg_match('/Payment:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                $paymentAmount = (float)str_replace(',', '', $match[1]);
+            } else {
+                $paymentAmount = $totalAmount;
+            }
+
+            // Extract Change amount
+            if (preg_match('/Change:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                $changeAmount = (float)str_replace(',', '', $match[1]);
+            }
+
+            return [
+                'id' => $sale->id,
+                'products' => $products,
+                'total_amount' => $totalAmount,
+                'payment_amount' => $paymentAmount,
+                'change_amount' => $changeAmount,
+                'created_at' => $sale->created_at,
+            ];
+        });
+
+        $lastPage = ceil($total / $perPage);
+        $from = $total === 0 ? 0 : (($page - 1) * $perPage) + 1;
+        $to = min($page * $perPage, $total);
+
+        return Inertia::render('Staff/Transactions/Index', [
+            'transactions' => $transactions,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
+            ],
+            'search' => $search,
+            'summary' => $summary,
+            'period' => $period,
+        ]);
+    }
+
+    private function getDateRange($period)
+    {
+        $now = now();
+
+        switch ($period) {
+            case 'daily':
+                return [
+                    'start' => $now->clone()->startOfDay(),
+                    'end' => $now->clone()->endOfDay(),
+                ];
+            case 'weekly':
+                return [
+                    'start' => $now->clone()->startOfWeek(),
+                    'end' => $now->clone()->endOfWeek(),
+                ];
+            case 'monthly':
+                return [
+                    'start' => $now->clone()->startOfMonth(),
+                    'end' => $now->clone()->endOfMonth(),
+                ];
+            default:
+                return [
+                    'start' => null,
+                    'end' => null,
+                ];
+        }
+    }
+
+    private function calculateSalesSummary($logs)
+    {
+        $totalSales = 0;
+        $totalTransactions = 0;
+        $totalItemsSold = 0;
+
+        foreach ($logs as $sale) {
+            $details = $sale->details;
+
+            // Extract and sum total amounts
+            if (preg_match('/Total:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                $totalSales += (float)str_replace(',', '', $match[1]);
+                $totalTransactions++;
+            }
+
+            // Count total items sold
+            if (preg_match_all('/\[Qty:\s*(\d+)\]/', $details, $matches)) {
+                foreach ($matches[1] as $qty) {
+                    $totalItemsSold += (int)$qty;
+                }
+            }
+        }
+
+        $averagePerTransaction = $totalTransactions > 0 ? $totalSales / $totalTransactions : 0;
+
+        return [
+            'totalSales' => $totalSales,
+            'totalTransactions' => $totalTransactions,
+            'totalItemsSold' => $totalItemsSold,
+            'averagePerTransaction' => $averagePerTransaction,
+        ];
+    }
 }
