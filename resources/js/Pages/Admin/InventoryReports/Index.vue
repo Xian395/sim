@@ -1097,45 +1097,28 @@ const getPaginationPages = () => {
   const current = stockPagination.value.current_page;
   const last = stockPagination.value.last_page;
 
-  // Always show first 2 pages
-  if (last <= 5) {
-    for (let i = 1; i <= last; i++) {
-      pages.push(i);
-    }
-  } else {
-    // Show first page
-    pages.push(1);
+  // Calculate window: 1 page before and 1 page after current
+  const windowStart = Math.max(1, current - 1);
+  const windowEnd = Math.min(last, current + 1);
 
-    // Show second page if current is 1 or 2
-    if (current <= 2) {
-      pages.push(2);
-    } else if (current > 2) {
-      pages.push('...');
-    }
-
-    // Show pages around current
-    const start = Math.max(3, current - 1);
-    const end = Math.min(last - 2, current + 1);
-
-    for (let i = start; i <= end; i++) {
-      if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
-        pages.push(i);
-      }
-    }
-
-    // Show ellipsis if needed
-    if (current < last - 2 && pages[pages.length - 1] !== '...') {
-      pages.push('...');
-    }
-
-    // Show last 2 pages
-    if (current < last - 1) {
-      pages.push(last - 1);
-    }
-    pages.push(last);
+  // Add pages from window start to window end
+  for (let i = windowStart; i <= windowEnd; i++) {
+    pages.push(i);
   }
 
-  return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+  // Add ellipsis and last 2 pages if there's a gap
+  if (windowEnd < last - 1) {
+    pages.push('...');
+    pages.push(last - 1);
+    pages.push(last);
+  } else if (windowEnd < last) {
+    // Add remaining pages without ellipsis if close to the end
+    for (let i = windowEnd + 1; i <= last; i++) {
+      pages.push(i);
+    }
+  }
+
+  return pages;
 };
 
 const handleProductPageChange = (page) => {
@@ -1151,45 +1134,28 @@ const getProductPaginationPages = () => {
   const current = productPagination.value.current_page;
   const last = productPagination.value.last_page;
 
-  // Always show first 2 pages
-  if (last <= 5) {
-    for (let i = 1; i <= last; i++) {
-      pages.push(i);
-    }
-  } else {
-    // Show first page
-    pages.push(1);
+  // Calculate window: 1 page before and 1 page after current
+  const windowStart = Math.max(1, current - 1);
+  const windowEnd = Math.min(last, current + 1);
 
-    // Show second page if current is 1 or 2
-    if (current <= 2) {
-      pages.push(2);
-    } else if (current > 2) {
-      pages.push('...');
-    }
-
-    // Show pages around current
-    const start = Math.max(3, current - 1);
-    const end = Math.min(last - 2, current + 1);
-
-    for (let i = start; i <= end; i++) {
-      if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
-        pages.push(i);
-      }
-    }
-
-    // Show ellipsis if needed
-    if (current < last - 2 && pages[pages.length - 1] !== '...') {
-      pages.push('...');
-    }
-
-    // Show last 2 pages
-    if (current < last - 1) {
-      pages.push(last - 1);
-    }
-    pages.push(last);
+  // Add pages from window start to window end
+  for (let i = windowStart; i <= windowEnd; i++) {
+    pages.push(i);
   }
 
-  return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+  // Add ellipsis and last 2 pages if there's a gap
+  if (windowEnd < last - 1) {
+    pages.push('...');
+    pages.push(last - 1);
+    pages.push(last);
+  } else if (windowEnd < last) {
+    // Add remaining pages without ellipsis if close to the end
+    for (let i = windowEnd + 1; i <= last; i++) {
+      pages.push(i);
+    }
+  }
+
+  return pages;
 };
 
 const formatDate = (dateString) => {
