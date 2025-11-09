@@ -19,11 +19,37 @@ class BrandController extends Controller
         });
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $brands = Brand::withCount('products')->get();
+        $perPage = intval($request->input('per_page')) ?: 10;
+        $page = intval($request->input('page')) ?: 1;
+
+        // Build the base query with product count
+        $query = Brand::withCount('products')->orderBy('name');
+
+        // Get total count before pagination
+        $total = $query->count();
+
+        // Apply pagination manually
+        $brands = $query->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        // Calculate pagination metadata
+        $lastPage = ceil($total / $perPage);
+        $from = $total === 0 ? 0 : (($page - 1) * $perPage) + 1;
+        $to = min($page * $perPage, $total);
+
         return Inertia::render('Admin/Brands/Index', [
             'brands' => $brands,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
+            ],
         ]);
     }
 

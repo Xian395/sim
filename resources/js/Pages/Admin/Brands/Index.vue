@@ -55,6 +55,67 @@
                                 </div>
                             </template>
                         </DataTable>
+
+                        <!-- Pagination -->
+                        <div v-if="brands.length > 0 && props.pagination.last_page > 1" class="mt-6 border-t border-gray-200 pt-6 space-y-4">
+                            <!-- Results Info -->
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <label class="text-sm text-gray-700">Items per page:</label>
+                                    <select
+                                        v-model.number="itemsPerPage"
+                                        @change="handleItemsPerPageChange"
+                                        class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none bg-white cursor-pointer"
+                                    >
+                                        <option :value="10">10</option>
+                                        <option :value="20">20</option>
+                                        <option :value="30">30</option>
+                                        <option :value="50">50</option>
+                                    </select>
+                                </div>
+
+                                <div class="text-sm text-gray-600">
+                                    Showing {{ props.pagination.from }} to {{ props.pagination.to }} of {{ props.pagination.total }} results
+                                </div>
+                            </div>
+
+                            <!-- Page Navigation -->
+                            <div class="flex gap-2 justify-end">
+                                <button
+                                    v-if="props.pagination.current_page > 1"
+                                    @click="handlePageChange(props.pagination.current_page - 1)"
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                                >
+                                    Previous
+                                </button>
+
+                                <div class="flex gap-1 items-center">
+                                    <template v-for="pageNum in getPaginationPages()" :key="pageNum">
+                                        <span v-if="pageNum === '...'" class="px-2 py-2 text-gray-500">...</span>
+                                        <button
+                                            v-else
+                                            @click="handlePageChange(pageNum)"
+                                            :class="[
+                                                'px-3 py-2 rounded transition',
+                                                pageNum === props.pagination.current_page
+                                                    ? 'bg-blue-500 text-white font-semibold'
+                                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                            ]"
+                                        >
+                                            {{ pageNum }}
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <button
+                                    v-if="props.pagination.current_page < props.pagination.last_page"
+                                    @click="handlePageChange(props.pagination.current_page + 1)"
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -208,7 +269,28 @@
                     <p class="mt-1 text-sm text-gray-500">This brand has no products assigned to it yet.</p>
                 </div>
 
-                <div v-else class="overflow-hidden">
+                <div v-else class="overflow-hidden space-y-4">
+                    <!-- Pagination Controls (Top) -->
+                    <div v-if="brandProducts.length > 0 && productsPagination.last_page > 1" class="flex justify-between items-center border-b border-gray-200 pb-4">
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm text-gray-700">Items per page:</label>
+                            <select
+                                v-model.number="productsPerPage"
+                                @change="handleProductsItemsPerPageChange"
+                                class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none bg-white cursor-pointer"
+                            >
+                                <option :value="5">5</option>
+                                <option :value="10">10</option>
+                                <option :value="20">20</option>
+                                <option :value="50">50</option>
+                            </select>
+                        </div>
+
+                        <div class="text-sm text-gray-600">
+                            Showing {{ productsPagination.from }} to {{ productsPagination.to }} of {{ productsPagination.total }} products
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -216,13 +298,13 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Code</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Selling Price</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categories</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="product in brandProducts" :key="product.id" class="hover:bg-gray-50">
+                                <tr v-for="product in paginatedBrandProducts" :key="product.id" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex justify-center">
                                             <div class="w-10 h-10 rounded-lg overflow-hidden shadow-sm">
@@ -270,15 +352,45 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                <div class="mt-6 flex justify-end">
-                    <button
-                        @click="closeProductsModal"
-                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    >
-                        Close
-                    </button>
+                    <!-- Pagination Controls (Bottom) -->
+                    <div v-if="brandProducts.length > 0 && productsPagination.last_page > 1" class="border-t border-gray-200 pt-4 space-y-4">
+                        <div class="flex gap-2 justify-end">
+                            <button
+                                v-if="productsPagination.current_page > 1"
+                                @click="handleProductsPageChange(productsPagination.current_page - 1)"
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                            >
+                                Previous
+                            </button>
+
+                            <div class="flex gap-1 items-center">
+                                <template v-for="pageNum in getProductsPaginationPages()" :key="pageNum">
+                                    <span v-if="pageNum === '...'" class="px-2 py-2 text-gray-500">...</span>
+                                    <button
+                                        v-else
+                                        @click="handleProductsPageChange(pageNum)"
+                                        :class="[
+                                            'px-3 py-2 rounded transition',
+                                            pageNum === productsPagination.current_page
+                                                ? 'bg-blue-500 text-white font-semibold'
+                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                        ]"
+                                    >
+                                        {{ pageNum }}
+                                    </button>
+                                </template>
+                            </div>
+
+                            <button
+                                v-if="productsPagination.current_page < productsPagination.last_page"
+                                @click="handleProductsPageChange(productsPagination.current_page + 1)"
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Modal>
@@ -297,8 +409,19 @@ import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import DataTable from "@/Components/DataTable.vue";
 
-defineProps({
+const props = defineProps({
     brands: Array,
+    pagination: {
+        type: Object,
+        default: () => ({
+            total: 0,
+            per_page: 10,
+            current_page: 1,
+            last_page: 1,
+            from: 0,
+            to: 0
+        })
+    }
 });
 
 const $page = usePage();
@@ -307,11 +430,22 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedBrand = ref(null);
 const brandToDelete = ref(null);
+const itemsPerPage = ref(props.pagination.per_page);
 
 // Products Modal
 const showProductsModal = ref(false);
 const brandProducts = ref([]);
 const loadingProducts = ref(false);
+const productsPerPage = ref(10);
+const productsCurrentPage = ref(1);
+const productsPagination = ref({
+    total: 0,
+    per_page: 10,
+    current_page: 1,
+    last_page: 1,
+    from: 0,
+    to: 0
+});
 
 const tableColumns = computed(() => [
     {
@@ -339,6 +473,139 @@ const tableColumns = computed(() => [
         align: 'right'
     }
 ]);
+
+const getPaginationPages = () => {
+    const pages = [];
+    const current = props.pagination.current_page;
+    const last = props.pagination.last_page;
+
+    if (last <= 5) {
+        for (let i = 1; i <= last; i++) {
+            pages.push(i);
+        }
+    } else {
+        pages.push(1);
+
+        if (current <= 2) {
+            pages.push(2);
+        } else if (current > 2) {
+            pages.push('...');
+        }
+
+        const start = Math.max(3, current - 1);
+        const end = Math.min(last - 2, current + 1);
+
+        for (let i = start; i <= end; i++) {
+            if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
+                pages.push(i);
+            }
+        }
+
+        if (current < last - 2 && pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+
+        if (current < last - 1) {
+            pages.push(last - 1);
+        }
+        pages.push(last);
+    }
+
+    return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+};
+
+const handlePageChange = (page) => {
+    router.get(route('admin.brands.index', {
+        page: page,
+        per_page: itemsPerPage.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const handleItemsPerPageChange = () => {
+    router.get(route('admin.brands.index', {
+        page: 1,
+        per_page: itemsPerPage.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const paginatedBrandProducts = computed(() => {
+    const total = brandProducts.value.length;
+    const perPage = productsPerPage.value;
+    const currentPage = productsCurrentPage.value;
+
+    // Update pagination metadata
+    const lastPage = Math.ceil(total / perPage);
+    const from = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, total);
+
+    productsPagination.value = {
+        total,
+        per_page: perPage,
+        current_page: currentPage,
+        last_page: lastPage,
+        from,
+        to
+    };
+
+    // Return paginated slice
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    return brandProducts.value.slice(start, end);
+});
+
+const getProductsPaginationPages = () => {
+    const pages = [];
+    const current = productsPagination.value.current_page;
+    const last = productsPagination.value.last_page;
+
+    if (last <= 5) {
+        for (let i = 1; i <= last; i++) {
+            pages.push(i);
+        }
+    } else {
+        pages.push(1);
+
+        if (current <= 2) {
+            pages.push(2);
+        } else if (current > 2) {
+            pages.push('...');
+        }
+
+        const start = Math.max(3, current - 1);
+        const end = Math.min(last - 2, current + 1);
+
+        for (let i = start; i <= end; i++) {
+            if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
+                pages.push(i);
+            }
+        }
+
+        if (current < last - 2 && pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+
+        if (current < last - 1) {
+            pages.push(last - 1);
+        }
+        pages.push(last);
+    }
+
+    return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+};
+
+const handleProductsPageChange = (page) => {
+    productsCurrentPage.value = page;
+};
+
+const handleProductsItemsPerPageChange = () => {
+    productsCurrentPage.value = 1;
+};
 
 const editForm = useForm({
     name: '',
@@ -466,6 +733,8 @@ const closeProductsModal = () => {
     selectedBrand.value = null;
     brandProducts.value = [];
     loadingProducts.value = false;
+    productsCurrentPage.value = 1;
+    productsPerPage.value = 10;
 };
 
 </script>

@@ -101,6 +101,67 @@
                                 </div>
                             </template>
                         </DataTable>
+
+                        <!-- Pagination -->
+                        <div v-if="categories.length > 0 && props.pagination.last_page > 1" class="mt-6 border-t border-gray-200 pt-6 space-y-4">
+                            <!-- Results Info -->
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <label class="text-sm text-gray-700">Items per page:</label>
+                                    <select
+                                        v-model.number="itemsPerPage"
+                                        @change="handleItemsPerPageChange"
+                                        class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none bg-white cursor-pointer"
+                                    >
+                                        <option :value="10">10</option>
+                                        <option :value="20">20</option>
+                                        <option :value="30">30</option>
+                                        <option :value="50">50</option>
+                                    </select>
+                                </div>
+
+                                <div class="text-sm text-gray-600">
+                                    Showing {{ props.pagination.from }} to {{ props.pagination.to }} of {{ props.pagination.total }} results
+                                </div>
+                            </div>
+
+                            <!-- Page Navigation -->
+                            <div class="flex gap-2 justify-end">
+                                <button
+                                    v-if="props.pagination.current_page > 1"
+                                    @click="handlePageChange(props.pagination.current_page - 1)"
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                                >
+                                    Previous
+                                </button>
+
+                                <div class="flex gap-1 items-center">
+                                    <template v-for="pageNum in getPaginationPages()" :key="pageNum">
+                                        <span v-if="pageNum === '...'" class="px-2 py-2 text-gray-500">...</span>
+                                        <button
+                                            v-else
+                                            @click="handlePageChange(pageNum)"
+                                            :class="[
+                                                'px-3 py-2 rounded transition',
+                                                pageNum === props.pagination.current_page
+                                                    ? 'bg-blue-500 text-white font-semibold'
+                                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                            ]"
+                                        >
+                                            {{ pageNum }}
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <button
+                                    v-if="props.pagination.current_page < props.pagination.last_page"
+                                    @click="handlePageChange(props.pagination.current_page + 1)"
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,6 +260,17 @@ const props = defineProps({
     counts: {
         type: Object,
         default: () => ({})
+    },
+    pagination: {
+        type: Object,
+        default: () => ({
+            total: 0,
+            per_page: 10,
+            current_page: 1,
+            last_page: 1,
+            from: 0,
+            to: 0
+        })
     }
 });
 
@@ -206,6 +278,8 @@ const $page = usePage();
 const dataTable = ref();
 const showEditModal = ref(false);
 const selectedCategory = ref(null);
+const itemsPerPage = ref(props.pagination.per_page);
+const currentPage = ref(props.pagination.current_page);
 
 const activeCategoryCount = computed(() => props.counts.active || 0);
 const archivedCategoryCount = computed(() => props.counts.archived || 0);
@@ -231,6 +305,68 @@ const tableColumns = computed(() => [
         align: 'right'
     }
 ]);
+
+const getPaginationPages = () => {
+    const pages = [];
+    const current = props.pagination.current_page;
+    const last = props.pagination.last_page;
+
+    if (last <= 5) {
+        for (let i = 1; i <= last; i++) {
+            pages.push(i);
+        }
+    } else {
+        pages.push(1);
+
+        if (current <= 2) {
+            pages.push(2);
+        } else if (current > 2) {
+            pages.push('...');
+        }
+
+        const start = Math.max(3, current - 1);
+        const end = Math.min(last - 2, current + 1);
+
+        for (let i = start; i <= end; i++) {
+            if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
+                pages.push(i);
+            }
+        }
+
+        if (current < last - 2 && pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+
+        if (current < last - 1) {
+            pages.push(last - 1);
+        }
+        pages.push(last);
+    }
+
+    return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+};
+
+const handlePageChange = (page) => {
+    router.get(route('admin.categories.index', {
+        filter: props.filter,
+        page: page,
+        per_page: itemsPerPage.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const handleItemsPerPageChange = () => {
+    router.get(route('admin.categories.index', {
+        filter: props.filter,
+        page: 1,
+        per_page: itemsPerPage.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
 
 const editForm = useForm({
     name: '',
@@ -304,7 +440,11 @@ const toggleStatus = async (category) => {
 };
 
 const filterCategories = (filter) => {
-    router.get(route('admin.categories.index', { filter }), {}, {
+    router.get(route('admin.categories.index', {
+        filter: filter,
+        page: 1,
+        per_page: itemsPerPage.value
+    }), {}, {
         preserveState: true,
         preserveScroll: true
     });

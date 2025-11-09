@@ -23,14 +23,30 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $filter = $request->get('filter', 'active');
+        $perPage = intval($request->input('per_page')) ?: 10;
+        $page = intval($request->input('page')) ?: 1;
 
-        $categories = Category::when($filter === 'active', function ($query) {
+        // Build the base query
+        $query = Category::when($filter === 'active', function ($query) {
             return $query->where('status', 'active');
         })->when($filter === 'archived', function ($query) {
             return $query->where('status', 'inactive');
         })->when($filter === 'all', function ($query) {
             return $query;
-        })->orderBy('name')->get();
+        })->orderBy('name');
+
+        // Get total count before pagination
+        $total = $query->count();
+
+        // Apply pagination manually
+        $categories = $query->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        // Calculate pagination metadata
+        $lastPage = ceil($total / $perPage);
+        $from = $total === 0 ? 0 : (($page - 1) * $perPage) + 1;
+        $to = min($page * $perPage, $total);
 
         // Get counts for all statuses
         $activeCategoryCount = Category::where('status', 'active')->count();
@@ -40,6 +56,14 @@ class CategoryController extends Controller
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
             'filter' => $filter,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
+            ],
             'counts' => [
                 'active' => $activeCategoryCount,
                 'archived' => $archivedCategoryCount,
