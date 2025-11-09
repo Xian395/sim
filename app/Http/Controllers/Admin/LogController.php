@@ -1065,4 +1065,143 @@ private function getDailyChartData($date)
             'staffCount' => $staffCount,
         ];
     }
+
+    public function getStaffTransactions($userId)
+    {
+        $sales = Log::where('action', 'sale')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($sale) {
+                $details = $sale->details;
+
+                // Parse the string format: "Processed sale: Product [Qty: X], Product [Qty: Y] - Total: PHP XXX - Payment: PHP XXX - Change: PHP XXX"
+                $products = [];
+                $totalAmount = 0;
+                $paymentAmount = 0;
+                $changeAmount = 0;
+
+                // Extract products with quantities using regex
+                // Matches: "Product Name [Qty: 2]"
+                if (preg_match_all('/(.+?)\s*\[Qty:\s*(\d+)\]/', $details, $matches)) {
+                    for ($i = 0; $i < count($matches[0]); $i++) {
+                        $products[] = [
+                            'name' => trim($matches[1][$i]),
+                            'qty' => (int)$matches[2][$i],
+                        ];
+                    }
+                }
+
+                // Extract Total amount
+                if (preg_match('/Total:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                    $totalAmount = (float)str_replace(',', '', $match[1]);
+                }
+
+                // Extract Payment amount
+                if (preg_match('/Payment:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                    $paymentAmount = (float)str_replace(',', '', $match[1]);
+                } else {
+                    $paymentAmount = $totalAmount;
+                }
+
+                // Extract Change amount
+                if (preg_match('/Change:\s*PHP\s*([\d,]+(?:\.\d{2})?)/i', $details, $match)) {
+                    $changeAmount = (float)str_replace(',', '', $match[1]);
+                }
+
+                return [
+                    'id' => $sale->id,
+                    'products' => $products,
+                    'total_amount' => $totalAmount,
+                    'payment_amount' => $paymentAmount,
+                    'change_amount' => $changeAmount,
+                    'created_at' => $sale->created_at,
+                ];
+            });
+
+        return response()->json($sales);
+    }
+
+    public function getStockTransactionLogs(Request $request)
+    {
+        try {
+            $search = $request->input('search', '');
+            $type = $request->input('type', '');
+            $perPage = intval($request->input('per_page')) ?: 10;
+            $page = intval($request->input('page')) ?: 1;
+
+            $query = Log::query();
+
+            // Filter by type
+            if ($type === 'in') {
+                $query->where('action', 'stock_in');
+            } elseif ($type === 'out') {
+                $query->where('action', 'stock_out');
+            } else {
+                $query->whereIn('action', ['stock_in', 'stock_out']);
+            }
+
+            // Search filter
+            if ($search) {
+                $query->where('details', 'like', "%{$search}%");
+            }
+
+            // Get total count before pagination
+            $total = $query->count();
+
+            // Paginate
+            $items = $query->with('user')
+                ->orderBy('created_at', 'desc')
+                ->offset(($page - 1) * $perPage)
+                ->limit($perPage)
+                ->get();
+
+            $logs = [];
+            foreach ($items as $log) {
+                $logs[] = [
+                    'id' => $log->id,
+                    'action' => $log->action,
+                    'details' => $log->details,
+                    'user' => $log->user ? $log->user->name : 'Unknown User',
+                    'created_at' => $log->created_at,
+                ];
+            }
+
+            $lastPage = ceil($total / $perPage);
+            $from = $total === 0 ? 0 : (($page - 1) * $perPage) + 1;
+            $to = min($page * $perPage, $total);
+
+            return response()->json([
+                'data' => $logs,
+                'pagination' => [
+                    'total' => $total,
+                    'per_page' => $perPage,
+                    'current_page' => $page,
+                    'last_page' => $lastPage,
+                    'from' => $from,
+                    'to' => $to,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteMultipleLogs(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|exists:logs,id'
+            ]);
+
+            $deletedCount = count($validated['ids']);
+            Log::whereIn('id', $validated['ids'])->delete();
+
+            return redirect()->back()->with('success', "{$deletedCount} log(s) deleted successfully");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete logs: ' . $e->getMessage());
+        }
+    }
+
 }

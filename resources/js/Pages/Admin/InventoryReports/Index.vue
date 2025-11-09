@@ -247,10 +247,40 @@
                   <!-- Inventory Details Table -->
                   <div class="bg-white rounded-lg border border-gray-200">
                     <div class="px-6 py-4 border-b border-gray-200">
-                      <h4 class="text-lg font-medium text-gray-900">Product Inventory Details</h4>
+                      <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-medium text-gray-900">Product Inventory Details</h4>
+                      </div>
+
+                      <!-- Search and Filters -->
+                      <div class="flex gap-4 items-end">
+                        <!-- Search -->
+                        <div class="flex-1">
+                          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                          <input
+                            v-model="productSearch"
+                            type="text"
+                            placeholder="Search by product name..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="w-40">
+                          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                          <select
+                            v-model="productStatusFilter"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="">All Status</option>
+                            <option value="In Stock">In Stock</option>
+                            <option value="Low Stock">Low Stock</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                     <DataTable
-                      :data="filteredProducts"
+                      :data="paginatedProducts"
                       :columns="tableColumns"
                       itemKey="id"
                       emptyMessage="No products found"
@@ -259,6 +289,11 @@
                         <span :class="getStatusBadgeClass(value)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
                           {{ value }}
                         </span>
+                      </template>
+
+                      <template #column-acquisition_price="{ value }">
+                        <span v-if="!value || value === 0" class="text-gray-500 italic">NOT SET</span>
+                        <span v-else>₱{{ formatCurrency(value) }}</span>
                       </template>
 
                       <template #column-actions="{ item }">
@@ -305,12 +340,240 @@
                         </div>
                       </template>
                     </DataTable>
+
+                    <!-- Product Pagination -->
+                    <div v-if="paginatedProducts.length > 0" class="px-6 py-4 border-t border-gray-200 space-y-4">
+                      <!-- Results Info -->
+                      <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                          <label class="text-sm text-gray-700">Items per page:</label>
+                          <select
+                            v-model.number="productItemsPerPage"
+                            @change="handleProductItemsPerPageChange"
+                            class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none bg-white cursor-pointer"
+                          >
+                            <option :value="10">10</option>
+                            <option :value="20">20</option>
+                            <option :value="30">30</option>
+                            <option :value="50">50</option>
+                          </select>
+                        </div>
+
+                        <div class="text-sm text-gray-600">
+                          Showing {{ productPagination.from }} to {{ productPagination.to }} of {{ productPagination.total }} results
+                        </div>
+                      </div>
+
+                      <!-- Page Navigation -->
+                      <div v-if="productPagination.last_page > 1" class="flex gap-2 justify-end">
+                        <button
+                          v-if="productPagination.current_page > 1"
+                          @click="handleProductPageChange(productPagination.current_page - 1)"
+                          class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                        >
+                          Previous
+                        </button>
+
+                        <div class="flex gap-1 items-center">
+                          <template v-for="pageNum in getProductPaginationPages()" :key="pageNum">
+                            <span v-if="pageNum === '...'" class="px-2 py-2 text-gray-500">...</span>
+                            <button
+                              v-else
+                              @click="handleProductPageChange(pageNum)"
+                              :class="[
+                                'px-3 py-2 rounded transition',
+                                pageNum === productPagination.current_page
+                                  ? 'bg-blue-500 text-white font-semibold'
+                                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                              ]"
+                            >
+                              {{ pageNum }}
+                            </button>
+                          </template>
+                        </div>
+
+                        <button
+                          v-if="productPagination.current_page < productPagination.last_page"
+                          @click="handleProductPageChange(productPagination.current_page + 1)"
+                          class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
               <div v-if="loadingInventoryReport" class="text-center py-12">
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                 <p class="mt-2 text-gray-600">Loading inventory report...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stock Transaction Logs Section -->
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+          <div class="p-6">
+            <div class="space-y-6">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Stock Transactions</h3>
+                  <p class="text-sm text-gray-600">Stock In and Stock Out records</p>
+                </div>
+              </div>
+
+              <!-- Search and Filters -->
+              <div class="flex gap-4 items-end">
+                <!-- Search -->
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <input
+                    v-model="stockSearch"
+                    @input="loadStockTransactionLogs"
+                    type="text"
+                    placeholder="Search by product, user, or details..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <!-- Type Filter -->
+                <div class="w-40">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select
+                    v-model="stockFilterType"
+                    @change="loadStockTransactionLogs"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All Types</option>
+                    <option value="in">Stock In</option>
+                    <option value="out">Stock Out</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Loading State -->
+              <div v-if="loadingStockLogs" class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-gray-600">Loading stock transactions...</p>
+              </div>
+
+              <!-- Stock Logs List -->
+              <div v-else-if="stockTransactionLogs.length > 0" class="space-y-3">
+                <div
+                  v-for="log in stockTransactionLogs"
+                  :key="log.id"
+                  class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-2">
+                        <span
+                          :class="[
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                            log.action === 'stock_in'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          ]"
+                        >
+                          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              v-if="log.action === 'stock_in'"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 4v16m8-8H4"
+                            />
+                            <path
+                              v-else
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M20 12H4"
+                            />
+                          </svg>
+                          {{ log.action === 'stock_in' ? 'Stock In' : 'Stock Out' }}
+                        </span>
+                        <span class="text-sm font-medium text-gray-900">{{ log.user }}</span>
+                      </div>
+                      <p class="text-sm text-gray-700 break-words">
+                        {{ log.details }}
+                      </p>
+                    </div>
+                    <div class="text-right ml-4 mt-2">
+                      <p class="text-xs font-medium text-gray-600">{{ formatDate(log.created_at) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="mt-2 text-gray-500">No stock transactions found</p>
+              </div>
+
+              <!-- Pagination -->
+              <div v-if="stockTransactionLogs.length > 0" class="pt-4 border-t border-gray-200 space-y-4">
+                <!-- Results Info -->
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-3">
+                    <label class="text-sm text-gray-700">Items per page:</label>
+                    <select
+                      v-model.number="stockItemsPerPage"
+                      @change="handleStockItemsPerPageChange"
+                      class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none bg-white cursor-pointer"
+                    >
+                      <option :value="10">10</option>
+                      <option :value="20">20</option>
+                      <option :value="30">30</option>
+                      <option :value="50">50</option>
+                    </select>
+                  </div>
+
+                  <div class="text-sm text-gray-600">
+                    Showing {{ stockPagination.from }} to {{ stockPagination.to }} of {{ stockPagination.total }} results
+                  </div>
+                </div>
+
+                <!-- Page Navigation -->
+                <div v-if="stockPagination.last_page > 1" class="flex gap-2 justify-end">
+                  <button
+                    v-if="stockPagination.current_page > 1"
+                    @click="handleStockPageChange(stockPagination.current_page - 1)"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                  >
+                    Previous
+                  </button>
+
+                  <div class="flex gap-1 items-center">
+                    <template v-for="pageNum in getPaginationPages()" :key="pageNum">
+                      <span v-if="pageNum === '...'" class="px-2 py-2 text-gray-500">...</span>
+                      <button
+                        v-else
+                        @click="handleStockPageChange(pageNum)"
+                        :class="[
+                          'px-3 py-2 rounded transition',
+                          pageNum === stockPagination.current_page
+                            ? 'bg-blue-500 text-white font-semibold'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        ]"
+                      >
+                        {{ pageNum }}
+                      </button>
+                    </template>
+                  </div>
+
+                  <button
+                    v-if="stockPagination.current_page < stockPagination.last_page"
+                    @click="handleStockPageChange(stockPagination.current_page + 1)"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -480,7 +743,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
 import ButtonNew from '@/Components/ButtonNew.vue';
@@ -513,6 +776,33 @@ const showStockHistoryModal = ref(false);
 const loadingStockHistory = ref(false);
 const stockHistory = ref([]);
 const selectedProductName = ref('');
+
+const stockTransactionLogs = ref([]);
+const loadingStockLogs = ref(false);
+const stockSearch = ref('');
+const stockFilterType = ref('');
+const stockPagination = ref({
+  total: 0,
+  per_page: 10,
+  current_page: 1,
+  last_page: 1,
+  from: 0,
+  to: 0
+});
+const stockItemsPerPage = ref(10);
+
+const productPagination = ref({
+  total: 0,
+  per_page: 10,
+  current_page: 1,
+  last_page: 1,
+  from: 0,
+  to: 0
+});
+const productItemsPerPage = ref(10);
+const productCurrentPage = ref(1);
+const productSearch = ref('');
+const productStatusFilter = ref('');
 
 const showSaleHistoryModal = ref(false);
 const loadingSaleHistory = ref(false);
@@ -569,6 +859,45 @@ const filteredProducts = computed(() => {
   return filtered;
 });
 
+const paginatedProducts = computed(() => {
+  let filtered = filteredProducts.value;
+
+  // Apply product-specific search filter
+  if (productSearch.value) {
+    filtered = filtered.filter(product =>
+      product.name.toLowerCase().includes(productSearch.value.toLowerCase())
+    );
+  }
+
+  // Apply product-specific status filter
+  if (productStatusFilter.value) {
+    filtered = filtered.filter(product => product.status === productStatusFilter.value);
+  }
+
+  const total = filtered.length;
+  const perPage = productItemsPerPage.value;
+  const currentPage = productCurrentPage.value;
+
+  // Update pagination metadata
+  const lastPage = Math.ceil(total / perPage);
+  const from = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+  const to = Math.min(currentPage * perPage, total);
+
+  productPagination.value = {
+    total,
+    per_page: perPage,
+    current_page: currentPage,
+    last_page: lastPage,
+    from,
+    to
+  };
+
+  // Return paginated slice
+  const start = (currentPage - 1) * perPage;
+  const end = start + perPage;
+  return filtered.slice(start, end);
+});
+
 const hasActiveFilters = computed(() => {
   return filters.value.search ||
          filters.value.brand ||
@@ -616,8 +945,10 @@ const tableColumns = computed(() => {
     { key: 'name', label: 'Product Name', type: 'text', align: 'left' },
     { key: 'brand', label: 'Brand', type: 'text', align: 'left' },
     { key: 'stock_quantity', label: 'Stock Quantity', type: 'number', align: 'left' },
-    { key: 'price', label: 'Unit Price', type: 'currency', align: 'left' },
-    { key: 'value', label: 'Total Value', type: 'currency', align: 'left' },
+    { key: 'acquisition_price', label: 'Acquisition Price', type: 'currency', align: 'left' },
+    { key: 'acquisition_total', label: 'Acq Total Value', type: 'currency', align: 'left' },
+    { key: 'price', label: 'Selling Price', type: 'currency', align: 'left' },
+    { key: 'value', label: 'Selling Total Value', type: 'currency', align: 'left' },
     { key: 'status', label: 'Status', type: 'text', align: 'left' },
     { key: 'actions', label: 'Actions', type: 'text', align: 'left', sticky: false }
   ];
@@ -714,6 +1045,153 @@ const closeSaleHistoryModal = () => {
   selectedProductName.value = '';
 };
 
+const loadStockTransactionLogs = async (page = 1) => {
+  loadingStockLogs.value = true;
+  try {
+    const params = new URLSearchParams();
+    if (stockSearch.value) params.append('search', stockSearch.value);
+    if (stockFilterType.value) params.append('type', stockFilterType.value);
+    params.append('per_page', stockItemsPerPage.value);
+    params.append('page', page);
+
+    const response = await fetch(`/api/stock-transaction-logs?${params.toString()}`);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('API Error:', errorData);
+      notify2('Failed to load stock transaction logs', 'error');
+      return;
+    }
+
+    const result = await response.json();
+
+    if (result.error) {
+      console.error('API returned error:', result.error);
+      notify2(result.error, 'error');
+      return;
+    }
+
+    stockTransactionLogs.value = result.data || [];
+    if (result.pagination) {
+      stockPagination.value = result.pagination;
+    }
+  } catch (error) {
+    console.error('Error loading stock transaction logs:', error);
+    notify2('Failed to load stock transaction logs', 'error');
+  } finally {
+    loadingStockLogs.value = false;
+  }
+};
+
+const handleStockPageChange = (page) => {
+  loadStockTransactionLogs(page);
+};
+
+const handleStockItemsPerPageChange = () => {
+  stockPagination.value.current_page = 1;
+  loadStockTransactionLogs(1);
+};
+
+const getPaginationPages = () => {
+  const pages = [];
+  const current = stockPagination.value.current_page;
+  const last = stockPagination.value.last_page;
+
+  // Always show first 2 pages
+  if (last <= 5) {
+    for (let i = 1; i <= last; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show first page
+    pages.push(1);
+
+    // Show second page if current is 1 or 2
+    if (current <= 2) {
+      pages.push(2);
+    } else if (current > 2) {
+      pages.push('...');
+    }
+
+    // Show pages around current
+    const start = Math.max(3, current - 1);
+    const end = Math.min(last - 2, current + 1);
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
+        pages.push(i);
+      }
+    }
+
+    // Show ellipsis if needed
+    if (current < last - 2 && pages[pages.length - 1] !== '...') {
+      pages.push('...');
+    }
+
+    // Show last 2 pages
+    if (current < last - 1) {
+      pages.push(last - 1);
+    }
+    pages.push(last);
+  }
+
+  return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+};
+
+const handleProductPageChange = (page) => {
+  productCurrentPage.value = page;
+};
+
+const handleProductItemsPerPageChange = () => {
+  productCurrentPage.value = 1;
+};
+
+const getProductPaginationPages = () => {
+  const pages = [];
+  const current = productPagination.value.current_page;
+  const last = productPagination.value.last_page;
+
+  // Always show first 2 pages
+  if (last <= 5) {
+    for (let i = 1; i <= last; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show first page
+    pages.push(1);
+
+    // Show second page if current is 1 or 2
+    if (current <= 2) {
+      pages.push(2);
+    } else if (current > 2) {
+      pages.push('...');
+    }
+
+    // Show pages around current
+    const start = Math.max(3, current - 1);
+    const end = Math.min(last - 2, current + 1);
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i) && pages[pages.length - 1] !== '...') {
+        pages.push(i);
+      }
+    }
+
+    // Show ellipsis if needed
+    if (current < last - 2 && pages[pages.length - 1] !== '...') {
+      pages.push('...');
+    }
+
+    // Show last 2 pages
+    if (current < last - 1) {
+      pages.push(last - 1);
+    }
+    pages.push(last);
+  }
+
+  return pages.filter(p => p !== '...' || pages.indexOf('...') === pages.lastIndexOf('...'));
+};
+
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleString('en-PH', {
@@ -780,13 +1258,15 @@ const exportInventoryReport = async () => {
       product.name,
       product.brand,
       product.stock_quantity.toString(),
+      !product.acquisition_price || product.acquisition_price === 0 ? 'NOT SET' : `PHP ${formatCurrency(product.acquisition_price)}`,
+      `PHP ${formatCurrency(product.acquisition_total || 0)}`,
       `PHP ${formatCurrency(product.price)}`,
       `PHP ${formatCurrency(product.value)}`,
       product.status
     ]);
 
     autoTable(doc, {
-      head: [['Product Name', 'Brand', 'Stock Qty', 'Unit Price', 'Total Value', 'Status']],
+      head: [['Product Name', 'Brand', 'Stock Qty', 'Acq Price', 'Acq Total', 'Selling Price', 'Selling Total', 'Status']],
       body: tableData,
       startY: yPosition,
       styles: { fontSize: 9 },
@@ -812,9 +1292,18 @@ const exportInventoryReport = async () => {
   }
 };
 
+const resetProductPage = () => {
+  productCurrentPage.value = 1;
+};
+
 onMounted(() => {
   updateDateTime();
   setInterval(updateDateTime, 60000);
   loadInventoryReport();
+  loadStockTransactionLogs();
 });
+
+// Watch for filter changes and reset page to 1
+watch(productSearch, resetProductPage);
+watch(productStatusFilter, resetProductPage);
 </script>

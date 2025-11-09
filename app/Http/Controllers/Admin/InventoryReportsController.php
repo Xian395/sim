@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Log;
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,11 +44,22 @@ class InventoryReportsController extends Controller
 
         return response()->json([
             'products' => $products->map(function ($product) {
+                // Get the most recent acquisition price from stock transactions
+                $latestStockIn = StockTransaction::where('product_id', $product->id)
+                    ->where('type', 'in')
+                    ->orderBy('transaction_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $acquisitionPrice = $latestStockIn ? $latestStockIn->acquisition_price : 0;
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'brand' => $product->brand ? $product->brand->name : 'No Brand',
                     'stock_quantity' => $product->stock_quantity,
+                    'acquisition_price' => $acquisitionPrice,
+                    'acquisition_total' => $product->stock_quantity * $acquisitionPrice,
                     'price' => $product->price,
                     'value' => $product->stock_quantity * $product->price,
                     'status' => $product->stock_quantity <= 0 ? 'Out of Stock' :

@@ -182,18 +182,40 @@
                     </div>
 
                     <div class="p-6">
-                        <div class="mb-4 text-sm text-gray-600">
-                            {{ logs.total || logs.data?.length || 0 }} records found
-                            <span v-if="isFiltered">(filtered)</span>
+                        <div class="mb-4 flex justify-between items-center">
+                            <div class="text-sm text-gray-600">
+                                {{ logs.total || logs.data?.length || 0 }} records found
+                                <span v-if="isFiltered">(filtered)</span>
+                            </div>
 
+                            <!-- Delete Selected Button -->
+                            <div v-if="selectedLogs.size > 0" class="flex items-center gap-3">
+                                <span class="text-sm text-gray-600">
+                                    {{ selectedLogs.size }} selected
+                                </span>
+                                <button
+                                    @click="deleteSelected"
+                                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors text-sm font-medium"
+                                >
+                                    Delete Selected
+                                </button>
+                            </div>
                         </div>
 
                         <DataTable
                             :data="logs.data || []"
-                            :columns="columns"
+                            :columns="displayColumns"
                             item-key="id"
                             empty-message="No activity logs found"
                         >
+                            <template #column-select="{ item }">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedLogs.has(item.id)"
+                                    @change="toggleSelection(item.id)"
+                                    class="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                                />
+                            </template>
                             <template #column-created_at="{ value }">
                                 <div class="text-sm text-gray-900">
                                     {{ new Date(value).toLocaleString() }}
@@ -270,7 +292,41 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Confirmation Modal -->
+            <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+                    </div>
+
+                    <div class="px-6 py-4">
+                        <p class="text-gray-600">
+                            Are you sure you want to delete <span class="font-semibold text-red-600">{{ logsToDelete }}</span> log(s)?
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                        <button
+                            @click="showDeleteConfirm = false"
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="confirmDelete"
+                            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors font-medium"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div v-else class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
@@ -283,15 +339,15 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import AdminAuthenticatedLayout from "@/Layouts/AdminAuthenticatedLayout.vue";
 import DataTable from "@/Components/DataTable.vue";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 import ButtonNew from "@/Components/ButtonNew.vue";
-import { getLogoBase64 } from "@/globalFunctions.js";
+import { getLogoBase64, notify2 } from "@/globalFunctions.js";
 
-
+const page = usePage();
 const { logs } = defineProps(["logs"]);
 
 const filters = ref({
@@ -306,6 +362,9 @@ const filters = ref({
 const showAdvancedFilters = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
+const selectedLogs = ref(new Set());
+const showDeleteConfirm = ref(false);
+const logsToDelete = ref(0);
 
 const columns = [
     { key: "user", label: "User", type: "text", align: "left" },
@@ -313,6 +372,11 @@ const columns = [
     { key: "details", label: "Details", type: "text", align: "left" },
     { key: "created_at", label: "Timestamp", type: "text", align: "left" },
 ];
+
+const displayColumns = computed(() => [
+    { key: "select", label: "", type: "checkbox", align: "center", width: "50px" },
+    ...columns
+]);
 
 const totalPages = computed(() =>
     Math.ceil((logs.data?.length || 0) / itemsPerPage.value)
@@ -387,6 +451,48 @@ const loadPage = (url) => {
             preserveScroll: true,
         });
     }
+};
+
+const toggleSelection = (id) => {
+    if (selectedLogs.value.has(id)) {
+        selectedLogs.value.delete(id);
+    } else {
+        selectedLogs.value.add(id);
+    }
+};
+
+const deleteSelected = () => {
+    if (selectedLogs.value.size === 0) {
+        notify2('Please select logs to delete', 'warning');
+        return;
+    }
+
+    logsToDelete.value = selectedLogs.value.size;
+    showDeleteConfirm.value = true;
+};
+
+const confirmDelete = () => {
+    const count = logsToDelete.value;
+    showDeleteConfirm.value = false;
+
+    // Use Inertia router which automatically handles CSRF
+    router.post('/api/activity-logs/delete-multiple',
+        {
+            ids: Array.from(selectedLogs.value)
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedLogs.value.clear();
+                logsToDelete.value = 0;
+                notify2(`${count} log(s) deleted successfully`, 'success');
+            },
+            onError: (errors) => {
+                console.error('Error deleting logs:', errors);
+                notify2('Failed to delete logs. Please try again.', 'error');
+            }
+        }
+    );
 };
 
 const exportToPDF = async () => {

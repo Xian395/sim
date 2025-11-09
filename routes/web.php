@@ -58,6 +58,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
 
+    // API endpoints for staff management
+    Route::get('/api/staff-transactions/{userId}', [LogController::class, 'getStaffTransactions'])->name('api.staff-transactions');
+    Route::get('/api/stock-transaction-logs', [LogController::class, 'getStockTransactionLogs'])->name('api.stock-transaction-logs');
+    Route::post('/api/activity-logs/delete-multiple', [LogController::class, 'deleteMultipleLogs'])->name('api.activity-logs.delete-multiple');
+
 
 
       Route::prefix('admin')->name('admin.')->group(function () {
@@ -68,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/users/{user}/transactions', [UserController::class, 'transactions'])->name('users.transactions');
 
 
 

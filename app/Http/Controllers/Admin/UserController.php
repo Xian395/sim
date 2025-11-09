@@ -96,4 +96,17 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
+
+    public function transactions(User $user)
+    {
+        return Inertia::render('Admin/Users/Transactions', [
+            'userId' => $user->id,
+            'staff' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
+    }
 }

@@ -43,6 +43,15 @@
 
               <template #column-actions="{ item }">
                 <div class="flex justify-end space-x-2">
+                  <template v-if="item.role === 'staff'">
+                    <Link
+                      :href="route('admin.users.transactions', item.id)"
+                      class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm font-medium inline-flex items-center justify-center"
+                      title="View Transactions"
+                    >
+                      Transactions
+                    </Link>
+                  </template>
                   <ButtonNew
                     types="edit"
                     tooltips="Edit User"
@@ -201,12 +210,13 @@
         </button>
       </div>
     </Modal>
+
   </AdminAuthenticatedLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { usePage, router, useForm } from '@inertiajs/vue3';
+import { usePage, router, useForm, Link } from '@inertiajs/vue3';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout.vue';
 import ButtonNew from "@/Components/ButtonNew.vue";
 import Modal from '@/Components/Modal.vue';
@@ -329,6 +339,5 @@ const confirmDelete = async () => {
     closeDeleteModal();
   }
 };
-
 
 </script>
