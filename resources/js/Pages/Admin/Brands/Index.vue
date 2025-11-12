@@ -21,6 +21,20 @@
                             Add
                         </ButtonNew>
                     </div>
+
+                    <!-- Search Bar -->
+                    <div class="px-6 pt-4 pb-2">
+                        <div class="flex-1">
+                            <input
+                                v-model="searchQuery"
+                                @input="handleSearch"
+                                type="text"
+                                placeholder="Search brands by name..."
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+
                     <div class="p-6">
                         <DataTable
                             :data="brands"
@@ -431,6 +445,7 @@ const showDeleteModal = ref(false);
 const selectedBrand = ref(null);
 const brandToDelete = ref(null);
 const itemsPerPage = ref(props.pagination.per_page);
+const searchQuery = ref('');
 
 // Products Modal
 const showProductsModal = ref(false);
@@ -517,7 +532,8 @@ const getPaginationPages = () => {
 const handlePageChange = (page) => {
     router.get(route('admin.brands.index', {
         page: page,
-        per_page: itemsPerPage.value
+        per_page: itemsPerPage.value,
+        search: searchQuery.value
     }), {}, {
         preserveState: true,
         preserveScroll: true
@@ -527,7 +543,19 @@ const handlePageChange = (page) => {
 const handleItemsPerPageChange = () => {
     router.get(route('admin.brands.index', {
         page: 1,
-        per_page: itemsPerPage.value
+        per_page: itemsPerPage.value,
+        search: searchQuery.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const handleSearch = () => {
+    router.get(route('admin.brands.index', {
+        page: 1,
+        per_page: itemsPerPage.value,
+        search: searchQuery.value
     }), {}, {
         preserveState: true,
         preserveScroll: true

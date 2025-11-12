@@ -23,9 +23,14 @@ class BrandController extends Controller
     {
         $perPage = intval($request->input('per_page')) ?: 10;
         $page = intval($request->input('page')) ?: 1;
+        $search = $request->get('search', '');
 
         // Build the base query with product count
-        $query = Brand::withCount('products')->orderBy('name');
+        $query = Brand::withCount('products')
+            ->when($search, function ($q) use ($search) {
+                return $q->where('name', 'like', "%{$search}%");
+            })
+            ->orderBy('name');
 
         // Get total count before pagination
         $total = $query->count();
@@ -42,6 +47,7 @@ class BrandController extends Controller
 
         return Inertia::render('Admin/Brands/Index', [
             'brands' => $brands,
+            'search' => $search,
             'pagination' => [
                 'total' => $total,
                 'per_page' => $perPage,

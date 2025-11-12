@@ -23,8 +23,8 @@
                         </ButtonNew>
                     </div>
 
-                    <!-- Filter Tabs -->
-                    <div class="px-6 pt-4 pb-2">
+                    <!-- Filter Tabs and Search -->
+                    <div class="px-6 pt-4 pb-2 space-y-4">
                         <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
                             <button
                                 @click="filterCategories('active')"
@@ -65,6 +65,17 @@
                                     {{ totalCategoryCount }}
                                 </span>
                             </button>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="flex-1">
+                            <input
+                                v-model="searchQuery"
+                                @input="handleSearch"
+                                type="text"
+                                placeholder="Search categories by name..."
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
                         </div>
                     </div>
                     <div class="p-6">
@@ -280,6 +291,7 @@ const showEditModal = ref(false);
 const selectedCategory = ref(null);
 const itemsPerPage = ref(props.pagination.per_page);
 const currentPage = ref(props.pagination.current_page);
+const searchQuery = ref('');
 
 const activeCategoryCount = computed(() => props.counts.active || 0);
 const archivedCategoryCount = computed(() => props.counts.archived || 0);
@@ -443,7 +455,20 @@ const filterCategories = (filter) => {
     router.get(route('admin.categories.index', {
         filter: filter,
         page: 1,
-        per_page: itemsPerPage.value
+        per_page: itemsPerPage.value,
+        search: searchQuery.value
+    }), {}, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const handleSearch = () => {
+    router.get(route('admin.categories.index', {
+        filter: props.filter,
+        page: 1,
+        per_page: itemsPerPage.value,
+        search: searchQuery.value
     }), {}, {
         preserveState: true,
         preserveScroll: true

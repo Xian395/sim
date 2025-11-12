@@ -25,6 +25,7 @@ class CategoryController extends Controller
         $filter = $request->get('filter', 'active');
         $perPage = intval($request->input('per_page')) ?: 10;
         $page = intval($request->input('page')) ?: 1;
+        $search = $request->get('search', '');
 
         // Build the base query
         $query = Category::when($filter === 'active', function ($query) {
@@ -33,6 +34,8 @@ class CategoryController extends Controller
             return $query->where('status', 'inactive');
         })->when($filter === 'all', function ($query) {
             return $query;
+        })->when($search, function ($query) use ($search) {
+            return $query->where('name', 'like', "%{$search}%");
         })->orderBy('name');
 
         // Get total count before pagination
@@ -56,6 +59,7 @@ class CategoryController extends Controller
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
             'filter' => $filter,
+            'search' => $search,
             'pagination' => [
                 'total' => $total,
                 'per_page' => $perPage,

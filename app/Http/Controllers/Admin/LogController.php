@@ -153,6 +153,9 @@ class LogController extends Controller
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 
+        // Build date range based on period
+        $dateRange = $this->getDateRangeForReport($period, $date, $startDate, $endDate, $year, $month);
+
         $brands = Brand::with('products')->get();
         $brandSalesData = [];
 
@@ -160,7 +163,11 @@ class LogController extends Controller
             $productNames = $brand->products->pluck('name')->toArray();
 
             $brandSales = $this->getBrandSalesForPeriod($productNames, $brand->name, $period, $date, $startDate, $endDate, $year, $month);
-            $brandSalesData[] = $brandSales;
+
+            // Only include brands with sales
+            if ($brandSales['totalTransactions'] > 0) {
+                $brandSalesData[] = $brandSales;
+            }
         }
 
         return response()->json([
@@ -172,6 +179,41 @@ class LogController extends Controller
             'year' => $year,
             'month' => $month
         ]);
+    }
+
+    private function getDateRangeForReport($period, $date, $startDate, $endDate, $year, $month)
+    {
+        switch ($period) {
+            case 'daily':
+                return [
+                    'start' => $date,
+                    'end' => $date,
+                ];
+            case 'weekly':
+                $start = Carbon::parse($date)->startOfWeek();
+                $end = Carbon::parse($date)->endOfWeek();
+                return [
+                    'start' => $start,
+                    'end' => $end,
+                ];
+            case 'monthly':
+                $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+                $end = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+                return [
+                    'start' => $start,
+                    'end' => $end,
+                ];
+            case 'range':
+                return [
+                    'start' => $startDate,
+                    'end' => $endDate,
+                ];
+            default:
+                return [
+                    'start' => null,
+                    'end' => null,
+                ];
+        }
     }
 
     private function getBrandSalesForPeriod($productNames, $brandName, $period, $date, $startDate, $endDate, $year, $month)

@@ -210,7 +210,20 @@
                                     <div class="px-6 py-4 border-b border-gray-200">
                                         <h4 class="text-lg font-medium text-gray-900">Sales by Brand</h4>
                                     </div>
-                                    <div class="overflow-x-auto">
+
+                                    <!-- Empty State -->
+                                    <div v-if="brandSalesReportData.brandSales.length === 0" class="px-6 py-12 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                        </svg>
+                                        <h3 class="mt-2 text-sm font-medium text-gray-900">
+                                            {{ getBrandSalesEmptyMessage() }}
+                                        </h3>
+                                        <p class="mt-1 text-sm text-gray-500">No brand sales recorded for the selected period.</p>
+                                    </div>
+
+                                    <!-- Table -->
+                                    <div v-else class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
@@ -724,53 +737,66 @@
 
                         <!-- Staff Sales Data -->
                         <div v-if="staffSalesReportData" class="space-y-6">
-                            <!-- Summary Stats -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
-                                    <div class="text-sm font-medium text-indigo-600">Total Sales</div>
-                                    <div class="text-2xl font-bold text-indigo-900">
-                                        ₱{{ formatCurrency(staffSalesReportData.summary.totalSales || 0) }}
-                                    </div>
-                                </div>
-                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                                    <div class="text-sm font-medium text-blue-600">Total Transactions</div>
-                                    <div class="text-2xl font-bold text-blue-900">
-                                        {{ staffSalesReportData.summary.totalTransactions || 0 }}
-                                    </div>
-                                </div>
-                                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                                    <div class="text-sm font-medium text-purple-600">Average per Staff</div>
-                                    <div class="text-2xl font-bold text-purple-900">
-                                        ₱{{ formatCurrency(staffSalesReportData.summary.averagePerStaff || 0) }}
-                                    </div>
-                                </div>
-                                <div class="bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-lg border border-cyan-200">
-                                    <div class="text-sm font-medium text-cyan-600">Total Staff</div>
-                                    <div class="text-2xl font-bold text-cyan-900">
-                                        {{ staffSalesReportData.staffSales?.length || 0 }}
-                                    </div>
-                                </div>
+                            <!-- Empty State -->
+                            <div v-if="staffSalesReportData.staffSales.length === 0" class="bg-white rounded-lg border border-gray-200 px-6 py-12 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                                    {{ getStaffSalesEmptyMessage() }}
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">No staff sales recorded for the selected period.</p>
                             </div>
 
-                            <!-- Staff Sales Table -->
-                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-200">
-                                    <h4 class="text-lg font-medium text-gray-900">Staff Performance Breakdown</h4>
+                            <!-- Summary Stats and Table -->
+                            <template v-else>
+                                <!-- Summary Stats -->
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
+                                        <div class="text-sm font-medium text-indigo-600">Total Sales</div>
+                                        <div class="text-2xl font-bold text-indigo-900">
+                                            ₱{{ formatCurrency(staffSalesReportData.summary.totalSales || 0) }}
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                        <div class="text-sm font-medium text-blue-600">Total Transactions</div>
+                                        <div class="text-2xl font-bold text-blue-900">
+                                            {{ staffSalesReportData.summary.totalTransactions || 0 }}
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                        <div class="text-sm font-medium text-purple-600">Average per Staff</div>
+                                        <div class="text-2xl font-bold text-purple-900">
+                                            ₱{{ formatCurrency(staffSalesReportData.summary.averagePerStaff || 0) }}
+                                        </div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-lg border border-cyan-200">
+                                        <div class="text-sm font-medium text-cyan-600">Total Staff</div>
+                                        <div class="text-2xl font-bold text-cyan-900">
+                                            {{ staffSalesReportData.staffSales?.length || 0 }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Name</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Transaction</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <tr v-for="staff in staffSalesReportData.staffSales" :key="staff.id" class="hover:bg-gray-50">
+
+                                <!-- Staff Sales Table -->
+                                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <div class="px-6 py-4 border-b border-gray-200">
+                                        <h4 class="text-lg font-medium text-gray-900">Staff Performance Breakdown</h4>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Name</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Transaction</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <tr v-for="staff in staffSalesReportData.staffSales" :key="staff.id" class="hover:bg-gray-50">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     {{ staff.name }}
                                                 </td>
@@ -801,6 +827,7 @@
                                     </table>
                                 </div>
                             </div>
+                            </template>
                         </div>
 
                         <div v-if="loadingStaffSalesReport" class="text-center py-12">
@@ -1176,7 +1203,19 @@ const loadBrandSalesReport = async () => {
     }
 };
 
-
+const getBrandSalesEmptyMessage = () => {
+    const period = brandReportFilters.period;
+    if (period === 'daily') {
+        return 'No brand sales this day';
+    } else if (period === 'weekly') {
+        return 'No brand sales this week';
+    } else if (period === 'monthly') {
+        return 'No brand sales this month';
+    } else if (period === 'range') {
+        return 'No brand sales in this date range';
+    }
+    return 'No brand sales recorded';
+};
 
 const exportBrandSalesReport = async () => {
     if (!brandSalesReportData.value) return;
@@ -1476,6 +1515,20 @@ const getRoleClass = (role) => {
         'staff': 'bg-blue-100 text-blue-800',
     };
     return roleClasses[role] || 'bg-gray-100 text-gray-800';
+};
+
+const getStaffSalesEmptyMessage = () => {
+    const period = staffReportFilters.period;
+    if (period === 'daily') {
+        return 'No staff sales this day';
+    } else if (period === 'weekly') {
+        return 'No staff sales this week';
+    } else if (period === 'monthly') {
+        return 'No staff sales this month';
+    } else if (period === 'range') {
+        return 'No staff sales in this date range';
+    }
+    return 'No staff sales recorded';
 };
 
 const exportStaffSalesReport = async () => {
